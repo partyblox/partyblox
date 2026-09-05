@@ -57,7 +57,10 @@ const upload = multer({
 
 
 app.use(express.static(publicDir));
-app.use("/uploads", express.static(uploadsDir));
+app.use("/uploads", (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    next();
+}, express.static(uploadsDir));
 
 
 // ============================================================
