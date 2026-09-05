@@ -107,7 +107,7 @@ canvas{display:block;}
 </head>
 <body>
 <div id="landing" class="screen active">
-  <div class="logo">OpenVerse</div>
+  <div class="logo">PartyBlox</div>
   <div class="tagline">✨ Assista junto num mundo 3D aberto ✨</div>
   <div class="panel">
     <div class="lbl">👤 Seu nome</div><input type="text" id="inName" maxlength="14" value="Player1">
@@ -245,7 +245,7 @@ canvas{display:block;}
 </div>
 <video id="localVideo" style="display:none" loop playsinline crossorigin="anonymous"></video>
 <audio id="localAudio" style="display:none" loop crossorigin="anonymous"></audio>
-<video id="screenVideo" style="display:none" playsinline muted></video>
+<video id="screenVideo" style="display:none" playsinline></video>
 <div id="joyBase"><div id="joyKnob"></div></div>
 <button id="jumpBtn">⬆️</button>
 <div id="mediaHint"></div><div id="toast"></div>
@@ -607,19 +607,31 @@ function drawAudioScreen(n){screenCtx.fillStyle='#111';screenCtx.fillRect(0,0,19
 
 function updateMediaTexture(){
   const sv=$('screenVideo');
-  if(isScreenSharing&&sv&&sv.readyState>=2&&!sv.paused&&!sv.ended){
-    try{screenCtx.drawImage(sv,0,0,1920,1080);screenTexture.needsUpdate=true;}catch(e){}
+  const v=$('localVideo');
+
+  if(isScreenSharing&&sv&&sv.srcObject&&sv.readyState>=2){
+    try{
+      screenCtx.drawImage(sv,0,0,1920,1080);
+      if(screenTexture)screenTexture.needsUpdate=true;
+      if(telaoScreen&&telaoScreen.material&&telaoScreen.material.map)
+        telaoScreen.material.map.needsUpdate=true;
+    }catch(e){}
     return;
   }
-  const v=$('localVideo');
-  if(mediaType==='video'&&v&&v.readyState>=2&&!v.paused&&!v.ended){
-    try{screenCtx.drawImage(v,0,0,1920,1080);screenTexture.needsUpdate=true;}catch(e){}
+
+  if(mediaType==='video'&&v&&v.src&&v.readyState>=2&&!v.ended){
+    try{
+      screenCtx.drawImage(v,0,0,1920,1080);
+      if(screenTexture)screenTexture.needsUpdate=true;
+      if(telaoScreen&&telaoScreen.material&&telaoScreen.material.map)
+        telaoScreen.material.map.needsUpdate=true;
+    }catch(e){}
   }
 }
 
 function getMediaServerBase(){
-  if(location.hostname==='localhost'||location.hostname==='127.0.0.1')return location.origin;
-  return 'https://partyblox.onrender.com';
+  if(location.protocol==='file:')return 'http://localhost:3000';
+  return location.origin;
 }
 async function handleFileUpload(){
   if(!isHost){toast('👑 Só o Host');return;}
@@ -747,9 +759,25 @@ function applyMediaState(state){
     mediaType='youtube';
   }
   else if(state.type==='image'){
+    mediaType='image';
     const img=new Image();
-    img.onload=()=>{screenCtx.fillStyle='#000';screenCtx.fillRect(0,0,1920,1080);
-      screenCtx.drawImage(img,0,0,1920,1080);screenTexture.needsUpdate=true;mediaType='image';};
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      try{
+        screenCtx.clearRect(0,0,1920,1080);
+        screenCtx.drawImage(img,0,0,1920,1080);
+        if(screenTexture){
+          screenTexture.needsUpdate=true;
+          screenTexture.image=screenCanvas;
+        }
+        if(telaoScreen&&telaoScreen.material&&telaoScreen.material.map)
+          telaoScreen.material.map.needsUpdate=true;
+      }catch(e){
+        console.error('[IMAGE DRAW]',e);
+        toast('❌ Não foi possível mostrar a imagem no telão');
+        drawDefaultScreen();
+      }
+    };
     img.onerror=()=>{toast('❌ Erro ao carregar imagem');drawDefaultScreen();};
     img.src=state.data||state.url||'';
   }
