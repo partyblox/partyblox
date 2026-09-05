@@ -107,7 +107,7 @@ canvas{display:block;}
 </head>
 <body>
 <div id="landing" class="screen active">
-  <div class="logo">PartyBlox</div>
+  <div class="logo">OpenVerse</div>
   <div class="tagline">✨ Assista junto num mundo 3D aberto ✨</div>
   <div class="panel">
     <div class="lbl">👤 Seu nome</div><input type="text" id="inName" maxlength="14" value="Player1">
@@ -280,7 +280,16 @@ function unlockMedia(){
     if(youtubePlayer&&ytVideoId)youtubePlayer.playVideo();
   }catch(_){}
 }
-addEventListener('pointerdown',unlockMedia,{once:true});
+addEventListener('pointerdown',unlockMedia);
+addEventListener('keydown',unlockMedia);
+function unlockAllRemoteMedia(){
+  try{
+    const v=$('localVideo'); if(v.src){v.muted=false;v.play().catch(()=>{});}
+    const a=$('localAudio'); if(a.src){a.play().catch(()=>{});}
+    if(youtubePlayer&&ytVideoId){try{youtubePlayer.playVideo();}catch(_){}}
+    const sv=$('screenVideo'); if(sv&&sv.srcObject){sv.muted=false;sv.play().catch(()=>{});}
+  }catch(_){}
+}
 
 let youtubePlayer=null,ytReady=false,ytVideoId=null;
 /* Ajustes finos do FRAME do YouTube (escala + deslocamento) */
@@ -621,30 +630,20 @@ function updateMediaTexture(){
   }
 }
 
-function handleFileUpload(){
+async function handleFileUpload(){
   if(!isHost){toast('👑 Só o Host');return;}
   const f=$('fileInput').files[0];if(!f)return;
-  const ty=f.type,MAX=10*1024*1024;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    const data=rd.result;
-    if(ty.startsWith('image/')){
-      applyMediaState({type:'image',data});
-      wsSendSafe({kind:'media',state:{type:'image',data}});
-      toast('🖼️ Imagem no telão!');
-    }else if(ty.startsWith('video/')){
-      applyMediaState({type:'video',data,name:f.name});
-      if(f.size<=MAX)wsSendSafe({kind:'media',state:{type:'video',data,name:f.name}});
-      else toast('⚠️ Vídeo >10MB: toca só pra você');
-      toast('🎬 Vídeo no telão!');
-    }else if(ty.startsWith('audio/')){
-      applyMediaState({type:'audio',data:f.size<=MAX?data:null,name:f.name});
-      if(f.size<=MAX)wsSendSafe({kind:'media',state:{type:'audio',data:data,name:f.name}});
-      toast('🎵 Música no telão!');
-    }else toast('❌ Tipo não suportado');
-  };
-  rd.readAsDataURL(f);
-  $('fileInput').value='';
+  try{
+    toast('⏳ Enviando arquivo para o servidor...');
+    const fd=new FormData();fd.append('media',f);
+    const res=await fetch('/upload',{method:'POST',body:fd});
+    const out=await res.json();
+    if(!res.ok||!out.url)throw new Error(out.error||'Falha no upload');
+    const type=out.type||f.type;
+    const state={type:type.startsWith('image/')?'image':type.startsWith('video/')?'video':type.startsWith('audio/')?'audio':'clear',url:out.url,name:f.name};
+    applyMediaState(state); wsSend({kind:'media',state});
+    toast(state.type==='image'?'🖼️ Imagem no telão!':state.type==='video'?'🎬 Vídeo no telão!':'🎵 Música no telão!');
+  }catch(e){toast('❌ '+(e.message||'Erro no upload'));}finally{$('fileInput').value='';}
 }
 function wsSendSafe(m){try{wsSend(m);}catch(e){toast('⚠️ Arquivo grande demais p/ sincronizar');}}
 
@@ -677,8 +676,8 @@ function stopScreenShare(){
   wsSend({kind:'media',state:{type:'clear'}});
 }
 function ovRemoteScreen(stream){
-  const sv=$('screenVideo');sv.srcObject=stream;sv.muted=true;sv.play().catch(()=>{});
-  isScreenSharing=true;mediaType='screen';
+  const sv=$('screenVideo');sv.srcObject=stream;sv.muted=false;sv.play().catch(()=>showMediaHint('▶ Clique na tela para liberar vídeo e áudio da transmissão'));
+  isScreenSharing=true;mediaType='screen';setTimeout(unlockAllRemoteMedia,100);
   toast('🖥️ Recebendo tela ao vivo no telão!');
 }
 function ovRemoteScreenEnd(){
@@ -771,12 +770,12 @@ function applyMediaState(state){
     const v=$('localVideo');
     v.src=state.data||state.url||'';v.muted=false;
     mediaType='video';
-    v.play().catch(()=>showMediaHint('▶ Clique na tela para liberar o vídeo'));
+    v.play().catch(()=>showMediaHint('▶ Clique na tela para liberar o vídeo/áudio'));setTimeout(unlockAllRemoteMedia,50);
   }
   else if(state.type==='audio'){
     const a=$('localAudio');
     if(state.data||state.url){a.src=state.data||state.url;a.play().catch(()=>showMediaHint('🔊 Clique na tela para liberar o áudio'));}
-    mediaType='audio';
+    mediaType='audio';setTimeout(unlockAllRemoteMedia,50);
     drawAudioScreen(state.name||'Música');
   }
   else if(state.type==='screen'){
@@ -886,6 +885,8 @@ function connectRoom(){
         updateHostIndicator();
         if(m.state&&m.state.dayMode)applyDayNight(m.state.dayMode,false);
         if(m.state&&m.state.media)applyMediaState(m.state.media);
+        if(Array.isArray(m.players))m.players.forEach(p=>{if(p&&p.playerId){if(window.ovRememberPlayer)window.ovRememberPlayer(p);if(window.ovPeerJoin)window.ovPeerJoin(p.playerId);}});
+        if(m.state&&m.state.screenOwner&&String(m.state.screenOwner)!==String(myPlayerId))wsSend({kind:'rtc',action:'screenRequest',to:String(m.state.screenOwner)});
         if(isHost&&!wasHost)toast('👑 Você é o Host da sala!');
       }
       else if(m.kind==='media')applyMediaState(m.state);
@@ -901,7 +902,7 @@ function connectRoom(){
       else if(m.kind==='position'&&m.playerId!==myPlayerId)updateRemotePlayer(m.playerId,m);
       else if(m.kind==='emote'&&m.playerId!==myPlayerId)playEmoteOnRemote(m.playerId,m.id);
       else if(m.kind==='reaction'&&m.playerId!==myPlayerId)showReaction(m.emoji);
-      else if(m.kind==='playerJoined'){playerCount++;addChatMsg('Sistema',m.name+' entrou',true);}
+      else if(m.kind==='playerJoined'){playerCount++;addChatMsg('Sistema',m.name+' entrou',true);if(window.ovRememberPlayer)window.ovRememberPlayer({playerId:m.playerId,name:m.name});if(window.ovPeerJoin)window.ovPeerJoin(m.playerId);}
       else if(m.kind==='playerLeft'){playerCount=Math.max(1,playerCount-1);addChatMsg('Sistema',m.name+' saiu',true);removeRemotePlayer(m.playerId);if(playerCount===1&&!isHost)claimHost();}
       else if(m.kind==='rtc'&&typeof window.ovRtcHandle==='function')window.ovRtcHandle(m);
     };
@@ -1111,6 +1112,7 @@ function togPanel(id){
   }
   async function handleRTC(m){
     if(m.to&&String(m.to)!==lpId())return;
+    if(m.action==='screenRequest'){if(screenStream)await makePeer(String(m.from||''),true);return;}
     if(m.action==='offer'){
       const from=String(m.from||'');
       const pc=await makePeer(from,false);if(!pc)return;
