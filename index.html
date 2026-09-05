@@ -107,7 +107,7 @@ canvas{display:block;}
 </head>
 <body>
 <div id="landing" class="screen active">
-  <div class="logo">OpenVerse</div>
+  <div class="logo">PartyBlox</div>
   <div class="tagline">✨ Assista junto num mundo 3D aberto ✨</div>
   <div class="panel">
     <div class="lbl">👤 Seu nome</div><input type="text" id="inName" maxlength="14" value="Player1">
@@ -681,6 +681,7 @@ function stopScreenShare(){
   if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;}
   $('screenVideo').srcObject=null;$('screenVideo').muted=false;isScreenSharing=false;mediaType=null;$('screenShareBtn').classList.remove('live');$('screenShareBtn').textContent='🖥️ Espelhar Minha Tela';drawDefaultScreen();
   if(typeof window.ovStopScreenShare==='function'){try{window.ovStopScreenShare();}catch(e){}}
+  hardStopLocalMedia();
   wsSend({kind:'media',state:{type:'clear'}});
 }
 function ovRemoteScreen(stream){
@@ -737,10 +738,43 @@ function clearMedia(){
   toast('🗑️ Telão limpo');
 }
 
+
+// Hard-stop guard: clearing the telão must invalidate any previous media.
+let mediaGeneration=0;
+function hardStopLocalMedia(){
+  mediaGeneration++;
+  try{
+    const v=$('localVideo');
+    v.pause(); v.removeAttribute('src'); v.load();
+  }catch(_){}
+  try{
+    const a=$('localAudio');
+    a.pause(); a.removeAttribute('src'); a.load();
+  }catch(_){}
+}
 function applyMediaState(state){
   if(!state)return;
   if(state.type==='clear'){
-    if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
+    try{
+      const v=$('localVideo');
+      v.pause();
+      v.removeAttribute('src');
+      v.load();
+    }catch(_){}
+    try{
+      const au=$('localAudio');
+      au.pause();
+      au.removeAttribute('src');
+      au.load();
+    }catch(_){}
+    try{
+      const sv=$('screenVideo');
+      if(!sv.srcObject){sv.pause();sv.removeAttribute('src');sv.load();}
+    }catch(_){}
+    mediaType=null;
+    drawDefaultScreen();
+    return;
+  }catch(_){}
     ytVideoId=null;$('youtubeOverlay').style.display='none';$('ytControls').style.display='none';
     if(punchMesh)punchMesh.visible=false;
     $('localVideo').pause();$('localAudio').pause();
@@ -1076,10 +1110,10 @@ function sendChat(){
   showBubble(myRig,pm?'🔒 '+pm[2]:text);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined});
 }
-const EMOJIS=['😀','😂','😎','','😢','😡','','👎','❤️','🔥','','🎬','','','💃','','🙌','','✨','🌈','🍔','','💎','🏀','🎲','','🦄','','','🌺','','☀️',''];
+const EMOJIS=['😀','😂','😎','😢','😡','','👎','❤️','🔥','','🎬','💃','','🙌','✨','🌈','🍔','💎','🏀','🎲','','🦄','🌺','☀️'];
 (function(){const p=$('emojiPick');EMOJIS.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{$('chatText').value+=e;p.classList.remove('active');};p.appendChild(b);});})();
 function togEmoji(){$('emojiPick').classList.toggle('active');}
-const REACTIONS=['😂','❤️','🔥','','🎉','','😍','','👍','','🙌','✨','💖','🎊','🎈','🏆','💎'];
+const REACTIONS=['😂','❤️','🔥','🎉','','😍','👍','🙌','✨','💖','🎊','🎈','🏆','💎'];
 function showReaction(e){
   const d=document.createElement('div');d.className='floatR';d.textContent=e;
   d.style.left=(Math.random()*(innerWidth-120)+60)+'px';d.style.top=(innerHeight-80)+'px';
