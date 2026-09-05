@@ -71,9 +71,13 @@ app.post("/upload", (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: "Nenhum arquivo enviado." });
         }
+        const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+        const proto = forwardedProto || req.protocol || "http";
+        const base = `${proto}://${req.get("host")}`;
         res.json({
-            url: `/uploads/${req.file.filename}`,
-            type: req.file.mimetype
+            url: `${base}/uploads/${req.file.filename}`,
+            type: req.file.mimetype,
+            name: req.file.originalname
         });
     });
 });
@@ -83,7 +87,7 @@ app.post("/upload", (req, res) => {
 // HTTP + WEBSOCKET
 // ============================================================
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 * 1024 });
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 * 1024 });
 
 
 // ============================================================
@@ -186,9 +190,14 @@ wss.on("connection", ws => {
                 kind: "roomState",
                 host: room.host === ws,
                 state: room.state,
-                players: getPlayers(room, ws),
-                playerCount: room.clients.size
+                playerCount: room.clients.size,
+                players: getPlayers(room, ws)
             });
+
+            if (room.state.screenOwner && room.state.screenOwner !== ws.pid) {
+                const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
+                if (owner) send(owner, { kind: "rtc", action: "screenRequest", from: ws.pid, to: room.state.screenOwner });
+            }
 
             // Avisa os outros
             broadcast(room, {
@@ -196,20 +205,6 @@ wss.on("connection", ws => {
                 name: ws.name,
                 playerId: ws.pid
             }, ws);
-
-            // Se já existe uma transmissão de tela, peça ao dono para
-            // criar imediatamente uma conexão WebRTC com o novo jogador.
-            if (room.state.screenOwner) {
-                const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
-                if (owner && owner !== ws) {
-                    send(owner, {
-                        kind: "rtc",
-                        action: "screenRequest",
-                        from: ws.pid,
-                        to: owner.pid
-                    });
-                }
-            }
 
             return;
         }
@@ -223,36 +218,26 @@ wss.on("connection", ws => {
 
 
         // ====================================================
-        // TROCA DE HOST
-        // ====================================================
-        if (msg.kind === "claimHost") {
-            if (!room.host || !room.clients.has(room.host)) {
-                room.host = ws;
-            }
-            if (room.host === ws) {
-                send(ws, {
-                    kind: "roomState",
-                    host: true,
-                    state: room.state,
-                    players: getPlayers(room, ws),
-                    playerCount: room.clients.size
-                });
-            }
-            return;
-        }
-
-        // ====================================================
         // MÍDIA
         // ====================================================
         if (msg.kind === "media") {
             if (ws !== room.host) return;
-
             room.state.media = msg.state || { type: "clear" };
+            if (room.state.media.type === "screen" && room.state.media.active) room.state.screenOwner = ws.pid;
+            else if (room.state.media.type === "clear" && room.state.screenOwner === ws.pid) room.state.screenOwner = null;
+            broadcast(room, { kind: "media", state: room.state.media });
+            return;
+        }
 
-            broadcast(room, {
-                kind: "media",
-                state: room.state.media
-            });
+
+        // ====================================================
+        // RECUPERAR HOST
+        // ====================================================
+        if (msg.kind === "claimHost") {
+            if (!room.host || !room.clients.has(room.host)) {
+                room.host = ws;
+                send(ws, { kind: "roomState", host: true, state: room.state, playerCount: room.clients.size, players: getPlayers(room, ws) });
+            }
             return;
         }
 
@@ -473,8 +458,8 @@ wss.on("connection", ws => {
                     kind: "roomState",
                     host: true,
                     state: room.state,
-                    players: getPlayers(room, room.host),
-                    playerCount: room.clients.size
+                    playerCount: room.clients.size,
+                    players: getPlayers(room, room.host)
                 });
             }
         }
