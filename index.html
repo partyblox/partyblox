@@ -107,7 +107,7 @@ canvas{display:block;}
 </head>
 <body>
 <div id="landing" class="screen active">
-  <div class="logo">PartyBlox</div>
+  <div class="logo">OpenVerse</div>
   <div class="tagline">✨ Assista junto num mundo 3D aberto ✨</div>
   <div class="panel">
     <div class="lbl">👤 Seu nome</div><input type="text" id="inName" maxlength="14" value="Player1">
@@ -630,8 +630,13 @@ function updateMediaTexture(){
 }
 
 function getMediaServerBase(){
+  // O site hospedado usa o mesmo servidor Render que já recebe o WebSocket.
+  // No localhost, o próprio Node serve o index.html e o /upload.
   if(location.protocol==='file:')return 'http://localhost:3000';
-  return location.origin;
+  if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+    return location.origin;
+  }
+  return 'https://partyblox.onrender.com';
 }
 async function handleFileUpload(){
   if(!isHost){toast('👑 Só o Host');return;}
