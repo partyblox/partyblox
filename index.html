@@ -198,6 +198,23 @@ canvas{display:block;}
     <button class="fbtn" onclick="ytPlay()">▶️ Play</button>
     <button class="fbtn" onclick="ytPause()">⏸️ Pausar</button>
     <div style="display:flex;gap:4px;"><button class="fbtn" onclick="ytSeek(-10)">↩️ -10s</button><button class="fbtn" onclick="ytSeek(10)">↪️ +10s</button></div>
+    <div id="localMediaControls" style="display:none;margin:6px 0;">
+      <div class="lbl">🎛️ Controles do vídeo/áudio enviado</div>
+      <div class="telaoRow">
+        <button class="telaoBtn" onclick="localMediaPlay()" title="Play">▶️</button>
+        <button class="telaoBtn" onclick="localMediaPause()" title="Pausar">⏸️</button>
+      </div>
+      <div class="telaoRow">
+        <button class="telaoBtn" onclick="localMediaSeek(-60)" title="Voltar 60 segundos">↩️ 60s</button>
+        <button class="telaoBtn" onclick="localMediaSeek(-30)" title="Voltar 30 segundos">↩️ 30s</button>
+        <button class="telaoBtn" onclick="localMediaSeek(-10)" title="Voltar 10 segundos">↩️ 10s</button>
+      </div>
+      <div class="telaoRow">
+        <button class="telaoBtn" onclick="localMediaSeek(10)" title="Adiantar 10 segundos">10s ↪️</button>
+        <button class="telaoBtn" onclick="localMediaSeek(30)" title="Adiantar 30 segundos">30s ↪️</button>
+        <button class="telaoBtn" onclick="localMediaSeek(60)" title="Adiantar 60 segundos">60s ↪️</button>
+      </div>
+    </div>
     <input type="file" id="fileInput" accept="image/*,video/*,audio/*" style="display:none" onchange="handleFileUpload()">
     <button class="fbtn" onclick="$('fileInput').click()">📁 Enviar Imagem/Vídeo/Música</button>
     <button class="fbtn" id="screenShareBtn" onclick="toggleScreenShare()">🖥️ Espelhar Minha Tela</button>
@@ -288,6 +305,7 @@ let telaoScale=1, telaoOffY=0;
 let screenCanvas,screenCtx,screenTexture,screenStream=null,isScreenSharing=false;
 let remotePlayers={},posTimer=0,lastSentChat={text:'',ts:0};
 let mediaType=null;
+let localMediaState={type:null,url:'',name:'',mime:''};
 
 const EMOTES=[{id:'wave',label:'👋 Acenar'},{id:'dance',label:'💃 Dançar'},{id:'spin',label:'🌀 Girar'},{id:'jump',label:'🦘 Pulo'},{id:'flex',label:'💪 Flex'},{id:'laugh',label:'😂 Rir'},{id:'clap',label:'👏 Palmas'},{id:'bow',label:'🙇 Saudar'},{id:'sit',label:'🪑 Sentar'},{id:'sleep',label:'😴 Dormir'},{id:'robot',label:'🤖 Robô'},{id:'super',label:'🦸 Super'},{id:'moonwalk',label:'🌙 Moonwalk'},{id:'acrobat',label:'🤸 Acrobacia'},{id:'namaste',label:'🙏 Namastê'},{id:'heart',label:'💖 Coração'}];
 
@@ -724,6 +742,33 @@ function ytPlay(){if(!isHost||!youtubePlayer)return;youtubePlayer.playVideo();ws
 function ytPause(){if(!isHost||!youtubePlayer)return;youtubePlayer.pauseVideo();wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime()}});}
 function ytSeek(d){if(!isHost||!youtubePlayer)return;const t=Math.max(0,getYTTime()+d);youtubePlayer.seekTo(t,true);wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()!==1,time:t}});}
 
+function getLocalMediaElement(){
+  if(localMediaState.type==='video')return $('localVideo');
+  if(localMediaState.type==='audio')return $('localAudio');
+  return null;
+}
+function sendLocalMediaState(el){
+  if(!isHost||!el||!localMediaState.type)return;
+  wsSend({kind:'media',state:{type:localMediaState.type,url:localMediaState.url,name:localMediaState.name,mime:localMediaState.mime,paused:el.paused,time:Number.isFinite(el.currentTime)?el.currentTime:0}});
+}
+function localMediaPlay(){
+  if(!isHost)return toast('👑 Só o Host');
+  const el=getLocalMediaElement();if(!el)return;
+  el.play().catch(()=>showMediaHint('▶ Clique na tela para liberar a mídia'));
+  sendLocalMediaState(el);
+}
+function localMediaPause(){
+  if(!isHost)return toast('👑 Só o Host');
+  const el=getLocalMediaElement();if(!el)return;
+  el.pause();sendLocalMediaState(el);
+}
+function localMediaSeek(delta){
+  if(!isHost)return toast('👑 Só o Host');
+  const el=getLocalMediaElement();if(!el)return;
+  const duration=Number.isFinite(el.duration)?el.duration:Infinity;
+  el.currentTime=Math.max(0,Math.min(duration,(el.currentTime||0)+delta));
+  sendLocalMediaState(el);
+}
 function clearMedia(){
   if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
   ytVideoId=null;
@@ -733,7 +778,9 @@ function clearMedia(){
   $('localVideo').pause();$('localAudio').pause();
   if(isScreenSharing&&!screenStream){isScreenSharing=false;}
   if(screenStream)stopScreenShare();
-  mediaType=null;drawDefaultScreen();
+  mediaType=null;localMediaState={type:null,url:'',name:'',mime:''};
+  $('localMediaControls').style.display='none';
+  drawDefaultScreen();
   wsSend({kind:'media',state:{type:'clear'}});
   toast('🗑️ Telão limpo');
 }
@@ -767,7 +814,9 @@ function applyMediaState(state){
       const sv=$('screenVideo');
       if(!sv.srcObject){sv.pause();sv.removeAttribute('src');sv.load();}
     }catch(_){}
-    mediaType=null;drawDefaultScreen();
+    mediaType=null;localMediaState={type:null,url:'',name:'',mime:''};
+    $('localMediaControls').style.display='none';
+    drawDefaultScreen();
     return;
   }
   else if(state.type==='telao'){
@@ -809,17 +858,28 @@ function applyMediaState(state){
   }
   else if(state.type==='video'){
     const v=$('localVideo');
-    v.src=state.data||state.url||'';v.muted=false;
+    const src=state.data||state.url||'';
+    const sameSrc=src && v.src===src;
+    if(src&&!sameSrc)v.src=src;
+    v.muted=false;
     mediaType='video';
-    v.play().catch(()=>showMediaHint('▶ Clique na tela para liberar o vídeo'));
+    localMediaState={type:'video',url:src,name:state.name||'',mime:state.mime||''};
+    $('localMediaControls').style.display='block';
+    if(typeof state.time==='number'&&Number.isFinite(state.time)){try{v.currentTime=Math.max(0,Math.min(v.duration||Infinity,state.time));}catch(_){}}
+    if(state.paused===false||(!sameSrc&&state.paused===undefined))v.play().catch(()=>showMediaHint('▶ Clique na tela para liberar o vídeo'));
+    else if(state.paused===true)v.pause();
   }
   else if(state.type==='audio'){
     const au=$('localAudio');
-    if(state.data||state.url){
-      au.src=state.data||state.url;
-      au.play().catch(()=>showMediaHint('🔊 Clique na tela para liberar o áudio'));
-    }
-    mediaType='audio';
+    const src=state.data||state.url||'';
+    const sameSrc=src && au.src===src;
+    if(src&&!sameSrc)au.src=src;
+    au.muted=false;
+    localMediaState={type:'audio',url:src,name:state.name||'Música',mime:state.mime||''};
+    $('localMediaControls').style.display='block';
+    if(typeof state.time==='number'&&Number.isFinite(state.time)){try{au.currentTime=Math.max(0,Math.min(au.duration||Infinity,state.time));}catch(_){}}
+    if(state.paused===false||(!sameSrc&&state.paused===undefined))au.play().catch(()=>showMediaHint('🔊 Clique na tela para liberar o áudio'));
+    else if(state.paused===true)au.pause();
     drawAudioScreen(state.name||'Música');
   }
   else if(state.type==='screen'){
@@ -1103,10 +1163,10 @@ function sendChat(){
   showBubble(myRig,pm?'🔒 '+pm[2]:text);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined});
 }
-const EMOJIS=['😀','😂','😎','','😢','😡','','👎','❤️','🔥','','🎬','','','💃','','🙌','','✨','🌈','🍔','','💎','🏀','🎲','','🦄','','','🌺','','☀️',''];
+const EMOJIS=['😀','😂','😎','😢','😡','👎','❤️','🔥','🎬','💃','🙌','✨','🌈','🍔','💎','🏀','🎲','🦄','🌺','☀️'];
 (function(){const p=$('emojiPick');EMOJIS.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{$('chatText').value+=e;p.classList.remove('active');};p.appendChild(b);});})();
 function togEmoji(){$('emojiPick').classList.toggle('active');}
-const REACTIONS=['😂','❤️','🔥','','🎉','','😍','','👍','','🙌','✨','💖','🎊','🎈','🏆','💎'];
+const REACTIONS=['😂','❤️','🔥','🎉','😍','👍','🙌','✨','💖','🎊','🎈','🏆','💎'];
 function showReaction(e){
   const d=document.createElement('div');d.className='floatR';d.textContent=e;
   d.style.left=(Math.random()*(innerWidth-120)+60)+'px';d.style.top=(innerHeight-80)+'px';
