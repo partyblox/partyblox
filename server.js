@@ -83,7 +83,7 @@ app.post("/upload", (req, res) => {
 // HTTP + WEBSOCKET
 // ============================================================
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 * 1024 });
 
 
 // ============================================================
@@ -186,7 +186,8 @@ wss.on("connection", ws => {
                 kind: "roomState",
                 host: room.host === ws,
                 state: room.state,
-                players: getPlayers(room, ws)
+                players: getPlayers(room, ws),
+                playerCount: room.clients.size
             });
 
             // Avisa os outros
@@ -195,6 +196,20 @@ wss.on("connection", ws => {
                 name: ws.name,
                 playerId: ws.pid
             }, ws);
+
+            // Se já existe uma transmissão de tela, peça ao dono para
+            // criar imediatamente uma conexão WebRTC com o novo jogador.
+            if (room.state.screenOwner) {
+                const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
+                if (owner && owner !== ws) {
+                    send(owner, {
+                        kind: "rtc",
+                        action: "screenRequest",
+                        from: ws.pid,
+                        to: owner.pid
+                    });
+                }
+            }
 
             return;
         }
@@ -206,6 +221,25 @@ wss.on("connection", ws => {
         const room = ws.room;
         if (!room) return;
 
+
+        // ====================================================
+        // TROCA DE HOST
+        // ====================================================
+        if (msg.kind === "claimHost") {
+            if (!room.host || !room.clients.has(room.host)) {
+                room.host = ws;
+            }
+            if (room.host === ws) {
+                send(ws, {
+                    kind: "roomState",
+                    host: true,
+                    state: room.state,
+                    players: getPlayers(room, ws),
+                    playerCount: room.clients.size
+                });
+            }
+            return;
+        }
 
         // ====================================================
         // MÍDIA
@@ -439,7 +473,8 @@ wss.on("connection", ws => {
                     kind: "roomState",
                     host: true,
                     state: room.state,
-                    players: getPlayers(room, room.host)
+                    players: getPlayers(room, room.host),
+                    playerCount: room.clients.size
                 });
             }
         }
