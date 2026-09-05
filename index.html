@@ -739,46 +739,36 @@ function clearMedia(){
 }
 
 
-// Hard-stop guard: clearing the telão must invalidate any previous media.
-let mediaGeneration=0;
+
+// Garante que mídia antiga não volte a tocar depois de limpar o telão.
 function hardStopLocalMedia(){
-  mediaGeneration++;
   try{
-    const v=$('localVideo');
-    v.pause(); v.removeAttribute('src'); v.load();
+    const v=$('localVideo');v.pause();v.removeAttribute('src');v.load();
   }catch(_){}
   try{
-    const a=$('localAudio');
-    a.pause(); a.removeAttribute('src'); a.load();
+    const a=$('localAudio');a.pause();a.removeAttribute('src');a.load();
   }catch(_){}
 }
 function applyMediaState(state){
   if(!state)return;
   if(state.type==='clear'){
+    if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
+    ytVideoId=null;$('youtubeOverlay').style.display='none';$('ytControls').style.display='none';
+    if(punchMesh)punchMesh.visible=false;
     try{
       const v=$('localVideo');
-      v.pause();
-      v.removeAttribute('src');
-      v.load();
+      v.pause();v.removeAttribute('src');v.load();
     }catch(_){}
     try{
       const au=$('localAudio');
-      au.pause();
-      au.removeAttribute('src');
-      au.load();
+      au.pause();au.removeAttribute('src');au.load();
     }catch(_){}
     try{
       const sv=$('screenVideo');
       if(!sv.srcObject){sv.pause();sv.removeAttribute('src');sv.load();}
     }catch(_){}
-    mediaType=null;
-    drawDefaultScreen();
-    return;
-  }catch(_){}
-    ytVideoId=null;$('youtubeOverlay').style.display='none';$('ytControls').style.display='none';
-    if(punchMesh)punchMesh.visible=false;
-    $('localVideo').pause();$('localAudio').pause();
     mediaType=null;drawDefaultScreen();
+    return;
   }
   else if(state.type==='telao'){
     telaoScale=state.scale||1;telaoOffY=state.offY||0;
@@ -805,10 +795,7 @@ function applyMediaState(state){
       try{
         screenCtx.clearRect(0,0,1920,1080);
         screenCtx.drawImage(img,0,0,1920,1080);
-        if(screenTexture){
-          screenTexture.needsUpdate=true;
-          screenTexture.image=screenCanvas;
-        }
+        if(screenTexture)screenTexture.needsUpdate=true;
         if(telaoScreen&&telaoScreen.material&&telaoScreen.material.map)
           telaoScreen.material.map.needsUpdate=true;
       }catch(e){
@@ -827,13 +814,19 @@ function applyMediaState(state){
     v.play().catch(()=>showMediaHint('▶ Clique na tela para liberar o vídeo'));
   }
   else if(state.type==='audio'){
-    const a=$('localAudio');
-    if(state.data||state.url){a.src=state.data||state.url;a.play().catch(()=>showMediaHint('🔊 Clique na tela para liberar o áudio'));}
+    const au=$('localAudio');
+    if(state.data||state.url){
+      au.src=state.data||state.url;
+      au.play().catch(()=>showMediaHint('🔊 Clique na tela para liberar o áudio'));
+    }
     mediaType='audio';
     drawAudioScreen(state.name||'Música');
   }
   else if(state.type==='screen'){
-    if(state.active&&!isScreenSharing){mediaType='screen';toast('🖥️ '+(state.name||'Alguém')+' está espelhando a tela');}
+    if(state.active&&!isScreenSharing){
+      mediaType='screen';
+      toast('🖥️ '+(state.name||'Alguém')+' está espelhando a tela');
+    }
   }
 }
 function showMediaHint(text){
@@ -1110,10 +1103,10 @@ function sendChat(){
   showBubble(myRig,pm?'🔒 '+pm[2]:text);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined});
 }
-const EMOJIS=['😀','😂','😎','😢','😡','','👎','❤️','🔥','','🎬','💃','','🙌','✨','🌈','🍔','💎','🏀','🎲','','🦄','🌺','☀️'];
+const EMOJIS=['😀','😂','😎','','😢','😡','','👎','❤️','🔥','','🎬','','','💃','','🙌','','✨','🌈','🍔','','💎','🏀','🎲','','🦄','','','🌺','','☀️',''];
 (function(){const p=$('emojiPick');EMOJIS.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{$('chatText').value+=e;p.classList.remove('active');};p.appendChild(b);});})();
 function togEmoji(){$('emojiPick').classList.toggle('active');}
-const REACTIONS=['😂','❤️','🔥','🎉','','😍','👍','🙌','✨','💖','🎊','🎈','🏆','💎'];
+const REACTIONS=['😂','❤️','🔥','','🎉','','😍','','👍','','🙌','✨','💖','🎊','🎈','🏆','💎'];
 function showReaction(e){
   const d=document.createElement('div');d.className='floatR';d.textContent=e;
   d.style.left=(Math.random()*(innerWidth-120)+60)+'px';d.style.top=(innerHeight-80)+'px';
