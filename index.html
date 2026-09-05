@@ -852,7 +852,7 @@ function wsUrl() {
     return 'ws://' + location.host;
   }
   // Substitua pela URL do seu Render (você vai pegar depois)
-  return 'wss://SEU-PROJETO.onrender.com';
+  return 'https://partyblox.onrender.com';
 }
 function wsSend(msg){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(msg));}
 function connectRoom(){
