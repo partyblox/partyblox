@@ -7,16 +7,14 @@ const { WebSocketServer } = require("ws");
 
 const PORT = process.env.PORT || 3000;
 const app = express();
+
 const publicDir = __dirname;
 const uploadsDir = path.join(publicDir, "uploads");
+fs.mkdirSync(uploadsDir, { recursive: true });
 
-// Garante que a pasta de uploads existe
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 // ============================================================
-// CORS
+// CORS (permite uploads de qualquer origem: GitHub Pages, etc.)
 // ============================================================
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -26,53 +24,59 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // ============================================================
-// UPLOADS (Multer)
+// UPLOADS — valida ANTES de salvar no disco (fileFilter)
 // ============================================================
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadsDir),
     filename: (req, file, cb) => {
-        // Sanitiza o nome do arquivo para evitar caracteres maliciosos
-        const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "");
-        cb(null, Date.now() + "-" + safeName);
+        const safe = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "");
+        cb(null, Date.now() + "-" + safe);
     }
 });
 
-const fileFilter = (req, file, cb) => {
-    const t = (file.mimetype || "").toLowerCase();
-    const validTypes = ["video/", "audio/", "image/"];
-    const isValidType = validTypes.some(type => t.startsWith(type));
-    
-    if (isValidType) {
+const fileFilter = (_req, file, cb) => {
+    const t = file.mimetype || "";
+    if (
+        t.startsWith("video/") ||
+        t.startsWith("audio/") ||
+        t.startsWith("image/")
+    ) {
         cb(null, true);
     } else {
-        cb(new Error("Formato não permitido. Envie apenas imagem, vídeo ou áudio."), false);
+        cb(new Error("Envie apenas imagem, vídeo ou áudio."), false);
     }
 };
 
-const upload = multer({ 
-    storage, 
-    fileFilter, 
-    limits: { fileSize: 300 * 1024 * 1024 } // 300MB
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 300 * 1024 * 1024 }
 });
 
-app.use(express.static(publicDir));
-app.use("/uploads", express.static(uploadsDir));
 
+app.use(express.static(publicDir));
+app.use("/uploads", (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    next();
+}, express.static(uploadsDir));
+
+
+// ============================================================
+// UPLOAD DE IMAGEM / VÍDEO / ÁUDIO
+// ============================================================
 app.post("/upload", (req, res) => {
     upload.single("media")(req, res, (err) => {
         if (err) {
-            if (err.code === 'LIMIT_FILE_SIZE') {
-                return res.status(413).json({ error: "Arquivo muito grande. O limite é 300MB." });
-            }
-            return res.status(400).json({ error: err.message || "Erro no upload." });
+            return res.status(400).json({ error: err.message });
         }
-        if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado." });
-        
-        const forwardedProto = String(req.headers["x-forwarded-proto"] || " ").split(",")[0].trim();
+        if (!req.file) {
+            return res.status(400).json({ error: "Nenhum arquivo enviado." });
+        }
+        const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
         const proto = forwardedProto || req.protocol || "http";
         const base = `${proto}://${req.get("host")}`;
-        
         res.json({
             url: `${base}/uploads/${req.file.filename}`,
             type: req.file.mimetype,
@@ -81,222 +85,400 @@ app.post("/upload", (req, res) => {
     });
 });
 
+
 // ============================================================
 // HTTP + WEBSOCKET
 // ============================================================
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 * 1024 }); // 16MB limite de payload WS
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 * 1024 });
+
+
+// ============================================================
+// SALAS
+// ============================================================
 const rooms = new Map();
 
 function getRoom(id) {
     if (!rooms.has(id)) {
         rooms.set(id, {
-            id, host: null, clients: new Set(),
-            state: { media: { type: "clear" }, screenOwner: null }
+            id,
+            host: null,
+            clients: new Set(),
+            state: {
+                dayMode: "day",
+                media: { type: "clear" },
+                screenOwner: null
+            }
         });
     }
     return rooms.get(id);
 }
 
+
+// ============================================================
+// ENVIAR
+// ============================================================
 function send(ws, data) {
-    try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(data)); } catch (e) {}
+    try {
+        if (ws && ws.readyState === 1) {
+            ws.send(JSON.stringify(data));
+        }
+    } catch (e) {}
 }
 
+
+// ============================================================
+// BROADCAST
+// ============================================================
 function broadcast(room, data, except = null) {
     for (const client of room.clients) {
         if (client !== except) send(client, data);
     }
 }
 
+
+// ============================================================
+// LISTA DOS JOGADORES
+// ============================================================
 function getPlayers(room, except = null) {
-    return [...room.clients].filter(c => c !== except).map(c => ({ playerId: c.pid, name: c.name }));
+    return [...room.clients]
+        .filter(c => c !== except)
+        .map(c => ({
+            playerId: c.pid,
+            name: c.name
+        }));
 }
 
+
 // ============================================================
-// WEBSOCKET LOGIC
+// WEBSOCKET
 // ============================================================
 wss.on("connection", ws => {
-    ws.room = null; ws.name = "Player"; ws.pid = null;
+    ws.room = null;
+    ws.name = "Player";
+    ws.pid = null;
 
+
+    // ========================================================
+    // RECEBER MENSAGEM
+    // ========================================================
     ws.on("message", raw => {
         let msg;
-        try { msg = JSON.parse(raw); } catch (e) { return; }
+        try {
+            msg = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
 
-        // ===== JOIN =====
+
+        // ====================================================
+        // JOIN
+        // ====================================================
         if (msg.kind === "join") {
-            const roomId = String(msg.room || "Sala-Publica").slice(0, 40);
+            const roomId = String(msg.room || "Praca-VIP").slice(0, 40);
             const room = getRoom(roomId);
+
             ws.room = room;
             ws.name = String(msg.name || "Player").slice(0, 20);
             ws.pid = String(msg.playerId || "").slice(0, 40);
+
             room.clients.add(ws);
-            
-            if (!room.host || msg.creator === true) {
+
+            if (!room.host) {
                 room.host = ws;
             }
 
-            send(ws, { 
-                kind: "roomState", 
-                host: room.host === ws, 
-                state: room.state, 
-                playerCount: room.clients.size, 
-                players: getPlayers(room, ws) 
+            // Envia estado completo para quem entrou
+            send(ws, {
+                kind: "roomState",
+                host: room.host === ws,
+                state: room.state,
+                playerCount: room.clients.size,
+                players: getPlayers(room, ws)
             });
-            
+
             if (room.state.screenOwner && room.state.screenOwner !== ws.pid) {
                 const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
                 if (owner) send(owner, { kind: "rtc", action: "screenRequest", from: ws.pid, to: room.state.screenOwner });
             }
-            broadcast(room, { kind: "playerJoined", name: ws.name, playerId: ws.pid }, ws);
+
+            // Avisa os outros
+            broadcast(room, {
+                kind: "playerJoined",
+                name: ws.name,
+                playerId: ws.pid
+            }, ws);
+
             return;
         }
 
+
+        // ====================================================
+        // IGNORAR SE NÃO ESTÁ EM UMA SALA
+        // ====================================================
         const room = ws.room;
         if (!room) return;
 
-        // ===== CLAIM HOST =====
-        if (msg.kind === "claimHost") {
-            if (!room.host || room.host === ws) {
-                room.host = ws;
-                broadcast(room, { kind: "hostChanged", playerId: ws.pid, name: ws.name, host: true });
-                for (const client of room.clients) {
-                    send(client, { kind: "roomState", host: client === ws, state: room.state, playerCount: room.clients.size, players: getPlayers(room, client) });
-                }
-            }
-            return;
-        }
 
-        // ===== PING =====
-        if (msg.kind === "ping") {
-            send(ws, { kind: "pong", timestamp: Date.now() });
-            return;
-        }
-
-        // ===== MEDIA =====
+        // ====================================================
+        // MÍDIA
+        // ====================================================
         if (msg.kind === "media") {
             if (ws !== room.host) return;
             room.state.media = msg.state || { type: "clear" };
-            if (room.state.media.type === "screen" && room.state.media.active) {
-                room.state.screenOwner = ws.pid;
-            } else if (room.state.media.type === "clear" && room.state.screenOwner === ws.pid) {
-                room.state.screenOwner = null;
-            }
+            if (room.state.media.type === "screen" && room.state.media.active) room.state.screenOwner = ws.pid;
+            else if (room.state.media.type === "clear" && room.state.screenOwner === ws.pid) room.state.screenOwner = null;
             broadcast(room, { kind: "media", state: room.state.media });
             return;
         }
 
-        // ===== CHAT =====
+
+        // ====================================================
+        // RECUPERAR HOST
+        // ====================================================
+        if (msg.kind === "claimHost") {
+            if (!room.host || !room.clients.has(room.host)) {
+                room.host = ws;
+                send(ws, { kind: "roomState", host: true, state: room.state, playerCount: room.clients.size, players: getPlayers(room, ws) });
+            }
+            return;
+        }
+
+
+        // ====================================================
+        // DIA / NOITE
+        // ====================================================
+        if (msg.kind === "dayNight") {
+            if (ws !== room.host) return;
+
+            room.state.dayMode = msg.mode === "night" ? "night" : "day";
+
+            broadcast(room, {
+                kind: "dayNight",
+                mode: room.state.dayMode
+            });
+            return;
+        }
+
+
+        // ====================================================
+        // CHAT
+        // ====================================================
         if (msg.kind === "chat") {
-            const text = String(msg.text || "").slice(0, 300);
-            const media = msg.media && typeof msg.media === "object" ? {
-                type: String(msg.media.type || "").slice(0, 20),
-                url: String(msg.media.url || "").slice(0, 1000),
-                duration: Number.isFinite(Number(msg.media.duration)) ? Number(msg.media.duration) : undefined
-            } : undefined;
+            const text = String(msg.text || "").slice(0, 200);
+            if (!text) return;
 
-            if (!text && !media?.url) return;
 
-            const payload = {
-                kind: "chat",
-                name: ws.name,
-                text,
-                pid: ws.pid,
-                media
-            };
-
+            // ------------------------------------------------
+            // MENSAGEM PRIVADA
+            // ------------------------------------------------
             if (msg.to) {
                 let target = null;
                 for (const client of room.clients) {
-                    if (client.name === String(msg.to).slice(0, 20) || client.pid === String(msg.to).slice(0, 40)) {
+                    if (
+                        client.name === msg.to ||
+                        client.pid === String(msg.to)
+                    ) {
                         target = client;
                         break;
                     }
                 }
+
                 if (target) {
-                    payload.to = String(msg.to).slice(0, 40);
-                    send(target, payload);
+                    // Envia apenas para o destinatário
+                    // (o remetente já adicionou a mensagem localmente)
+                    send(target, {
+                        kind: "chat",
+                        name: ws.name,
+                        text: text,
+                        pid: ws.pid,
+                        to: msg.to
+                    });
                 }
                 return;
             }
 
-            broadcast(room, payload, ws);
+
+            // ------------------------------------------------
+            // CHAT PÚBLICO (sem eco pro remetente)
+            // ------------------------------------------------
+            broadcast(room, {
+                kind: "chat",
+                name: ws.name,
+                text: text,
+                pid: ws.pid
+            }, ws);  // 👈 exceto quem enviou
             return;
         }
 
-        // ===== REAÇÕES =====
+
+        // ====================================================
+        // REAÇÕES
+        // ====================================================
         if (msg.kind === "reaction") {
             const emoji = String(msg.emoji || "").slice(0, 8);
             if (!emoji) return;
-            broadcast(room, { kind: "reaction", playerId: ws.pid, name: ws.name, emoji }, ws);
+
+            broadcast(room, {
+                kind: "reaction",
+                playerId: ws.pid,
+                name: ws.name,
+                emoji: emoji
+            }, ws);
             return;
         }
 
-        // ===== EMOTES =====
+
+        // ====================================================
+        // POSIÇÃO
+        // ====================================================
+        if (msg.kind === "position") {
+            broadcast(room, {
+                kind: "position",
+                playerId: ws.pid,
+                name: ws.name,
+                x: Number(msg.x) || 0,
+                y: Number(msg.y) || 0,
+                z: Number(msg.z) || 0,
+                ry: Number(msg.ry) || 0
+            }, ws);
+            return;
+        }
+
+
+        // ====================================================
+        // EMOTE
+        // ====================================================
         if (msg.kind === "emote") {
             const id = String(msg.id || "").slice(0, 40);
-            const label = String(msg.label || "").slice(0, 30);
             if (!id) return;
-            broadcast(room, { kind: "emote", playerId: ws.pid, id, label, name: ws.name }, ws);
+
+            broadcast(room, {
+                kind: "emote",
+                playerId: ws.pid,
+                id: id,
+                name: ws.name
+            }, ws);
             return;
         }
 
-        // ===== RTC SIGNALING (tela ao vivo) =====
+
+        // ====================================================
+        // WEBRTC (sinalização)
+        // ====================================================
         if (msg.kind === "rtc") {
-            const action = String(msg.action || "");
+            const action = msg.action;
+
+
+            // ----------------------------------------------
+            // Começou compartilhamento de tela
+            // ----------------------------------------------
             if (action === "screenStarted") {
                 room.state.screenOwner = ws.pid;
-                broadcast(room, { kind:"rtc", action:"screenStarted", from:ws.pid, name:ws.name }, ws);
+
+                broadcast(room, {
+                    kind: "rtc",
+                    action: "screenStarted",
+                    from: ws.pid,
+                    name: ws.name
+                }, ws);
                 return;
             }
+
+
+            // ----------------------------------------------
+            // Parou compartilhamento de tela
+            // ----------------------------------------------
             if (action === "screenStopped") {
-                if (room.state.screenOwner === ws.pid) room.state.screenOwner = null;
-                broadcast(room, { kind:"rtc", action:"screenStopped", from:ws.pid, name:ws.name }, ws);
+                if (room.state.screenOwner === ws.pid) {
+                    room.state.screenOwner = null;
+                }
+
+                broadcast(room, {
+                    kind: "rtc",
+                    action: "screenStopped",
+                    from: ws.pid,
+                    name: ws.name
+                }, ws);
                 return;
             }
+
+
+            // ----------------------------------------------
+            // Offer / Answer / ICE Candidate
+            // ----------------------------------------------
             const targetId = String(msg.to || "");
             if (!targetId) return;
-            const target = [...room.clients].find(c => c.pid === targetId);
-            if (!target) return;
-            send(target, {
-                kind:"rtc",
-                action,
-                from:ws.pid,
-                to:targetId,
-                description:msg.description || null,
-                candidate:msg.candidate || null
-            });
+
+            for (const client of room.clients) {
+                if (client.pid === targetId) {
+                    send(client, {
+                        ...msg,
+                        from: ws.pid
+                    });
+                    break;
+                }
+            }
             return;
         }
     });
 
+
+    // ========================================================
+    // PLAYER SAIU
+    // ========================================================
     ws.on("close", () => {
         const room = ws.room;
         if (!room) return;
+
         room.clients.delete(ws);
-        
+
+
+        // Se estava compartilhando tela
         if (room.state.screenOwner === ws.pid) {
             room.state.screenOwner = null;
-            broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid });
+            broadcast(room, {
+                kind: "rtc",
+                action: "screenStopped",
+                from: ws.pid
+            });
         }
-        
-        broadcast(room, { kind: "playerLeft", name: ws.name, playerId: ws.pid });
-        
-        // Transferência automática de host
+
+
+        // Avisa que saiu
+        broadcast(room, {
+            kind: "playerLeft",
+            name: ws.name,
+            playerId: ws.pid
+        });
+
+
+        // Troca de host
         if (room.host === ws) {
             room.host = room.clients.values().next().value || null;
             if (room.host) {
-                broadcast(room, { kind: "hostChanged", playerId: room.host.pid, name: room.host.name, host: true });
-                for (const client of room.clients) {
-                    send(client, { kind: "roomState", host: client === room.host, state: room.state, playerCount: room.clients.size, players: getPlayers(room, client) });
-                }
+                send(room.host, {
+                    kind: "roomState",
+                    host: true,
+                    state: room.state,
+                    playerCount: room.clients.size,
+                    players: getPlayers(room, room.host)
+                });
             }
         }
-        
-        if (room.clients.size === 0) rooms.delete(room.id);
+
+
+        // Apaga sala vazia
+        if (room.clients.size === 0) {
+            rooms.delete(room.id);
+        }
     });
 });
 
+
+// ============================================================
+// INICIAR SERVIDOR
+// ============================================================
 server.listen(PORT, () => {
-    console.log(`🎬 PartyBlox Server online em http://localhost:${PORT}`);
-    console.log(`📡 WebSocket pronto em ws://localhost:${PORT}`);
+    console.log(`OpenVerse online em http://localhost:${PORT}`);
 });
