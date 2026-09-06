@@ -221,27 +221,31 @@ wss.on("connection", ws => {
             return;
         }
 
-        // ===== RTC =====
+        // ===== RTC SIGNALING (tela ao vivo) =====
         if (msg.kind === "rtc") {
-            const action = msg.action;
+            const action = String(msg.action || "");
             if (action === "screenStarted") {
                 room.state.screenOwner = ws.pid;
-                broadcast(room, { kind: "rtc", action: "screenStarted", from: ws.pid, name: ws.name }, ws);
+                broadcast(room, { kind:"rtc", action:"screenStarted", from:ws.pid, name:ws.name }, ws);
                 return;
             }
             if (action === "screenStopped") {
                 if (room.state.screenOwner === ws.pid) room.state.screenOwner = null;
-                broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid, name: ws.name }, ws);
+                broadcast(room, { kind:"rtc", action:"screenStopped", from:ws.pid, name:ws.name }, ws);
                 return;
             }
             const targetId = String(msg.to || "");
             if (!targetId) return;
-            for (const client of room.clients) {
-                if (client.pid === targetId) {
-                    send(client, { ...msg, from: ws.pid });
-                    break;
-                }
-            }
+            const target = [...room.clients].find(c => c.pid === targetId);
+            if (!target) return;
+            send(target, {
+                kind:"rtc",
+                action,
+                from:ws.pid,
+                to:targetId,
+                description:msg.description || null,
+                candidate:msg.candidate || null
+            });
             return;
         }
     });
