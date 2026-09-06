@@ -9,7 +9,11 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const publicDir = __dirname;
 const uploadsDir = path.join(publicDir, "uploads");
-fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Garante que a pasta de uploads existe
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ============================================================
 // CORS
@@ -23,36 +27,46 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// UPLOADS
+// UPLOADS (Multer)
 // ============================================================
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadsDir),
     filename: (req, file, cb) => {
-        const safe = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "");
-        cb(null, Date.now() + "-" + safe);
+        // Sanitiza o nome do arquivo para evitar caracteres maliciosos
+        const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "");
+        cb(null, Date.now() + "-" + safeName);
     }
 });
 
-const fileFilter = (_req, file, cb) => {
-    const t = file.mimetype || "";
-    if (t.startsWith("video/") || t.startsWith("audio/") || t.startsWith("image/")) {
+const fileFilter = (req, file, cb) => {
+    const t = (file.mimetype || "").toLowerCase();
+    const validTypes = ["video/", "audio/", "image/"];
+    const isValidType = validTypes.some(type => t.startsWith(type));
+    
+    if (isValidType) {
         cb(null, true);
     } else {
-        cb(new Error("Envie apenas imagem, vídeo ou áudio."), false);
+        cb(new Error("Formato não permitido. Envie apenas imagem, vídeo ou áudio."), false);
     }
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 300 * 1024 * 1024 } });
+const upload = multer({ 
+    storage, 
+    fileFilter, 
+    limits: { fileSize: 300 * 1024 * 1024 } // 300MB
+});
 
 app.use(express.static(publicDir));
-app.use("/uploads", (req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    next();
-}, express.static(uploadsDir));
+app.use("/uploads", express.static(uploadsDir));
 
 app.post("/upload", (req, res) => {
     upload.single("media")(req, res, (err) => {
-        if (err) return res.status(400).json({ error: err.message });
+        if (err) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(413).json({ error: "Arquivo muito grande. O limite é 300MB." });
+            }
+            return res.status(400).json({ error: err.message || "Erro no upload." });
+        }
         if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado." });
         
         const forwardedProto = String(req.headers["x-forwarded-proto"] || " ").split(",")[0].trim();
@@ -71,7 +85,7 @@ app.post("/upload", (req, res) => {
 // HTTP + WEBSOCKET
 // ============================================================
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 * 1024 });
+const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 * 1024 }); // 16MB limite de payload WS
 const rooms = new Map();
 
 function getRoom(id) {
@@ -117,7 +131,6 @@ wss.on("connection", ws => {
             ws.pid = String(msg.playerId || "").slice(0, 40);
             room.clients.add(ws);
             
-            // Se é criador e não tem host, vira host
             if (!room.host || msg.creator === true) {
                 room.host = ws;
             }
@@ -130,7 +143,6 @@ wss.on("connection", ws => {
                 players: getPlayers(room, ws) 
             });
             
-            // Avisar o dono da tela (se houver) sobre o novo cliente
             if (room.state.screenOwner && room.state.screenOwner !== ws.pid) {
                 const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
                 if (owner) send(owner, { kind: "rtc", action: "screenRequest", from: ws.pid, to: room.state.screenOwner });
@@ -142,40 +154,25 @@ wss.on("connection", ws => {
         const room = ws.room;
         if (!room) return;
 
-        // ===== CLAIM HOST (NOVO!) =====
-        // Quando o host sai, um convidado pode se tornar host
+        // ===== CLAIM HOST =====
         if (msg.kind === "claimHost") {
-            // Só permite se não houver host atual OU se o host atual for o próprio cliente
             if (!room.host || room.host === ws) {
                 room.host = ws;
-                // Notifica todos que o host mudou
-                broadcast(room, { 
-                    kind: "hostChanged", 
-                    playerId: ws.pid, 
-                    name: ws.name,
-                    host: true 
-                });
-                // Reenvia roomState para todos atualizar
+                broadcast(room, { kind: "hostChanged", playerId: ws.pid, name: ws.name, host: true });
                 for (const client of room.clients) {
-                    send(client, { 
-                        kind: "roomState", 
-                        host: client === ws, 
-                        state: room.state, 
-                        playerCount: room.clients.size, 
-                        players: getPlayers(room, client) 
-                    });
+                    send(client, { kind: "roomState", host: client === ws, state: room.state, playerCount: room.clients.size, players: getPlayers(room, client) });
                 }
             }
             return;
         }
 
-        // ===== PING (mantém conexão viva) =====
+        // ===== PING =====
         if (msg.kind === "ping") {
             send(ws, { kind: "pong", timestamp: Date.now() });
             return;
         }
 
-        // ===== MEDIA (só o host pode mudar) =====
+        // ===== MEDIA =====
         if (msg.kind === "media") {
             if (ws !== room.host) return;
             room.state.media = msg.state || { type: "clear" };
@@ -193,7 +190,6 @@ wss.on("connection", ws => {
             const text = String(msg.text || "").slice(0, 300);
             if (!text) return;
             if (msg.to) {
-                // Mensagem privada
                 let target = null;
                 for (const client of room.clients) {
                     if (client.name === msg.to || client.pid === String(msg.to)) { 
@@ -225,7 +221,7 @@ wss.on("connection", ws => {
             return;
         }
 
-        // ===== RTC (WebRTC para screen share P2P) =====
+        // ===== RTC =====
         if (msg.kind === "rtc") {
             const action = msg.action;
             if (action === "screenStarted") {
@@ -238,7 +234,6 @@ wss.on("connection", ws => {
                 broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid, name: ws.name }, ws);
                 return;
             }
-            // Encaminhar mensagens P2P (offer, answer, candidate, screenRequest)
             const targetId = String(msg.to || "");
             if (!targetId) return;
             for (const client of room.clients) {
@@ -256,7 +251,6 @@ wss.on("connection", ws => {
         if (!room) return;
         room.clients.delete(ws);
         
-        // Se era o dono da tela, limpar
         if (room.state.screenOwner === ws.pid) {
             room.state.screenOwner = null;
             broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid });
@@ -264,26 +258,13 @@ wss.on("connection", ws => {
         
         broadcast(room, { kind: "playerLeft", name: ws.name, playerId: ws.pid });
         
-        // Transferência de host automática
+        // Transferência automática de host
         if (room.host === ws) {
             room.host = room.clients.values().next().value || null;
             if (room.host) {
-                // Notifica todos sobre o novo host
-                broadcast(room, { 
-                    kind: "hostChanged", 
-                    playerId: room.host.pid, 
-                    name: room.host.name,
-                    host: true 
-                });
-                // Reenvia roomState para cada cliente
+                broadcast(room, { kind: "hostChanged", playerId: room.host.pid, name: room.host.name, host: true });
                 for (const client of room.clients) {
-                    send(client, { 
-                        kind: "roomState", 
-                        host: client === room.host, 
-                        state: room.state, 
-                        playerCount: room.clients.size, 
-                        players: getPlayers(room, client) 
-                    });
+                    send(client, { kind: "roomState", host: client === room.host, state: room.state, playerCount: room.clients.size, players: getPlayers(room, client) });
                 }
             }
         }
@@ -293,6 +274,6 @@ wss.on("connection", ws => {
 });
 
 server.listen(PORT, () => {
-    console.log(`🎬 Watch Party Server online em http://localhost:${PORT}`);
-    console.log(`📡 WebSocket pronto para conexões`);
+    console.log(`🎬 PartyBlox Server online em http://localhost:${PORT}`);
+    console.log(`📡 WebSocket pronto em ws://localhost:${PORT}`);
 });
