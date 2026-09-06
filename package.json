@@ -1,13 +1,17 @@
 {
-  "name": "watch-party",
+  "name": "partyblox-server",
   "version": "1.0.0",
+  "description": "Servidor de salas PartyBlox",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "ws": "^8.14.2",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
