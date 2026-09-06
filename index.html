@@ -390,6 +390,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 
+// ⚠️ CONFIGURAÇÃO IMPORTANTE: Coloque aqui a URL do seu backend no Render
+const BACKEND_URL = 'https://SEU-APP.onrender.com'; // Troque pelo seu URL do Render
+
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
@@ -442,9 +445,10 @@ setTimeout(()=>{try{$('qrImg').src=DONATE_CONFIG.qrImageUrl;}catch(_){}},500);
 
 function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-').slice(0,30);}
 function wsUrl(){
-    const p = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return p + '//' + location.host;
-  }
+    const wsProtocol = BACKEND_URL.startsWith('https://') ? 'wss://' : 'ws://';
+    const host = BACKEND_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return wsProtocol + host;
+}
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
 
 function createRoom(){
@@ -661,7 +665,7 @@ async function uploadChatMedia(media){
     const fd=new FormData();
     fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
     
-    const uploadUrl=new URL('/upload',location.origin).href;
+    const uploadUrl=BACKEND_URL + '/upload';
     const res=await fetch(uploadUrl,{method:'POST',body:fd,cache:'no-store'});
     const contentType=(res.headers.get('content-type')||'').toLowerCase();
     let data=null;
@@ -672,7 +676,7 @@ async function uploadChatMedia(media){
       throw new Error('O servidor respondeu HTML/texto ('+res.status+'). O server.js publicado não está com a rota /upload correta.');
     }
     if(!res.ok||!data||!data.url)throw new Error((data&&data.error)||('Upload falhou ('+res.status+')'));
-    return{type:media.type,url:new URL(data.url,uploadUrl).href,duration:media.duration};
+    return{type:media.type,url:new URL(data.url,BACKEND_URL).href,duration:media.duration};
   }
   return media;
 }
@@ -1075,7 +1079,7 @@ function sendLocalState(){
   wsSend({kind:'media',state:{type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||''}});
 }
 
-// Upload usa o mesmo servidor desta página. YouTube e compartilhamento de tela não foram alterados.
+// Upload usa o servidor Render. YouTube e compartilhamento de tela não foram alterados.
 async function handleFileUpload(){
   if(!isHost) return toast('👑 Só o host pode enviar');
   const f = $('fileInput').files && $('fileInput').files[0];
@@ -1095,7 +1099,7 @@ async function handleFileUpload(){
     const fd = new FormData();
     fd.append('media', f, f.name);
 
-    const uploadUrl = new URL('/upload', location.origin).href;
+    const uploadUrl = BACKEND_URL + '/upload';
     const res = await fetch(uploadUrl, { method: 'POST', body: fd, cache: 'no-store' });
     const contentType = (res.headers.get('content-type') || '').toLowerCase();
     let data = null;
@@ -1108,7 +1112,7 @@ async function handleFileUpload(){
     if(!res.ok || !data || !data.url) throw new Error((data&&data.error)||('Upload falhou ('+res.status+')'));
 
     const ty = t.startsWith('image/') ? 'image' : t.startsWith('video/') ? 'video' : 'audio';
-    const state = { type: ty, url: new URL(data.url, uploadUrl).href, name: f.name, mime: t };
+    const state = { type: ty, url: new URL(data.url, BACKEND_URL).href, name: f.name, mime: t };
     
     applyMediaState(state);
     wsSend({ kind: 'media', state: state });
