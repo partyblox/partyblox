@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PartyBlox</title>
 <script src="https://www.youtube.com/iframe_api"></script>
 <style>
@@ -36,7 +36,7 @@ body{overflow:hidden;height:100vh;background:linear-gradient(135deg,#1a1a2e,#162
 .tb-btn.host{background:rgba(253,203,110,.25);border-color:#fdcb6e;}
 .tb-btn.donate{background:linear-gradient(90deg,#fd79a8,#e84393);border-color:#fd79a8;animation:pulseBtn 3s infinite;}
 @keyframes pulseBtn{0%,100%{box-shadow:0 0 0 0 rgba(253,121,168,.4);}50%{box-shadow:0 0 0 8px rgba(253,121,168,0);}}
-.main{flex:1;display:flex;overflow:hidden;position:relative;}
+.main{flex:1;display:flex;overflow:hidden;position:relative;flex-wrap:nowrap;}
 .video-side{flex:1;display:flex;flex-direction:column;background:#000;position:relative;min-width:280px;}
 .video-container{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
 #ytPlayer,#localVideo,#screenVideo,#imageHolder{width:100%;height:100%;object-fit:contain;display:block;background:#000;}
@@ -160,8 +160,8 @@ body{overflow:hidden;height:100vh;background:linear-gradient(135deg,#1a1a2e,#162
 .donate-footer .stat-lbl{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;}
 .donate-footer .thanks{font-size:12px;color:rgba(255,255,255,.7);font-style:italic;}
 
-/* Layout em coluna apenas no modo retrato (celular em pé) ou telas muito pequenas (< 600px) */
-@media (max-width: 900px) and (orientation: portrait), (max-width: 600px) {
+/* ===== LAYOUT MOBILE RETRATO (Celular em pé) ===== */
+@media (max-width: 768px) and (orientation: portrait) {
   .main { flex-direction: column; }
   .video-side { min-height: 50vh; min-width: 100%; }
   .chat-side { width: 100% !important; min-width: 100%; flex: 1; max-width: none; }
@@ -172,6 +172,83 @@ body{overflow:hidden;height:100vh;background:linear-gradient(135deg,#1a1a2e,#162
   .topbar { flex-wrap: wrap; height: auto; padding: 10px 14px; }
   .topbar-right { width: 100%; justify-content: flex-end; margin-top: 6px; }
   .tiers { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== LAYOUT MOBILE PAISAGEM (Celular deitado) ===== */
+@media (orientation: landscape) and (max-height: 600px) {
+  .main {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  .video-side {
+    flex: 1 !important;
+    min-width: 50% !important;
+    min-height: 100% !important;
+  }
+  .chat-side {
+    width: 45% !important;
+    min-width: 220px !important;
+    max-width: 400px !important;
+    flex-shrink: 0 !important;
+  }
+  .divider {
+    width: 4px !important;
+    height: 100% !important;
+    cursor: col-resize !important;
+  }
+  .divider::before {
+    width: 4px !important;
+    height: 30px !important;
+  }
+  
+  /* Compacta o banner de publicidade no modo paisagem para não esmagar o chat */
+  .ad-banner {
+    padding: 6px 10px !important;
+    border-bottom-width: 1px !important;
+  }
+  .ad-banner::before {
+    font-size: 8px !important;
+    top: 2px !important;
+    left: 6px !important;
+  }
+  .ad-banner .ad-content {
+    gap: 8px !important;
+    padding-top: 2px !important;
+  }
+  .ad-banner .ad-icon {
+    font-size: 20px !important;
+  }
+  .ad-banner .ad-title {
+    font-size: 11px !important;
+    margin-bottom: 0 !important;
+  }
+  .ad-banner .ad-desc {
+    display: none !important; /* Esconde a descrição para economizar altura */
+  }
+  .ad-banner .ad-cta {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* Compacta o cabeçalho e abas do chat */
+  .chat-head { height: 36px !important; padding: 0 10px !important; }
+  .chat-head h3 { font-size: 13px !important; }
+  .chat-tabs { padding: 4px !important; }
+  .c-tab { padding: 5px 4px !important; font-size: 11px !important; }
+  
+  /* Compacta a área de digitação */
+  .chat-in { padding: 6px !important; }
+  .chat-in input { padding: 8px 10px !important; font-size: 12px !important; }
+  .chat-in button { padding: 8px 10px !important; }
+  .emo-btn { width: 32px !important; height: 32px !important; font-size: 15px !important; }
+  
+  /* Compacta controles de vídeo se aparecerem */
+  .player-controls { padding: 10px !important; }
+  .ctrl-row { gap: 6px !important; }
+  .cbtn { width: 32px !important; height: 32px !important; font-size: 14px !important; }
+  .cbtn.play { width: 38px !important; height: 38px !important; font-size: 16px !important; }
+  .time { font-size: 11px !important; min-width: 80px !important; }
+  .vol-slider { width: 60px !important; }
 }
 </style>
 </head>
