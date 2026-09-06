@@ -270,8 +270,12 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
           <div class="ctrl-row">
             <div class="ctrl-l">
               <button class="cbtn play" id="playBtn" onclick="togglePlayPause()">▶️</button>
-              <button class="cbtn" onclick="skip(-10)" title="Voltar 10s">⏮️</button>
-              <button class="cbtn" onclick="skip(10)" title="Avançar 10s">⏭️</button>
+              <button class="cbtn" onclick="skip(-10)" title="Voltar 10s">⏮️ 10</button>
+              <button class="cbtn" onclick="skip(10)" title="Avançar 10s">10 ⏭️</button>
+              <button class="cbtn" onclick="skip(-30)" title="Voltar 30s">↩️ 30</button>
+              <button class="cbtn" onclick="skip(30)" title="Avançar 30s">30 ↪️</button>
+              <button class="cbtn" onclick="skip(-60)" title="Voltar 60s">⏪ 60</button>
+              <button class="cbtn" onclick="skip(60)" title="Avançar 60s">60 ⏩</button>
               <div class="time"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></div>
             </div>
             <div class="ctrl-r">
