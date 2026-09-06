@@ -1,39 +1,32 @@
-# OpenVerse Party — Telão + Emotes v2
+PARTYBLOX - VERSÃO CORRIGIDA
 
-## ✨ O que foi incluído
+Arquivos:
+- index.html
+- server.js
+- package.json
+- render.yaml
 
-### 🎭 Emotes (do Saturnalia)
-| Emote | Emoji |
-|---|---|
-| Acenar | 👋 |
-| Dançar | 💃 |
-| Girar | 🌀 |
-| Pulo | 🦘 |
-| Flex | 💪 |
-| Rir | 😂 |
-| Palmas | 👏 |
-| Saudar | 🙇 |
-| Sentar | 🪑 |
-| Dormir | 😴 |
-| Robô | 🤖 |
-| Super | 🦸 |
-| Moonwalk | 🌙 |
-| Acrobacia | 🤸 |
-| Namastê | 🙏 |
-| Coração | 💖 |
+LOCALHOST:
+1. Instale Node.js.
+2. Abra o terminal nesta pasta.
+3. Rode: npm install
+4. Rode: npm start
+5. Abra: http://localhost:3000
 
-### 🎬 YouTube no Telão
-- Cola o link → player oficial do YouTube em cada navegador
-- Play, Pausa, -10s, +10s sincronizados via WebSocket
-- Host = relógio de referência
-- Quem entra depois recebe o vídeo + posição atual
+RENDER:
+- Suba esta pasta para seu serviço Node.
+- O render.yaml usa npm install e npm start.
 
-### 🌐 Mantém tudo do OpenVerse Party
-- Mundo 3D, avatar personalizável, chat, conversa privada
-- Upload de arquivo, dia/noite
-- Navegador interno, reações
+CORREÇÕES:
+- Link do YouTube com watch, youtu.be, shorts, embed e live.
+- YouTube sincronizado pela sala.
+- Upload de imagem, vídeo e áudio pelo servidor, sem mandar base64 pelo WebSocket.
+- Compartilhamento de tela por WebRTC entre host e participantes.
+- Sinalização WebRTC pelo WebSocket.
+- Reconexão e entrada de novos participantes durante o compartilhamento.
+- Limpar tela encerra corretamente a transmissão.
 
-## 🚀 Rodar
-```bash
-npm install
-npm start
+OBSERVAÇÃO:
+- Alguns vídeos do YouTube não permitem incorporação; nesses casos o próprio YouTube bloqueia o player.
+- Navegadores podem exigir um clique do participante para liberar áudio automático.
+- Compartilhamento de tela precisa de HTTPS em produção; localhost é permitido pelos navegadores.
