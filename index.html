@@ -76,6 +76,8 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .divider::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:40px;background:rgba(255,255,255,.3);border-radius:2px;}
 .divider:hover::before{background:#2d3436;}
 .chat-side{width:380px;display:flex;flex-direction:column;background:#161620;min-width:260px;max-width:800px;height:100%;}
+.chat-side.hidden{display:none !important;}
+.divider.hidden{display:none !important;}
 .chat-head{height:52px;padding:0 14px;background:#1a1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .chat-head h3{font-size:15px;}
 .chat-tabs{display:flex;gap:4px;background:#161620;padding:6px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
@@ -179,8 +181,9 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 
 @media (max-width: 900px) and (orientation: portrait) {
   .main { flex-direction: column; }
-  .video-side { min-height: 50vh; min-width: 100%; }
-  .chat-side { width: 100% !important; min-width: 100%; flex: 1; max-width: none; }
+  .video-side { min-height: 50vh; min-width: 100%; flex: 1; }
+  .chat-side { width: 100% !important; min-width: 100%; flex: 1; max-width: none; transition: all 0.3s ease; }
+  .chat-side.hidden { height: 0 !important; min-height: 0 !important; flex: 0 !important; overflow: hidden; }
   .divider { width: 100%; height: 6px; cursor: row-resize; }
   .divider::before { width: 40px; height: 4px; }
   .host-controls { top: 10px; right: 10px; }
@@ -391,7 +394,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';cle
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 
 // ⚠️ CONFIGURAÇÃO IMPORTANTE: Coloque aqui a URL do seu backend no Render
-const BACKEND_URL = 'https://partyblox.onrender.com'; // Troque pelo seu URL do Render
+const BACKEND_URL = 'https://partyblox.onrender.com';
 
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
@@ -408,7 +411,7 @@ let selectedTierAmount=10;
 
 // Audio Recording
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
-const MAX_AUDIO_DURATION=30; // seconds
+const MAX_AUDIO_DURATION=30;
 
 function openDonate(){$('donateModal').classList.add('active');}
 function closeDonate(){$('donateModal').classList.remove('active');}
@@ -567,14 +570,28 @@ function switchTab(t){
 function toggleChat(){
   const s=$('chatSide');
   const d=$('divider');
-  if(s.style.display==='none'){
-    s.style.display='flex';
-    if(window.innerWidth > 900) d.style.display='block';
+  const isMobile = window.innerWidth <= 900;
+  
+  if(s.classList.contains('hidden')){
+    s.classList.remove('hidden');
+    if(!isMobile) d.classList.remove('hidden');
     $('chatToggleBtn').innerHTML='✕ Fechar';
+    if(isMobile) {
+      s.style.display = 'flex';
+      setTimeout(() => {
+        const chatMsgs = $('chatMsgs');
+        if(chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      }, 100);
+    }
   } else {
-    s.style.display='none';
-    d.style.display='none';
+    s.classList.add('hidden');
+    d.classList.add('hidden');
     $('chatToggleBtn').innerHTML='💬 Chat';
+    if(isMobile) {
+      setTimeout(() => {
+        s.style.display = 'none';
+      }, 300);
+    }
   }
 }
 
@@ -589,7 +606,6 @@ function addChatMsg(author,text,isSystem=false,isPrivate=false,target=null,media
     const tx=document.createElement('div');tx.className='text';tx.textContent=text;
     d.appendChild(a);d.appendChild(tx);
     
-    // Add media if present
     if(media){
       const mediaContainer=document.createElement('div');
       mediaContainer.className='chat-media-container';
@@ -641,7 +657,6 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
   lastSentChat={text:text,ts:Date.now()};
   addChatMsg(myName,text,false,isPrivate,pm,media);
   
-  // Upload media first, then send message
   uploadChatMedia(media).then(uploadedMedia=>{
     wsSend({
       kind:'chat',
@@ -659,7 +674,6 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
 
 async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
-    // Convert blob to base64 for upload
     const response=await fetch(media.url);
     const blob=await response.blob();
     const fd=new FormData();
@@ -703,17 +717,14 @@ async function handleChatMediaUpload(){
   const mediaType=t.startsWith('image/')?'image':'video';
   const mediaUrl=URL.createObjectURL(f);
   
-  // Check if sending private message
   const input=$('chatText');
   const text=input.value.trim();
   const pm=text.match(/^@(\S+)\s+(.+)/);
   
   if(pm){
-    // Private message with media
     sendChatWithMedia(pm[2]||'[Mídia]',{type:mediaType,url:mediaUrl},true,pm[1]);
     input.value='';
   }else{
-    // Public message with media
     sendChatWithMedia(text||'[Mídia]',{type:mediaType,url:mediaUrl});
     input.value='';
   }
@@ -721,7 +732,6 @@ async function handleChatMediaUpload(){
   $('chatMediaInput').value='';
 }
 
-// Audio Recording Functions
 async function toggleAudioRecording(){
   if(!mediaRecorder||mediaRecorder.state==='inactive'){
     startAudioRecording();
@@ -746,7 +756,6 @@ async function startAudioRecording(){
       const audioUrl=URL.createObjectURL(blob);
       const duration=Math.round((Date.now()-recordingStartTime)/1000);
       
-      // Check if sending private message
       const input=$('chatText');
       const text=input.value.trim();
       const pm=text.match(/^@(\S+)\s+(.+)/);
@@ -769,12 +778,10 @@ async function startAudioRecording(){
     $('micBtn').textContent='⏹️';
     $('micBtn').style.background='rgba(231,76,60,.3)';
     
-    // Update timer
     recordingTimer=setInterval(()=>{
       const elapsed=Math.floor((Date.now()-recordingStartTime)/1000);
       $('recordingTimer').textContent=fmtTime(elapsed);
       
-      // Auto-stop at 30 seconds
       if(elapsed>=MAX_AUDIO_DURATION){
         stopAudioRecording();
         toast('⏱️ Gravação limitada a 30 segundos');
@@ -812,12 +819,10 @@ function playChatAudio(url){
   });
 }
 
-// Media Viewer
 function openMediaViewer(media){
   const modal=$('mediaViewerModal');
   const content=$('mediaViewerContent');
   
-  // Clear previous content except close button
   while(content.children.length>1){
     content.removeChild(content.lastChild);
   }
@@ -843,7 +848,6 @@ function closeMediaViewer(event,force=false){
     const modal=$('mediaViewerModal');
     const content=$('mediaViewerContent');
     
-    // Stop any playing videos
     const videos=content.querySelectorAll('video');
     videos.forEach(v=>v.pause());
     
@@ -1079,7 +1083,6 @@ function sendLocalState(){
   wsSend({kind:'media',state:{type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||''}});
 }
 
-// Upload usa o servidor Render. YouTube e compartilhamento de tela não foram alterados.
 async function handleFileUpload(){
   if(!isHost) return toast('👑 Só o host pode enviar');
   const f = $('fileInput').files && $('fileInput').files[0];
@@ -1170,7 +1173,6 @@ async function sendScreenOffer(targetId){
 async function handleRtcMessage(m){
   const from=String(m.from||'');
   if(m.action==='screenRequest'){
-    // Um novo participante entrou enquanto o host já compartilhava a tela.
     if(isHost && screenStream && m.from){
       await sendScreenOffer(String(m.from));
     }
@@ -1250,7 +1252,6 @@ async function toggleScreenShare(){
 
       wsSend({kind:'media',state:{type:'screen',active:true,name:myName}});
 
-      // Cria uma conexão WebRTC separada para cada participante.
       const peers=Array.isArray(window.__partyPlayers)?window.__partyPlayers:[];
       for(const p of peers){
         if(p&&p.playerId)await sendScreenOffer(p.playerId);
@@ -1284,18 +1285,7 @@ function stopScreenShare(){
   wsSend({kind:'media',state:{type:'clear'}});
 }
 
-function toggleHostControls(){
-    const box=document.getElementById('hostCtrls');
-    const hideBtn=document.getElementById('toggleHostControls');
-    const showBtn=document.getElementById('showHostControls');
-    if(!box) return;
-    const hidden=box.style.display!=='none';
-    box.style.display=hidden?'none':'';
-    if(hideBtn) hideBtn.style.display=hidden?'none':'';
-    if(showBtn) showBtn.style.display=hidden?'':'none';
-  }
-
-  function clearMedia(){
+function clearMedia(){
   if(!isHost)return toast('👑 Só o host pode limpar');
   if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
   ytVideoId=null;
@@ -1329,7 +1319,6 @@ function applyMediaState(state){
     $('localVideo').pause();$('localVideo').removeAttribute('src');$('localVideo').style.display='none';
     $('localAudio').pause();$('localAudio').removeAttribute('src');
     $('imageHolder').style.display='none';
-    // Encerra também conexões WebRTC remotas para impedir áudio/vídeo de voltar.
     for(const [id,pc] of rtcPeers){
       try{pc.close()}catch(_){}
       rtcPeers.delete(id);
@@ -1345,7 +1334,6 @@ function applyMediaState(state){
     return;
   }
 
-  // Esconde o que não está sendo usado.
   $('localVideo').style.display='none';
   $('imageHolder').style.display='none';
   $('screenVideo').style.display='none';
@@ -1406,6 +1394,12 @@ function applyMediaState(state){
   }
 }
 
+// Inicializar chat como visível no mobile
+if(window.innerWidth <= 900) {
+  $('chatSide').classList.remove('hidden');
+  $('divider').classList.remove('hidden');
+  $('chatToggleBtn').innerHTML='✕ Fechar';
+}
 
 if(new URLSearchParams(location.search).get('room')){
   $('inRoom').value=new URLSearchParams(location.search).get('room');
