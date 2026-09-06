@@ -126,10 +126,12 @@ wss.on("connection", ws => {
             const text = String(msg.text || "").slice(0, 200); if (!text) return;
             if (msg.to) {
                 let target = [...room.clients].find(c => c.name === msg.to || c.pid === String(msg.to));
-                if (target) send(target, { kind: "chat", name: ws.name, text, pid: ws.pid, to: msg.to });
+                // ✅ CORREÇÃO: Adicionado msg.media
+                if (target) send(target, { kind: "chat", name: ws.name, text, pid: ws.pid, to: msg.to, media: msg.media });
                 return;
             }
-            broadcast(room, { kind: "chat", name: ws.name, text, pid: ws.pid }, ws); return;
+            // ✅ CORREÇÃO: Adicionado msg.media
+            broadcast(room, { kind: "chat", name: ws.name, text, pid: ws.pid, media: msg.media }, ws); return;
         }
         if (msg.kind === "reaction") {
             broadcast(room, { kind: "reaction", playerId: ws.pid, name: ws.name, emoji: String(msg.emoji || "").slice(0, 8) }, ws); return;
