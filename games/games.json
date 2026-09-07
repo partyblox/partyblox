@@ -1,18 +1,3 @@
 {
-  "games": [
-    {
-      "id": "chess",
-      "name": "Xadrez Online",
-      "icon": "♟️",
-      "desc": "Xadrez completo com validação de movimentos",
-      "file": "games/chess.html"
-    },
-    {
-      "id": "checkers",
-      "name": "Damas",
-      "icon": "🔴",
-      "desc": "Damas brasileiras com captura obrigatória",
-      "file": "games/checkers.html"
-    }
-  ]
+  "games": []
 }
