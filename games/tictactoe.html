@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogo da Velha Online</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;user-select:none;}
+body{background:#1a1a2e;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px 12px;overflow-y:auto;}
+h1{margin-bottom:14px;color:#fdcb6e;font-size:22px;text-align:center;}
+
+/* Lobby */
+.lobby{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;width:min(400px,100%);margin-bottom:16px;}
+.lobby h3{font-size:14px;color:#fdcb6e;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.lobby-hint{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:12px;line-height:1.4;}
+.players-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.player-slot{padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;gap:10px;min-height:44px;transition:.2s;}
+.player-slot.filled{background:rgba(253,203,110,.08);border-color:rgba(253,203,110,.3);}
+.player-slot.you{background:rgba(116,185,255,.1);border-color:rgba(116,185,255,.3);}
+.player-slot .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+.player-slot.x-color .avatar{background:linear-gradient(135deg,#fd79a8,#e84393);}
+.player-slot.o-color .avatar{background:linear-gradient(135deg,#74b9ff,#0984e3);}
+.player-slot .name{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.player-slot .name small{font-size:10px;opacity:.6;font-weight:500;margin-left:4px;}
+.player-slot .symbol{padding:3px 8px;background:rgba(253,203,110,.2);border:1px solid #fdcb6e;border-radius:6px;font-size:11px;font-weight:800;color:#fdcb6e;}
+.player-slot.empty{opacity:.4;border-style:dashed;}
+.player-slot.empty .avatar{background:rgba(255,255,255,.1);color:rgba(255,255,255,.3);}
+
+.start-btn{width:100%;padding:12px;background:linear-gradient(90deg,#fd79a8,#fdcb6e);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;}
+.start-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.start-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Game */
+.game-container{display:none;flex-direction:column;align-items:center;width:min(400px,100%);}
+.game-container.active{display:flex;}
+
+.match-header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;}
+.match-player{flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;gap:8px;transition:.2s;}
+.match-player.active-turn{background:rgba(253,203,110,.15);border-color:#fdcb6e;box-shadow:0 0 0 2px rgba(253,203,110,.3);}
+.match-player .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;}
+.match-player.x .avatar{background:linear-gradient(135deg,#fd79a8,#e84393);}
+.match-player.o .avatar{background:linear-gradient(135deg,#74b9ff,#0984e3);}
+.match-player .info{flex:1;min-width:0;}
+.match-player .info .pname{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.match-player .info .sym{font-size:10px;color:rgba(255,255,255,.5);font-weight:600;}
+.match-vs{font-size:14px;font-weight:900;color:#fdcb6e;padding:0 4px;}
+
+.status{margin-bottom:14px;font-size:16px;font-weight:700;min-height:24px;text-align:center;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.04);width:100%;}
+.status.my-turn{background:rgba(0,184,148,.15);color:#55efc4;}
+.status.their-turn{background:rgba(253,121,168,.1);color:#fd79a8;}
+.status.win{background:rgba(253,203,110,.2);color:#fdcb6e;animation:pulse 1s infinite;}
+.status.lose{background:rgba(231,76,60,.15);color:#e74c3c;}
+.status.draw{background:rgba(116,185,255,.15);color:#74b9ff;}
+
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;width:min(300px,90vw);}
+.cell{aspect-ratio:1;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:12px;font-size:clamp(32px,10vw,48px);font-weight:900;display:flex;align-items:center;justify-content:center;transition:.2s;cursor:default;}
+.cell.clickable{cursor:pointer;}
+.cell.clickable:hover:not(.filled){background:rgba(253,203,110,.15);border-color:#fdcb6e;}
+.cell.x{color:#fd79a8;}
+.cell.o{color:#74b9ff;}
+.cell.win{background:rgba(253,203,110,.3);border-color:#fdcb6e;animation:pulse 1s infinite;}
+.cell.last-move{box-shadow:inset 0 0 0 2px rgba(253,203,110,.4);}
+.cell.disabled{opacity:.5;pointer-events:none;}
+@keyframes pulse{50%{transform:scale(1.05);}}
+
+.btn-row{display:flex;gap:8px;width:100%;}
+button.action{flex:1;padding:12px;background:linear-gradient(90deg,#fd79a8,#fdcb6e);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
+button.action:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3);}
+button.action.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);}
+button.action.secondary:hover{background:rgba(255,255,255,.15);}
+button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.score{margin-top:14px;display:flex;gap:16px;font-size:13px;width:100%;}
+.score>div{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px;background:rgba(255,255,255,.04);border-radius:10px;}
+.score .val{font-size:22px;font-weight:800;color:#fdcb6e;}
+.score .lbl{font-size:10px;opacity:.7;margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+
+.waiting{text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;animation:blink 1.5s infinite;}
+@keyframes blink{50%{opacity:.3;}}
+</style>
+</head>
+<body>
+<h1>⭕ Jogo da Velha Online</h1>
+
+<!-- LOBBY -->
+<div class="lobby" id="lobby">
+  <h3>🎮 Sala de Espera</h3>
+  <div class="lobby-hint">Convide alguém da sala para jogar. O jogo inicia quando 2 players entrarem.</div>
+  <div class="players-list" id="playersList"></div>
+  <button class="start-btn" id="startBtn" disabled>Aguardando 2 jogadores...</button>
+</div>
+
+<!-- GAME -->
+<div class="game-container" id="gameContainer">
+  <div class="match-header">
+    <div class="match-player x" id="mpX">
+      <div class="avatar" id="avatarX">?</div>
+      <div class="info">
+        <div class="pname" id="nameX">Jogador X</div>
+        <div class="sym">X · começa</div>
+      </div>
+    </div>
+    <div class="match-vs">VS</div>
+    <div class="match-player o" id="mpO">
+      <div class="avatar" id="avatarO">?</div>
+      <div class="info">
+        <div class="pname" id="nameO">Jogador O</div>
+        <div class="sym">O</div>
+      </div>
+    </div>
+  </div>
+  <div class="status" id="status">Preparando...</div>
+  <div class="board" id="board"></div>
+  <div class="btn-row">
+    <button class="action" id="rematchBtn" disabled>🔄 Jogar de novo</button>
+    <button class="action secondary" id="leaveBtn">🚪 Sair</button>
+  </div>
+  <div class="score">
+    <div><div class="val" id="scoreX">0</div><div class="lbl" id="scoreLblX">X</div></div>
+    <div><div class="val" id="scoreDraw">0</div><div class="lbl">Empate</div></div>
+    <div><div class="val" id="scoreO">0</div><div class="lbl" id="scoreLblO">O</div></div>
+  </div>
+</div>
+
+<script>
+// ===== Config =====
+const GAME_ID='tictactoe';
+const MAX_PLAYERS=2;
+
+// ===== Estado =====
+let me={id:null,name:null,symbol:null};
+let players=[];         // [{id,name,symbol}, ...]  max 2
+let board=Array(9).fill('');
+let currentTurn='X';
+let gameOver=false;
+let lastMove=-1;
+let matchStarted=false;
+let scores={X:0,O:0,D:0};
+let rematchVotes=new Set();
+let rematchRequested=false;
+const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+// ===== Comunicação com PartyBlox =====
+function send(type,data={}){
+  window.parent.postMessage({
+    __game:true,
+    game:GAME_ID,
+    type:type,
+    ...data
+  },'*');
+}
+
+window.addEventListener('message',e=>{
+  const m=e.data;
+  if(!m||!m.__game||m.game!==GAME_ID)return;
+  handleMsg(m);
+});
+
+function handleMsg(m){
+  switch(m.type){
+    case 'hello':
+      me.id=m.myId;me.name=m.myName;
+      send('join',{name:me.name});
+      break;
+    case 'players':
+      players=m.players||[];
+      renderLobby();
+      break;
+    case 'start':
+      startMatch(m.players,m.startSymbol||'X');
+      break;
+    case 'move':
+      applyMove(m.move,m.player);
+      break;
+    case 'rematch_req':
+      handleRematchRequest(m.player);
+      break;
+    case 'rematch_yes':
+      rematchVotes.add(m.player);
+      if(rematchVotes.size>=2)startRematch();
+      else updateRematchStatus();
+      break;
+    case 'player_left':
+      handlePlayerLeft(m.player);
+      break;
+  }
+}
+
+// ===== Lobby =====
+function renderLobby(){
+  const list=$('playersList');
+  list.innerHTML='';
+  const slots=[{sym:'X',label:'Jogador 1 (X)'},{sym:'O',label:'Jogador 2 (O)'}];
+  
+  for(let i=0;i<MAX_PLAYERS;i++){
+    const p=players[i];
+    const slot=document.createElement('div');
+    
+    if(p){
+      const isMe=p.id===me.id;
+      slot.className='player-slot filled '+(i===0?'x-color':'o-color')+(isMe?' you':'');
+      const initial=(p.name||'?')[0].toUpperCase();
+      slot.innerHTML=`
+        <div class="avatar">${escape(initial)}</div>
+        <div class="name">${escape(p.name)}${isMe?'<small>(você)</small>':''}</div>
+        <div class="symbol">${slots[i].sym}</div>
+      `;
+    }else{
+      slot.className='player-slot empty';
+      slot.innerHTML=`
+        <div class="avatar">?</div>
+        <div class="name">${slots[i].label} · aguardando...</div>
+      `;
+    }
+    list.appendChild(slot);
+  }
+  
+  const btn=$('startBtn');
+  if(players.length>=2){
+    if(!matchStarted){
+      btn.disabled=false;
+      btn.textContent='🎮 Iniciar Partida';
+      btn.onclick=startMatchRequest;
+    }else{
+      btn.disabled=true;
+      btn.textContent='Partida em andamento...';
+    }
+  }else{
+    btn.disabled=true;
+    btn.textContent='Aguardando 2 jogadores...';
+  }
+}
+
+function startMatchRequest(){
+  // Quem clicou primeiro inicia - servidor escolhe quem foi
+  send('start_request',{});
+  $('startBtn').disabled=true;
+  $('startBtn').textContent='Iniciando...';
+}
+
+function startMatch(list,startSymbol){
+  players=list;
+  matchStarted=true;
+  board=Array(9).fill('');
+  currentTurn=startSymbol||'X';
+  gameOver=false;
+  lastMove=-1;
+  rematchVotes=new Set();
+  rematchRequested=false;
+  
+  $('lobby').style.display='none';
+  $('gameContainer').classList.add('active');
+  
+  const pX=players.find(p=>p.symbol==='X')||players[0];
+  const pO=players.find(p=>p.symbol==='O')||players[1];
+  if(pX){me.symbol=pX.id===me.id?'X':me.symbol;}
+  if(pO){me.symbol=pO.id===me.id?'O':me.symbol;}
+  
+  $('nameX').textContent=pX?.name||'X';
+  $('nameO').textContent=pO?.name||'O';
+  $('avatarX').textContent=(pX?.name||'?')[0].toUpperCase();
+  $('avatarO').textContent=(pO?.name||'?')[0].toUpperCase();
+  $('scoreLblX').textContent=(pX?.name||'X').slice(0,8);
+  $('scoreLblO').textContent=(pO?.name||'O').slice(0,8);
+  
+  renderBoard();
+  updateStatus();
+  updateScores();
+}
+
+// ===== Tabuleiro =====
+function renderBoard(){
+  const b=$('board');
+  b.innerHTML='';
+  const clickable=!gameOver&&currentTurn===me.symbol;
+  
+  for(let i=0;i<9;i++){
+    const c=document.createElement('div');
+    c.className='cell';
+    if(board[i]){
+      c.classList.add('filled',board[i].toLowerCase());
+      c.textContent=board[i];
+      if(i===lastMove)c.classList.add('last-move');
+    }
+    if(clickable&&!board[i])c.classList.add('clickable');
+    if(!clickable||gameOver)c.classList.add('disabled');
+    c.onclick=()=>makeMove(i);
+    b.appendChild(c);
+  }
+  
+  // highlight win
+  const winLine=checkWinLine();
+  if(winLine){
+    const cells=b.querySelectorAll('.cell');
+    winLine.forEach(i=>cells[i].classList.add('win'));
+  }
+}
+
+function makeMove(i){
+  if(gameOver||currentTurn!==me.symbol||board[i])return;
+  board[i]=me.symbol;
+  lastMove=i;
+  send('move',{move:i,symbol:me.symbol});
+  applyMove(i,me.id);
+}
+
+function applyMove(move,playerId){
+  if(move<0||move>=9||board[move])return;
+  const player=players.find(p=>p.id===playerId);
+  if(!player||!player.symbol)return;
+  board[move]=player.symbol;
+  lastMove=move;
+  
+  const winLine=checkWinLine();
+  if(winLine){
+    gameOver=true;
+    scores[player.symbol]++;
+    renderBoard();
+    updateScores();
+    const isMe=playerId===me.id;
+    const status=$('status');
+    status.className='status '+(isMe?'win':'lose');
+    status.textContent=isMe?'🎉 Você venceu!':'😢 Você perdeu! '+player.name+' venceu.';
+    enableRematch();
+    return;
+  }
+  
+  if(board.every(v=>v)){
+    gameOver=true;
+    scores.D++;
+    renderBoard();
+    updateScores();
+    const status=$('status');
+    status.className='status draw';
+    status.textContent='🤝 Empate!';
+    enableRematch();
+    return;
+  }
+  
+  currentTurn=currentTurn==='X'?'O':'X';
+  renderBoard();
+  updateStatus();
+}
+
+function checkWinLine(){
+  for(const[a,b,c]of WINS){
+    if(board[a]&&board[a]===board[b]&&board[a]===board[c])return[a,b,c];
+  }
+  return null;
+}
+
+function updateStatus(){
+  const status=$('status');
+  $('mpX').classList.toggle('active-turn',currentTurn==='X'&&!gameOver);
+  $('mpO').classList.toggle('active-turn',currentTurn==='O'&&!gameOver);
+  
+  if(gameOver)return;
+  
+  if(currentTurn===me.symbol){
+    status.className='status my-turn';
+    status.textContent='🎯 Sua vez! Clique em uma casa.';
+  }else{
+    const opp=players.find(p=>p.symbol===currentTurn);
+    status.className='status their-turn';
+    status.textContent='⏳ Vez de '+(opp?.name||'oponente')+'...';
+  }
+}
+
+function updateScores(){
+  $('scoreX').textContent=scores.X;
+  $('scoreO').textContent=scores.O;
+  $('scoreDraw').textContent=scores.D;
+}
+
+// ===== Rematch =====
+function enableRematch(){
+  $('rematchBtn').disabled=false;
+  $('rematchBtn').textContent='🔄 Jogar de novo';
+  $('rematchBtn').onclick=requestRematch;
+}
+
+function requestRematch(){
+  if(rematchRequested)return;
+  rematchRequested=true;
+  rematchVotes.add(me.id);
+  send('rematch_req',{});
+  updateRematchStatus();
+}
+
+function handleRematchRequest(playerId){
+  rematchVotes.add(playerId);
+  updateRematchStatus();
+}
+
+function updateRematchStatus(){
+  if(rematchVotes.size>=2){
+    startRematch();
+    return;
+  }
+  $('rematchBtn').disabled=true;
+  const waiting=2-rematchVotes.size;
+  $('rematchBtn').textContent=`⏳ Aguardando (${waiting})...`;
+}
+
+function startRematch(){
+  board=Array(9).fill('');
+  lastMove=-1;
+  gameOver=false;
+  // inverte quem começa
+  currentTurn=currentTurn==='X'?'O':'X';
+  rematchVotes=new Set();
+  rematchRequested=false;
+  $('rematchBtn').disabled=true;
+  $('rematchBtn').textContent='🔄 Jogar de novo';
+  renderBoard();
+  updateStatus();
+}
+
+function handlePlayerLeft(playerId){
+  const status=$('status');
+  status.className='status lose';
+  const p=players.find(x=>x.id===playerId);
+  status.textContent='🚪 '+(p?.name||'Oponente')+' saiu da partida.';
+  gameOver=true;
+  $('rematchBtn').disabled=true;
+}
+
+// ===== Utils =====
+function $(id){return document.getElementById(id);}
+function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ===== Init =====
+$('leaveBtn').onclick=()=>send('leave',{});
+send('ready',{});
+
+renderLobby();
+</script>
+</body>
+</html>

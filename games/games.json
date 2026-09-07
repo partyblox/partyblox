@@ -1,0 +1,11 @@
+{
+  "games": [
+    {
+      "id": "mygame",
+      "name": "Meu Jogo",
+      "icon": "🎯",
+      "desc": "Descrição do jogo",
+      "file": "games/mygame.html"
+    }
+  ]
+}
