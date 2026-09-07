@@ -68,7 +68,19 @@ const rooms = new Map();
 
 function getRoom(id) {
     if (!rooms.has(id)) {
-        rooms.set(id, { id, host: null, clients: new Set(), state: { media: { type: "clear" }, screenOwner: null } });
+        rooms.set(id, {
+            id,
+            host: null,
+            clients: new Set(),
+            state: {
+                media: { type: "clear" },
+                screenOwner: null,
+                // ✅ NOVO: Estado dos shorts (playlist + índice atual)
+                shorts: { playlist: [], index: -1 },
+                // ✅ NOVO: View atual ('player' ou 'shorts')
+                view: "player"
+            }
+        });
     }
     return rooms.get(id);
 }
@@ -94,11 +106,20 @@ wss.on("connection", ws => {
         if (msg.kind === "join") {
             const roomId = String(msg.room || "Praca-VIP").slice(0, 40);
             const room = getRoom(roomId);
-            ws.room = room; ws.name = String(msg.name || "Player").slice(0, 20); ws.pid = String(msg.playerId || "").slice(0, 40);
+            ws.room = room;
+            ws.name = String(msg.name || "Player").slice(0, 20);
+            ws.pid = String(msg.playerId || "").slice(0, 40);
             room.clients.add(ws);
             if (!room.host) room.host = ws;
 
-            send(ws, { kind: "roomState", host: room.host === ws, state: room.state, playerCount: room.clients.size, players: getPlayers(room, ws) });
+            // ✅ room.state agora contém media, shorts e view
+            send(ws, {
+                kind: "roomState",
+                host: room.host === ws,
+                state: room.state,
+                playerCount: room.clients.size,
+                players: getPlayers(room, ws)
+            });
             
             if (room.state.screenOwner && room.state.screenOwner !== ws.pid) {
                 const owner = [...room.clients].find(c => c.pid === room.state.screenOwner);
@@ -110,38 +131,101 @@ wss.on("connection", ws => {
 
         const room = ws.room; if (!room) return;
 
+        // ===== MÍDIA (YouTube, vídeo, áudio, imagem, tela) =====
         if (msg.kind === "media") {
             if (ws !== room.host) return;
             room.state.media = msg.state || { type: "clear" };
             if (room.state.media.type === "screen" && room.state.media.active) room.state.screenOwner = ws.pid;
             else if (room.state.media.type === "clear" && room.state.screenOwner === ws.pid) room.state.screenOwner = null;
-            broadcast(room, { kind: "media", state: room.state.media }); return;
+            broadcast(room, { kind: "media", state: room.state.media });
+            return;
         }
+
+        // ===== ✅ NOVO: SINCRONIZAÇÃO DE SHORTS =====
+        if (msg.kind === "shortsSync") {
+            if (ws !== room.host) return; // Só o host pode alterar
+            
+            // Validação e limpeza dos dados recebidos
+            const playlist = Array.isArray(msg.playlist) ? msg.playlist.map(s => ({
+                type: String(s.type || "youtube_short").slice(0, 20),
+                id: String(s.id || "").slice(0, 100),
+                url: String(s.url || "").slice(0, 500)
+            })) : [];
+            
+            const index = typeof msg.index === "number" ? Math.max(-1, msg.index) : -1;
+            
+            // Salva no estado da sala
+            room.state.shorts = { playlist, index };
+            
+            // Repassa para TODOS (incluindo o host, para manter consistência)
+            broadcast(room, {
+                kind: "shortsSync",
+                playlist: playlist,
+                index: index
+            });
+            return;
+        }
+
+        // ===== ✅ NOVO: SINCRONIZAÇÃO DE VIEW (PLAYER/SHORTS) =====
+        if (msg.kind === "viewChange") {
+            if (ws !== room.host) return; // Só o host pode alterar
+            
+            const view = msg.view === "shorts" ? "shorts" : "player";
+            room.state.view = view;
+            
+            broadcast(room, {
+                kind: "viewChange",
+                view: view
+            }, ws); // Exclui quem enviou para evitar eco
+            return;
+        }
+
         if (msg.kind === "claimHost") {
             if (!room.host || !room.clients.has(room.host)) {
-                room.host = ws; send(ws, { kind: "roomState", host: true, state: room.state, playerCount: room.clients.size, players: getPlayers(room, ws) });
-            } return;
+                room.host = ws;
+                send(ws, {
+                    kind: "roomState",
+                    host: true,
+                    state: room.state,
+                    playerCount: room.clients.size,
+                    players: getPlayers(room, ws)
+                });
+            }
+            return;
         }
+
         if (msg.kind === "chat") {
             const text = String(msg.text || "").slice(0, 200); if (!text) return;
             if (msg.to) {
                 let target = [...room.clients].find(c => c.name === msg.to || c.pid === String(msg.to));
-                // ✅ CORREÇÃO: Adicionado msg.media
                 if (target) send(target, { kind: "chat", name: ws.name, text, pid: ws.pid, to: msg.to, media: msg.media });
                 return;
             }
-            // ✅ CORREÇÃO: Adicionado msg.media
-            broadcast(room, { kind: "chat", name: ws.name, text, pid: ws.pid, media: msg.media }, ws); return;
+            broadcast(room, { kind: "chat", name: ws.name, text, pid: ws.pid, media: msg.media }, ws);
+            return;
         }
+
         if (msg.kind === "reaction") {
-            broadcast(room, { kind: "reaction", playerId: ws.pid, name: ws.name, emoji: String(msg.emoji || "").slice(0, 8) }, ws); return;
+            broadcast(room, { kind: "reaction", playerId: ws.pid, name: ws.name, emoji: String(msg.emoji || "").slice(0, 8) }, ws);
+            return;
         }
+
         if (msg.kind === "emote") {
-            broadcast(room, { kind: "emote", playerId: ws.pid, id: String(msg.id || "").slice(0, 40), name: ws.name }, ws); return;
+            broadcast(room, { kind: "emote", playerId: ws.pid, id: String(msg.id || "").slice(0, 40), name: ws.name }, ws);
+            return;
         }
+
         if (msg.kind === "rtc") {
-            if (msg.action === "screenStarted") { room.state.screenOwner = ws.pid; broadcast(room, { kind: "rtc", action: "screenStarted", from: ws.pid }, ws); return; }
-            if (msg.action === "screenStopped") { if (room.state.screenOwner === ws.pid) room.state.screenOwner = null; broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid }, ws); return; }
+            if (msg.action === "screenStarted") {
+                room.state.screenOwner = ws.pid;
+                broadcast(room, { kind: "rtc", action: "screenStarted", from: ws.pid }, ws);
+                return;
+            }
+            if (msg.action === "screenStopped") {
+                if (room.state.screenOwner === ws.pid) room.state.screenOwner = null;
+                broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid }, ws);
+                return;
+            }
             const targetId = String(msg.to || ""); if (!targetId) return;
             const target = [...room.clients].find(c => c.pid === targetId);
             if (target) send(target, { ...msg, from: ws.pid });
@@ -151,11 +235,20 @@ wss.on("connection", ws => {
     ws.on("close", () => {
         const room = ws.room; if (!room) return;
         room.clients.delete(ws);
-        if (room.state.screenOwner === ws.pid) { room.state.screenOwner = null; broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid }); }
+        if (room.state.screenOwner === ws.pid) {
+            room.state.screenOwner = null;
+            broadcast(room, { kind: "rtc", action: "screenStopped", from: ws.pid });
+        }
         broadcast(room, { kind: "playerLeft", name: ws.name, playerId: ws.pid });
         if (room.host === ws) {
             room.host = room.clients.values().next().value || null;
-            if (room.host) send(room.host, { kind: "roomState", host: true, state: room.state, playerCount: room.clients.size, players: getPlayers(room, room.host) });
+            if (room.host) send(room.host, {
+                kind: "roomState",
+                host: true,
+                state: room.state,
+                playerCount: room.clients.size,
+                players: getPlayers(room, room.host)
+            });
         }
         if (room.clients.size === 0) rooms.delete(room.id);
     });
