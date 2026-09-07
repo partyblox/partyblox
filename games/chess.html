@@ -66,7 +66,7 @@ h1{margin-bottom:12px;color:#fdcb6e;font-size:22px;text-align:center;}
 .cell.movable:hover{filter:brightness(1.1);}
 .cell .move-dot{position:absolute;width:26%;height:26%;border-radius:50%;background:rgba(0,0,0,.25);pointer-events:none;}
 .cell.capture-ring::after{content:'';position:absolute;inset:4%;border:3px solid rgba(0,0,0,.3);border-radius:50%;pointer-events:none;}
-.cell .piece{position:relative;z-index:2;text-shadow:0 2px 3px rgba(0,0,0,.3);pointer-events:none;}
+.cell .piece{position:relative;z-index:2;font-size:inherit;line-height:1;}
 .cell .piece.white{color:#fdfdfd;text-shadow:0 0 2px #000,0 2px 3px rgba(0,0,0,.5);}
 .cell .piece.black{color:#1a1a1a;text-shadow:0 0 2px rgba(255,255,255,.3),0 2px 3px rgba(0,0,0,.4);}
 .coords{position:absolute;font-size:9px;font-weight:700;opacity:.7;pointer-events:none;z-index:3;}
@@ -88,7 +88,6 @@ button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .move-entry{padding:2px 6px;background:rgba(255,255,255,.06);border-radius:4px;font-family:monospace;font-size:11px;}
 .move-entry .num{color:#fdcb6e;font-weight:700;}
 
-/* Promotion Modal */
 .promo-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:100;}
 .promo-modal.active{display:flex;}
 .promo-box{background:#1a1a2e;border:2px solid #fdcb6e;border-radius:16px;padding:20px;text-align:center;}
@@ -96,9 +95,6 @@ button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .promo-options{display:flex;gap:10px;}
 .promo-opt{width:60px;height:60px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:12px;font-size:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
 .promo-opt:hover{background:rgba(253,203,110,.2);border-color:#fdcb6e;transform:scale(1.1);}
-
-.waiting{text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;animation:blink 1.5s infinite;}
-@keyframes blink{50%{opacity:.3;}}
 
 @media (max-width:400px){
   .cell{font-size:20px;}
@@ -155,7 +151,6 @@ button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 const GAME_ID='chess';
 const MAX_PLAYERS=2;
 const GLYPH={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
-const PIECE_NAME={k:'Rei',q:'Dama',r:'Torre',b:'Bispo',n:'Cavalo',p:'Peão'};
 const FILES=['a','b','c','d','e','f','g','h'];
 
 let me={id:null,name:null,color:null};
@@ -185,17 +180,18 @@ function initBoard(){
     'wR','wN','wB','wQ','wK','wB','wN','wR'
   ];
 }
+
 function initState(){
   return{castle:{wK:true,wQ:true,bK:true,bQ:true},turn:'w',ep:null,halfmove:0,fullmove:1};
 }
 
-// ===== Comunicação =====
 function send(type,data={}){window.parent.postMessage({__game:true,game:GAME_ID,type,...data},'*');}
 window.addEventListener('message',e=>{
   const m=e.data;
   if(!m||!m.__game||m.game!==GAME_ID)return;
   handleMsg(m);
 });
+
 function handleMsg(m){
   switch(m.type){
     case 'hello':me.id=m.myId;me.name=m.myName;send('join',{name:me.name});break;
@@ -207,7 +203,6 @@ function handleMsg(m){
   }
 }
 
-// ===== Lobby =====
 function renderLobby(){
   const list=$('playersList');list.innerHTML='';
   const slots=[{label:'Jogador 1 · Brancas',cls:'w-color'},{label:'Jogador 2 · Pretas',cls:'b-color'}];
@@ -257,8 +252,8 @@ function resetGame(){
   renderBoard();updateStatus();renderCaptured();
 }
 
-// ===== Lógica de Xadrez =====
 function pieceAt(b,r,c){return(r>=0&&r<8&&c>=0&&c<8)?b[r*8+c]:null;}
+
 function isAttacked(b,r,c,by){
   for(const dc of[-1,1]){
     const pr=r+(by==='w'?1:-1),pc=c+dc;
@@ -287,12 +282,14 @@ function isAttacked(b,r,c,by){
   if(slide([[-1,0],[1,0],[0,-1],[0,1]],['r','q']))return true;
   return false;
 }
+
 function inCheck(b,color){
   for(let i=0;i<64;i++){
     if(b[i]===color+'K')return isAttacked(b,Math.floor(i/8),i%8,color==='w'?'b':'w');
   }
   return false;
 }
+
 function genPseudo(b,r,c,st){
   const piece=b[r*8+c];
   if(!piece)return[];
@@ -347,6 +344,7 @@ function genPseudo(b,r,c,st){
   }
   return moves;
 }
+
 function applyMove(b,st,move,promo){
   const nb=b.slice();
   const ns={...st,castle:{...st.castle}};
@@ -375,6 +373,7 @@ function applyMove(b,st,move,promo){
   if(color==='b')ns.fullmove=(st.fullmove||1)+1;
   return{board:nb,state:ns};
 }
+
 function legalMoves(b,r,c,st){
   const piece=b[r*8+c];
   if(!piece)return[];
@@ -384,6 +383,7 @@ function legalMoves(b,r,c,st){
     return!inCheck(nb,color);
   });
 }
+
 function allLegal(b,color,st){
   const all=[];
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
@@ -391,12 +391,12 @@ function allLegal(b,color,st){
   }
   return all;
 }
+
 function insufficientMaterial(b){
   const nonK=b.filter(p=>p&&p[1]!=='k');
   if(nonK.length===0)return true;
   if(nonK.length===1&&(nonK[0][1]==='b'||nonK[0][1]==='n'))return true;
   if(nonK.length===2&&nonK.every(p=>p[1]==='b')&&nonK[0][0]!==nonK[1][0]){
-    // dois bispos em casas de mesma cor = empate (simplificado)
     let positions=[];
     for(let i=0;i<64;i++){if(b[i]&&b[i][1]==='b')positions.push({r:Math.floor(i/8),c:i%8});}
     if(positions.length===2){
@@ -406,9 +406,11 @@ function insufficientMaterial(b){
   }
   return false;
 }
+
 function boardHash(b,st){
   return b.map(p=>p||'-').join('')+st.turn+JSON.stringify(st.castle)+(st.ep?st.ep.r+','+st.ep.c:'-');
 }
+
 function getStatus(){
   const legal=allLegal(board,state.turn,state);
   const chk=inCheck(board,state.turn);
@@ -424,7 +426,6 @@ function getStatus(){
   return{over:false,inCheck:chk};
 }
 
-// ===== Interação =====
 function onCellClick(r,c){
   if(gameOver||state.turn!==me.color)return;
   const piece=pieceAt(board,r,c);
@@ -448,6 +449,7 @@ function onCellClick(r,c){
   }
   renderBoard();
 }
+
 function doMove(move,promo){
   const capturedPiece=move.enPassant?board[move.from.r*8+move.to.c]:board[move.to.r*8+move.to.c];
   if(capturedPiece)captured[board[move.from.r*8+move.from.c][0]].push(capturedPiece);
@@ -460,6 +462,7 @@ function doMove(move,promo){
   send('move',{move,promo});
   afterMove(notation);
 }
+
 function applyRemoteMove(data){
   const move=data.move;
   const capturedPiece=move.enPassant?board[move.from.r*8+move.to.c]:board[move.to.r*8+move.to.c];
@@ -472,6 +475,7 @@ function applyRemoteMove(data){
   moveList.push(notation);
   afterMove(notation);
 }
+
 function afterMove(notation){
   const status=getStatus();
   renderBoard();renderCaptured();renderHistory();
@@ -483,6 +487,7 @@ function afterMove(notation){
     else updateStatus(false);
   }
 }
+
 function buildNotation(move,capturedPiece,promo){
   if(move.castle)return move.castle==='K'?'O-O':'O-O-O';
   const piece=board[move.from.r*8+move.from.c];
@@ -497,6 +502,7 @@ function buildNotation(move,capturedPiece,promo){
   if(move.promotion)n+='='+(promo||'q').toUpperCase();
   return n;
 }
+
 function showPromoModal(){
   const modal=$('promoModal');
   const opts=$('promoOptions');
@@ -515,7 +521,6 @@ function showPromoModal(){
   modal.classList.add('active');
 }
 
-// ===== Renderização =====
 function renderBoard(){
   const el=$('board');el.innerHTML='';
   const flipped=me.color==='b';
@@ -533,7 +538,6 @@ function renderBoard(){
       const cell=document.createElement('div');
       const isLight=(r+c)%2===0;
       cell.className='cell '+(isLight?'light':'dark');
-      // coordenadas
       if(dc===0){
         const rank=document.createElement('span');
         rank.className='coords coord-rank';rank.textContent=8-r;
@@ -569,6 +573,7 @@ function renderBoard(){
     }
   }
 }
+
 function updateStatus(check=false){
   const st=$('status');
   $('mpW').classList.toggle('active-turn',state.turn==='w'&&!gameOver);
@@ -582,6 +587,7 @@ function updateStatus(check=false){
     st.textContent='⏳ Vez de '+(opp?.name||'oponente')+'...';
   }
 }
+
 function renderCaptured(){
   const mine=captured[me.color]||[];
   const theirs=captured[me.color==='w'?'b':'w']||[];
@@ -590,6 +596,7 @@ function renderCaptured(){
   $('capturedByMe').innerHTML=mine.slice().sort(sortFn).map(p=>`<span class="cap-piece" style="color:${p[0]==='w'?'#f5f5f5':'#555'}">${GLYPH[p[1]]}</span>`).join('');
   $('capturedByOpp').innerHTML=theirs.slice().sort(sortFn).map(p=>`<span class="cap-piece" style="color:${p[0]==='w'?'#f5f5f5':'#555'}">${GLYPH[p[1]]}</span>`).join('');
 }
+
 function renderHistory(){
   const el=$('moveHistory');el.innerHTML='';
   for(let i=0;i<moveList.length;i+=2){
@@ -601,6 +608,7 @@ function renderHistory(){
   }
   el.parentElement.scrollTop=el.parentElement.scrollHeight;
 }
+
 function endGame(status){
   const st=$('status');
   $('mpW').classList.remove('active-turn');
@@ -618,6 +626,7 @@ function endGame(status){
   $('rematchBtn').textContent='🔄 Jogar de novo';
   $('rematchBtn').onclick=requestRematch;
 }
+
 function requestRematch(){
   if(rematchRequested)return;
   rematchRequested=true;
@@ -625,6 +634,7 @@ function requestRematch(){
   send('rematch_req',{});
   updateRematch();
 }
+
 function updateRematch(){
   if(rematchVotes.size>=2){
     resetGame();
@@ -633,6 +643,7 @@ function updateRematch(){
   $('rematchBtn').disabled=true;
   $('rematchBtn').textContent=`⏳ Aguardando (${2-rematchVotes.size})...`;
 }
+
 function handleLeft(pid){
   const p=players.find(x=>x.id===pid);
   const st=$('status');
