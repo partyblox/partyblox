@@ -75,10 +75,10 @@ function getRoom(id) {
             state: {
                 media: { type: "clear" },
                 screenOwner: null,
-                // ✅ NOVO: Estado dos shorts (playlist + índice atual)
                 shorts: { playlist: [], index: -1 },
-                // ✅ NOVO: View atual ('player' ou 'shorts')
-                view: "player"
+                view: "player",
+                // ✅ NOVO: URL do TikTok sincronizada
+                tiktokUrl: "https://www.tiktok.com/foryou"
             }
         });
     }
@@ -112,7 +112,6 @@ wss.on("connection", ws => {
             room.clients.add(ws);
             if (!room.host) room.host = ws;
 
-            // ✅ room.state agora contém media, shorts e view
             send(ws, {
                 kind: "roomState",
                 host: room.host === ws,
@@ -141,11 +140,10 @@ wss.on("connection", ws => {
             return;
         }
 
-        // ===== ✅ NOVO: SINCRONIZAÇÃO DE SHORTS =====
+        // ===== SINCRONIZAÇÃO DE SHORTS =====
         if (msg.kind === "shortsSync") {
-            if (ws !== room.host) return; // Só o host pode alterar
+            if (ws !== room.host) return;
             
-            // Validação e limpeza dos dados recebidos
             const playlist = Array.isArray(msg.playlist) ? msg.playlist.map(s => ({
                 type: String(s.type || "youtube_short").slice(0, 20),
                 id: String(s.id || "").slice(0, 100),
@@ -154,10 +152,8 @@ wss.on("connection", ws => {
             
             const index = typeof msg.index === "number" ? Math.max(-1, msg.index) : -1;
             
-            // Salva no estado da sala
             room.state.shorts = { playlist, index };
             
-            // Repassa para TODOS (incluindo o host, para manter consistência)
             broadcast(room, {
                 kind: "shortsSync",
                 playlist: playlist,
@@ -166,17 +162,33 @@ wss.on("connection", ws => {
             return;
         }
 
-        // ===== ✅ NOVO: SINCRONIZAÇÃO DE VIEW (PLAYER/SHORTS) =====
+        // ===== ✅ ATUALIZADO: SINCRONIZAÇÃO DE VIEW (PLAYER/SHORTS/TIKTOK) =====
         if (msg.kind === "viewChange") {
-            if (ws !== room.host) return; // Só o host pode alterar
+            if (ws !== room.host) return;
             
-            const view = msg.view === "shorts" ? "shorts" : "player";
+            // Aceita 'player', 'shorts' ou 'tiktok'
+            const view = ["shorts", "tiktok"].includes(msg.view) ? msg.view : "player";
             room.state.view = view;
             
             broadcast(room, {
                 kind: "viewChange",
                 view: view
-            }, ws); // Exclui quem enviou para evitar eco
+            }, ws);
+            return;
+        }
+
+        // ===== ✅ NOVO: SINCRONIZAÇÃO DO TIKTOK =====
+        if (msg.kind === "tiktokSync") {
+            if (ws !== room.host) return; // Só o host pode alterar
+            
+            // Valida e salva a URL (limita a 500 caracteres por segurança)
+            room.state.tiktokUrl = String(msg.url || "https://www.tiktok.com/foryou").slice(0, 500);
+            
+            // Repassa para TODOS (incluindo o host para manter consistência)
+            broadcast(room, {
+                kind: "tiktokSync",
+                url: room.state.tiktokUrl
+            });
             return;
         }
 
