@@ -1492,6 +1492,35 @@ document.addEventListener('keydown',e=>{
     closeMediaViewer(e,true);
   }
 });
+// ⬅️ ADICIONE: Força reprodução quando usuário interage com a página
+document.addEventListener('click', function forcePlay() {
+  if(mediaType === 'youtube' && youtubePlayer) {
+    try {
+      const state = youtubePlayer.getPlayerState();
+      // Se está em estado -1 (não iniciado) ou 5 (cueado), tenta tocar
+      if(state === -1 || state === 5) {
+        console.log('Forçando play do YouTube...');
+        youtubePlayer.playVideo();
+      }
+    } catch(e) {
+      console.error('Erro ao forçar play:', e);
+    }
+  }
+}, {once: false});
+
+// ⬅️ ADICIONE: Monitora e força play se travar
+setInterval(()=>{
+  if(mediaType === 'youtube' && youtubePlayer && ytVideoId) {
+    try {
+      const state = youtubePlayer.getPlayerState();
+      // Se passou mais de 3 segundos e ainda está em -1 ou 5, força play
+      if((state === -1 || state === 5) && getYTDur() > 0) {
+        console.log('Player travado, forçando play...');
+        youtubePlayer.playVideo();
+      }
+    } catch(e) {}
+  }
+}, 3000);  
 </script>
 </body>
 </html>
