@@ -66,16 +66,20 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:#fdcb6e;border-radius:50%;}
 .media-badge{position:absolute;top:14px;left:14px;padding:6px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:12px;font-weight:700;display:none;}
 .media-badge.active{display:flex;align-items:center;gap:6px;}
-.host-controls{position:absolute;z-index:20;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;}
+.host-controls{position:absolute;z-index:20;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;transition:.3s;}
+.host-controls.hidden{display:none !important;}
 .hc-btn{padding:8px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;white-space:nowrap;}
 .hc-btn:hover{background:rgba(253,203,110,.3);border-color:#fdcb6e;}
 .hc-btn.live{background:#e74c3c;border-color:#e74c3c;animation:pulse 1s infinite;}
 @keyframes pulse{50%{opacity:.6;}}
+.toggle-host-btn{position:absolute;top:14px;right:14px;z-index:21;padding:8px 12px;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;cursor:pointer;font-size:11px;font-weight:600;transition:.2s;}
+.toggle-host-btn:hover{background:rgba(253,203,110,.3);border-color:#fdcb6e;}
+.toggle-host-btn.hidden{display:none;}
 .divider{width:6px;background:#222;cursor:col-resize;position:relative;flex-shrink:0;transition:.2s;touch-action:none;z-index:10;}
 .divider:hover{background:#fdcb6e;}
 .divider::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:40px;background:rgba(255,255,255,.3);border-radius:2px;}
 .divider:hover::before{background:#2d3436;}
-.chat-side{width:380px;display:flex;flex-direction:column;background:#161620;min-width:260px;max-width:800px;height:100%;}
+.chat-side{width:380px;display:flex;flex-direction:column;background:#161620;min-width:260px;max-width:800px;height:100%;transition:width .3s;}
 .chat-side.hidden{display:none !important;}
 .divider.hidden{display:none !important;}
 .chat-head{height:52px;padding:0 14px;background:#1a1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
@@ -180,28 +184,37 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 @keyframes unlockPulse{0%,100%{box-shadow:0 0 0 0 rgba(253,203,110,.5);}50%{box-shadow:0 0 0 16px rgba(253,203,110,0);}}
 .yt-unlock-text{color:#fff;font-size:15px;font-weight:600;text-align:center;max-width:320px;line-height:1.6;padding:0 20px;}
 
-/* ===== ESTILOS TIKTOK/SHORTS ===== */
-#shortsPanel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;background:#000;}
-#shortsPanel.active{display:flex;}
-.shorts-header{padding:10px;background:#1a1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
-.shorts-header input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:12px;outline:none;}
+/* ===== SHORTS NA ÁREA PRINCIPAL ===== */
+.main-tabs{position:absolute;top:14px;left:14px;z-index:19;display:flex;gap:6px;background:rgba(0,0,0,.75);padding:6px;border-radius:12px;backdrop-filter:blur(10px);}
+.main-tab{padding:8px 16px;background:rgba(255,255,255,.08);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:.2s;}
+.main-tab:hover{background:rgba(255,255,255,.15);}
+.main-tab.active{background:#fdcb6e;color:#2d3436;}
+#shortsMainPanel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;background:#000;position:relative;}
+#shortsMainPanel.active{display:flex;}
+.shorts-header{padding:12px;background:rgba(26,26,46,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.shorts-header input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:13px;outline:none;}
 .shorts-header input:focus{border-color:#fdcb6e;}
-.shorts-header button{padding:8px 12px;background:#fdcb6e;color:#2d3436;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;}
+.shorts-header button{padding:10px 16px;background:#fdcb6e;color:#2d3436;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;}
 .shorts-container{flex:1;overflow-y:auto;scroll-snap-type:y mandatory;display:flex;flex-direction:column;scroll-behavior:smooth;}
-.shorts-container::-webkit-scrollbar{width:4px;}
+.shorts-container::-webkit-scrollbar{width:6px;}
 .shorts-container::-webkit-scrollbar-track{background:#161620;}
-.shorts-container::-webkit-scrollbar-thumb{background:#fdcb6e;border-radius:2px;}
+.shorts-container::-webkit-scrollbar-thumb{background:#fdcb6e;border-radius:3px;}
 .short-item{flex-shrink:0;height:100%;min-height:100%;scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
-.short-item iframe{width:100%;height:100%;border:none;max-width:400px;max-height:90vh;}
-.short-controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;background:rgba(0,0,0,.8);padding:10px 16px;border-radius:30px;backdrop-filter:blur(10px);}
-.short-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.short-item iframe{width:100%;height:100%;border:none;max-width:450px;max-height:95vh;}
+.short-controls{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:rgba(0,0,0,.9);padding:12px 20px;border-radius:35px;backdrop-filter:blur(10px);z-index:15;}
+.short-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:.2s;}
 .short-btn:hover{background:#fdcb6e;color:#2d3436;}
 .short-btn.active{background:#00b894;}
-.short-info{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.75);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(10px);}
+.short-info{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.85);padding:10px 16px;border-radius:24px;font-size:13px;font-weight:600;backdrop-filter:blur(10px);}
 .shorts-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;text-align:center;padding:40px;}
-.shorts-empty .icon{font-size:80px;margin-bottom:16px;opacity:.3;}
-.shorts-empty h3{color:#aaa;margin-bottom:8px;font-size:20px;}
-.shorts-empty p{color:#777;max-width:300px;font-size:13px;}
+.shorts-empty .icon{font-size:100px;margin-bottom:20px;opacity:.3;}
+.shorts-empty h3{color:#aaa;margin-bottom:10px;font-size:22px;}
+.shorts-empty p{color:#777;max-width:350px;font-size:14px;line-height:1.6;}
+
+/* Botões de tamanho do chat */
+.chat-size-controls{display:flex;gap:4px;align-items:center;}
+.chat-size-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.chat-size-btn:hover{background:#fdcb6e;color:#2d3436;border-color:#fdcb6e;}
 /* ================================ */
 
 @media (max-width: 900px) and (orientation: portrait) {
@@ -216,6 +229,8 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .topbar { flex-wrap: wrap; height: auto; padding: 10px 14px; }
 .topbar-right { width: 100%; justify-content: flex-end; margin-top: 6px; }
 .tiers { grid-template-columns: repeat(2, 1fr); }
+.main-tabs { top: 10px; left: 10px; }
+.main-tab { padding: 6px 12px; font-size: 12px; }
 }
 @media (max-width: 900px) and (orientation: landscape) {
 .main { flex-direction: row !important; }
@@ -270,6 +285,12 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 </div>
 <div class="main">
 <div class="video-side">
+<!-- ABAS PRINCIPAIS: Player / Shorts -->
+<div class="main-tabs">
+<button class="main-tab active" data-view="player" onclick="switchMainView('player')">🎬 Player</button>
+<button class="main-tab" data-view="shorts" onclick="switchMainView('shorts')">📱 Shorts</button>
+</div>
+
 <div class="video-container" id="videoCont">
 <div class="video-placeholder" id="placeholder">
 <div class="icon">🎬</div>
@@ -287,6 +308,10 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <canvas id="imageHolder" style="display:none"></canvas>
 <div class="media-badge" id="mediaBadge"><span id="mediaTypeIcon">🎬</span><span id="mediaTypeText">YouTube</span></div>
 <div class="viewer-count" id="viewerCount"><span id="vcNum">1</span> assistindo</div>
+
+<!-- Botão para mostrar/esconder controles do host -->
+<button class="toggle-host-btn" id="toggleHostBtn" onclick="toggleHostControls()" style="display:none">👁️ Controles</button>
+
 <div class="host-controls" id="hostCtrls" style="display:none">
 <button class="hc-btn" onclick="showYTInput()">🔗 YouTube</button>
 <button class="hc-btn" onclick="document.getElementById('fileInput').click()">📁 Enviar Mídia</button>
@@ -318,18 +343,42 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 </div>
 </div>
 </div>
+
+<!-- PAINEL SHORTS NA ÁREA PRINCIPAL -->
+<div id="shortsMainPanel">
+<div class="shorts-header">
+<input type="text" id="shortsInput" placeholder="Cole link TikTok ou YouTube Shorts">
+<button onclick="addShort()">➕ Adicionar</button>
+</div>
+<div class="shorts-container" id="shortsContainer">
+<div class="shorts-empty" id="shortsEmpty">
+<div class="icon">📱</div>
+<h3>Nenhum short adicionado</h3>
+<p>Cole links do TikTok ou YouTube Shorts para criar uma playlist sincronizada com seus amigos!<br><br>Use os botões abaixo para navegar ou ative o auto-scroll.</p>
+</div>
+</div>
+<div class="short-controls">
+<button class="short-btn" onclick="prevShort()" title="Anterior">⬅️</button>
+<button class="short-btn" onclick="toggleAutoScroll()" id="autoScrollBtn" title="Auto-scroll">🔄</button>
+<button class="short-btn" onclick="nextShort()" title="Próximo">➡️</button>
+</div>
+</div>
 </div>
 <div class="divider" id="divider"></div>
 <div class="chat-side" id="chatSide">
 <div class="chat-head">
 <h3>💬 Chat da Sala</h3>
-<div style="display:flex;gap:5px;">
+<div style="display:flex;gap:5px;align-items:center;">
+<!-- BOTÕES DE TAMANHO DO CHAT -->
+<div class="chat-size-controls">
+<button class="chat-size-btn" onclick="resizeChat(-50)" title="Diminuir">−</button>
+<button class="chat-size-btn" onclick="resizeChat(50)" title="Aumentar">+</button>
+</div>
 <button class="emo-btn" style="width:32px;height:32px;font-size:14px" onclick="toggleChat()">✕</button>
 </div>
 </div>
 <div class="chat-tabs">
 <button class="c-tab active" data-tab="chat" onclick="switchTab('chat')">💬 Chat</button>
-<button class="c-tab" data-tab="shorts" onclick="switchTab('shorts')">🎬 Shorts</button>
 <button class="c-tab" data-tab="react" onclick="switchTab('react')">😂 Reações</button>
 <button class="c-tab" data-tab="emote" onclick="switchTab('emote')">🎭 Emotes</button>
 </div>
@@ -349,26 +398,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <button class="emo-btn" id="micBtn" onclick="toggleAudioRecording()" title="Gravar áudio">🎤</button>
 <input type="text" id="chatText" placeholder="@nome = PV..." maxlength="300" onkeypress="if(event.key==='Enter')sendChat()">
 <button onclick="sendChat()">➤</button>
-</div>
-</div>
-</div>
-<div class="chat-panel" id="tabShorts">
-<div id="shortsPanel" class="active">
-<div class="shorts-header">
-<input type="text" id="shortsInput" placeholder="Cole link TikTok ou YouTube Shorts">
-<button onclick="addShort()">➕</button>
-</div>
-<div class="shorts-container" id="shortsContainer">
-<div class="shorts-empty" id="shortsEmpty">
-<div class="icon">🎬</div>
-<h3>Nenhum short adicionado</h3>
-<p>Cole links do TikTok ou YouTube Shorts para criar uma playlist sincronizada com seus amigos!</p>
-</div>
-</div>
-<div class="short-controls">
-<button class="short-btn" onclick="prevShort()" title="Anterior">⬅️</button>
-<button class="short-btn" onclick="toggleAutoScroll()" id="autoScrollBtn" title="Auto-scroll">🔄</button>
-<button class="short-btn" onclick="nextShort()" title="Próximo">➡️</button>
 </div>
 </div>
 </div>
@@ -457,13 +486,14 @@ let ytSuppressStateSend=false;
 let ytLastStateSent=0;
 let ytAutoplayBlocked=false;
 
-// ===== VARIÁVEIS DO SISTEMA SHORTS/TIKTOK =====
 let shortsPlaylist=[];
 let currentShortIndex=-1;
 let autoScrollEnabled=false;
 let autoScrollTimer=null;
-const AUTO_SCROLL_INTERVAL=10000; // 10 segundos
-// =============================================
+const AUTO_SCROLL_INTERVAL=10000;
+
+let hostControlsVisible=true;
+let currentMainView='player';
 
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
 const MAX_AUDIO_DURATION=30;
@@ -622,7 +652,27 @@ ws.onerror=()=>{setTimeout(()=>{if(!isHost&&playerCount===1)claimHost();},3000);
 
 function updateHostUI(){
 $('hostInd').style.display=isHost?'inline-block':'none';
-$('hostCtrls').style.display=isHost?'flex':'none';
+$('hostCtrls').style.display=(isHost && hostControlsVisible)?'flex':'none';
+$('toggleHostBtn').style.display=isHost?'block':'none';
+$('toggleHostBtn').textContent=hostControlsVisible?'👁️ Esconder':'👁️ Controles';
+}
+
+function toggleHostControls(){
+hostControlsVisible=!hostControlsVisible;
+updateHostUI();
+toast(hostControlsVisible?'👁️ Controles visíveis':'👁️ Controles escondidos');
+}
+
+function switchMainView(view){
+currentMainView=view;
+document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+if(view==='player'){
+$('videoCont').style.display='flex';
+$('shortsMainPanel').classList.remove('active');
+}else{
+$('videoCont').style.display='none';
+$('shortsMainPanel').classList.add('active');
+}
 }
 
 function claimHost(){
@@ -674,6 +724,14 @@ s.style.display = 'none';
 }, 300);
 }
 }
+}
+
+function resizeChat(delta){
+const s=$('chatSide');
+const currentWidth=parseInt(getComputedStyle(s).width);
+const newWidth=clamp(currentWidth+delta,260,800);
+s.style.width=newWidth+'px';
+toast('💬 Chat: '+newWidth+'px');
 }
 
 function addChatMsg(author,text,isSystem=false,isPrivate=false,target=null,media=null){
@@ -1578,7 +1636,6 @@ if(!isHost)toast('🖥️ Conectando à tela do host...');
 }
 }
 
-// ===== FUNÇÕES DO SISTEMA SHORTS/TIKTOK =====
 function extractShortInfo(url){
 url=String(url||'').trim();
 if(!url)return null;
@@ -1587,7 +1644,6 @@ try{
 const x=new URL(url);
 const host=x.hostname.replace(/^www\./,'').toLowerCase();
 
-// TikTok
 if(host==='tiktok.com'||host==='vm.tiktok.com'){
 const match=x.pathname.match(/\/@?[^\/]+\/video\/(\d+)/);
 if(match){
@@ -1595,13 +1651,11 @@ return{type:'tiktok',id:match[1],url:url};
 }
 }
 
-// YouTube Shorts
 if(host==='youtube.com'||host==='m.youtube.com'||host==='youtu.be'){
 const shortsMatch=x.pathname.match(/\/shorts\/([^\/\?]+)/);
 if(shortsMatch){
 return{type:'youtube_short',id:shortsMatch[1],url:'https://www.youtube.com/embed/'+shortsMatch[1]};
 }
-// Video normal
 const v=x.searchParams.get('v');
 if(v){
 return{type:'youtube_short',id:v,url:'https://www.youtube.com/embed/'+v};
@@ -1745,7 +1799,6 @@ function syncShortsState(){
 if(!isHost)return;
 wsSend({kind:'media',state:{shorts:{playlist:shortsPlaylist,index:currentShortIndex}}});
 }
-// =============================================
 
 if(window.innerWidth <= 900) {
 $('chatSide').classList.remove('hidden');
@@ -1782,9 +1835,8 @@ closeMediaViewer(e,true);
 }
 });
 
-// Auto-scroll listener para shorts
 $('shortsContainer').addEventListener('scroll',()=>{
-if(currentTab!=='shorts')return;
+if(currentMainView!=='shorts')return;
 const container=$('shortsContainer');
 const scrollTop=container.scrollTop;
 const itemHeight=container.clientHeight;
