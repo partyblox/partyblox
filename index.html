@@ -182,53 +182,21 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 @keyframes unlockPulse{0%,100%{box-shadow:0 0 0 0 rgba(253,203,110,.5);}50%{box-shadow:0 0 0 16px rgba(253,203,110,0);}}
 .yt-unlock-text{color:#fff;font-size:15px;font-weight:600;text-align:center;max-width:320px;line-height:1.6;padding:0 20px;}
 
-/* ===== ESTILOS ABAS PRINCIPAIS ===== */
+/* ===== ABAS PRINCIPAIS ===== */
 .main-tabs{position:absolute;top:14px;left:14px;z-index:19;display:flex;gap:6px;background:rgba(0,0,0,.75);padding:6px;border-radius:12px;backdrop-filter:blur(10px);}
 .main-tab{padding:8px 16px;background:rgba(255,255,255,.08);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:.2s;}
 .main-tab:hover{background:rgba(255,255,255,.15);}
 .main-tab.active{background:#fdcb6e;color:#2d3436;}
 
-/* ===== ESTILOS SHORTS ===== */
+/* ===== PAINEL YOUTUBE SHORTS ===== */
 #shortsMainPanel{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:#000;z-index:4;}
 #shortsMainPanel.active{display:flex;}
-.shorts-header{padding:12px;background:rgba(26,26,46,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
-.shorts-header input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:13px;outline:none;}
-.shorts-header input:focus{border-color:#fdcb6e;}
-.shorts-header button{padding:10px 14px;background:#fdcb6e;color:#2d3436;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;}
-.shorts-header button.clear{background:#e74c3c;color:#fff;}
-.shorts-container{flex:1;overflow-y:auto;scroll-snap-type:y mandatory;display:flex;flex-direction:column;scroll-behavior:smooth;}
-.shorts-container::-webkit-scrollbar{width:6px;}
-.shorts-container::-webkit-scrollbar-track{background:#161620;}
-.shorts-container::-webkit-scrollbar-thumb{background:#fdcb6e;border-radius:3px;}
-.short-item{flex-shrink:0;height:100%;min-height:100%;scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
-.short-item iframe{width:100%;height:100%;border:none;max-width:450px;max-height:95vh;}
-.short-controls{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:rgba(0,0,0,.9);padding:12px 20px;border-radius:35px;backdrop-filter:blur(10px);z-index:15;}
-.short-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:.2s;}
-.short-btn:hover{background:#fdcb6e;color:#2d3436;}
-.short-btn.active{background:#00b894;}
-.short-info{position:absolute;top:70px;left:20px;background:rgba(0,0,0,.85);padding:10px 16px;border-radius:24px;font-size:13px;font-weight:600;backdrop-filter:blur(10px);z-index:15;}
-.shorts-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;text-align:center;padding:40px;}
-.shorts-empty .icon{font-size:100px;margin-bottom:20px;opacity:.3;}
-.shorts-empty h3{color:#aaa;margin-bottom:10px;font-size:22px;}
-.shorts-empty p{color:#777;max-width:350px;font-size:14px;line-height:1.6;}
-
-/* ===== ESTILOS TIKTOK ===== */
-#tiktokPanel{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:#000;z-index:4;}
-#tiktokPanel.active{display:flex;}
-.tiktok-header{padding:12px;background:rgba(26,26,46,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
-.tiktok-header input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:13px;outline:none;}
-.tiktok-header input:focus{border-color:#ff0050;}
-.tiktok-header button{padding:10px 14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;}
-.tiktok-header .btn-load{background:#ff0050;color:#fff;}
-.tiktok-header .btn-external{background:#74b9ff;color:#2d3436;}
-.tiktok-iframe-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
-.tiktok-iframe-wrap iframe{width:100%;height:100%;border:none;}
-.tiktok-blocked{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px;background:linear-gradient(135deg,#1a1a2e,#16213e);}
-.tiktok-blocked .icon{font-size:100px;margin-bottom:20px;}
-.tiktok-blocked h3{color:#ff0050;margin-bottom:10px;font-size:22px;}
-.tiktok-blocked p{color:#aaa;max-width:400px;font-size:14px;line-height:1.6;margin-bottom:20px;}
-.tiktok-blocked button{padding:14px 28px;background:#ff0050;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s;}
-.tiktok-blocked button:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(255,0,80,.4);}
+.shorts-iframe-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
+.shorts-iframe-wrap iframe{width:100%;height:100%;border:none;}
+.shorts-fallback{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);border-radius:30px;display:flex;align-items:center;gap:10px;z-index:5;}
+.shorts-fallback span{color:#fff;font-size:13px;font-weight:600;}
+.shorts-fallback a{padding:8px 16px;background:#ff0000;color:#fff;border-radius:20px;text-decoration:none;font-weight:700;font-size:13px;transition:.2s;}
+.shorts-fallback a:hover{background:#cc0000;transform:scale(1.05);}
 
 @media (max-width: 900px) and (orientation: portrait) {
 .main { flex-direction: column; }
@@ -300,11 +268,10 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <div class="main">
 <div class="video-side">
 <div class="video-container" id="videoCont">
-<!-- ABAS: Player / Shorts / TikTok -->
+<!-- ABAS: Player / Shorts -->
 <div class="main-tabs">
 <button class="main-tab active" data-view="player" onclick="switchMainView('player')">🎬 Player</button>
 <button class="main-tab" data-view="shorts" onclick="switchMainView('shorts')">📱 Shorts</button>
-<button class="main-tab" data-view="tiktok" onclick="switchMainView('tiktok')">🎵 TikTok</button>
 </div>
 
 <div class="video-placeholder" id="placeholder">
@@ -354,41 +321,13 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 </div>
 </div>
 
-<!-- PAINEL SHORTS -->
+<!-- PAINEL YOUTUBE SHORTS (simples - apenas iframe) -->
 <div id="shortsMainPanel">
-<div class="shorts-header">
-<input type="text" id="shortsInput" placeholder="Cole link TikTok ou YouTube Shorts" onkeypress="if(event.key==='Enter')addShort()">
-<button onclick="addShort()">➕ Adicionar</button>
-<button class="clear" onclick="clearShorts()">🗑️ Limpar</button>
-</div>
-<div class="shorts-container" id="shortsContainer">
-<div class="shorts-empty" id="shortsEmpty">
-<div class="icon">📱</div>
-<h3>Nenhum short adicionado</h3>
-<p>Cole links do TikTok ou YouTube Shorts para criar uma playlist sincronizada!<br><br>Use os botões abaixo para navegar ou ative o auto-scroll.</p>
-</div>
-</div>
-<div class="short-controls">
-<button class="short-btn" onclick="prevShort()" title="Anterior">⬅️</button>
-<button class="short-btn" onclick="toggleAutoScroll()" id="autoScrollBtn" title="Auto-scroll">🔄</button>
-<button class="short-btn" onclick="nextShort()" title="Próximo">➡️</button>
-</div>
-</div>
-
-<!-- PAINEL TIKTOK -->
-<div id="tiktokPanel">
-<div class="tiktok-header">
-<input type="text" id="tiktokInput" placeholder="Cole URL do TikTok (ex: tiktok.com/@user)" value="https://www.tiktok.com/foryou" onkeypress="if(event.key==='Enter')loadTiktok()">
-<button class="btn-load" onclick="loadTiktok()">🔄 Carregar</button>
-<button class="btn-external" onclick="openTiktokExternal()">↗️ Externo</button>
-</div>
-<div class="tiktok-iframe-wrap" id="tiktokIframeWrap">
-<iframe id="tiktokFrame" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-<div class="tiktok-blocked" id="tiktokBlocked" style="display:none;">
-<div class="icon">🎵</div>
-<h3>TikTok bloqueou o iframe</h3>
-<p>O TikTok não permite ser aberto dentro de outros sites. Clique no botão abaixo para abrir em uma nova aba. Todos na sala receberão o mesmo link!</p>
-<button onclick="openTiktokExternal()">↗️ Abrir TikTok em Nova Aba</button>
+<div class="shorts-iframe-wrap">
+<iframe id="shortsFrame" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
+<div class="shorts-fallback">
+<span>Se não carregar:</span>
+<a href="https://www.youtube.com/shorts" target="_blank" rel="noopener">Abrir YouTube Shorts ↗</a>
 </div>
 </div>
 </div>
@@ -511,20 +450,13 @@ let ytSuppressStateSend=false;
 let ytLastStateSent=0;
 let ytAutoplayBlocked=false;
 
-let shortsPlaylist=[];
-let currentShortIndex=-1;
-let autoScrollEnabled=false;
-let autoScrollTimer=null;
-const AUTO_SCROLL_INTERVAL=10000;
 let hostControlsVisible=true;
 let currentMainView='player';
 
-/* ===== NOVO: Variáveis TikTok ===== */
-let tiktokUrl = 'https://www.tiktok.com/foryou';
-/* ================================= */
-
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
 const MAX_AUDIO_DURATION=30;
+
+const SHORTS_URL = 'https://www.youtube.com/shorts';
 
 function openDonate(){$('donateModal').classList.add('active');}
 function closeDonate(){$('donateModal').classList.remove('active');}
@@ -609,24 +541,9 @@ playerCount=Number(m.playerCount||1);
 window.__partyPlayers=m.players||[];
 updateHostUI();
 if(m.state&&m.state.media)applyMediaState(m.state.media);
-if(m.state&&m.state.shorts){
-shortsPlaylist=m.state.shorts.playlist||[];
-currentShortIndex=m.state.shorts.index||-1;
-renderShorts();
-if(currentShortIndex>=0)scrollToShort(currentShortIndex);
-}
 if(m.state&&m.state.view){
 switchMainView(m.state.view,true);
 }
-/* NOVO: Receber URL do TikTok */
-if(m.state&&m.state.tiktokUrl){
-tiktokUrl=m.state.tiktokUrl;
-$('tiktokInput').value=tiktokUrl;
-if(currentMainView==='tiktok'){
-$('tiktokFrame').src=tiktokUrl;
-}
-}
-/* ============================ */
 if(m.state && m.state.screenOwner && m.state.screenOwner!==myPlayerId && m.state.media && m.state.media.type==='screen' && m.state.media.active){
 setTimeout(()=>wsSend({kind:'rtc',action:'screenRequest',from:myPlayerId,to:m.state.screenOwner}),300);
 }
@@ -642,24 +559,9 @@ else if(m.kind==='rtc'){
 handleRtcMessage(m);
 }
 else if(m.kind==='media')applyMediaState(m.state);
-else if(m.kind==='shortsSync'){
-shortsPlaylist=m.playlist||[];
-currentShortIndex=typeof m.index==='number'?m.index:-1;
-renderShorts();
-if(currentShortIndex>=0)scrollToShort(currentShortIndex);
-}
 else if(m.kind==='viewChange'){
 switchMainView(m.view,true);
 }
-/* NOVO: Receber sync do TikTok */
-else if(m.kind==='tiktokSync'){
-tiktokUrl=m.url||'https://www.tiktok.com/foryou';
-$('tiktokInput').value=tiktokUrl;
-if(currentMainView==='tiktok'){
-$('tiktokFrame').src=tiktokUrl;
-}
-}
-/* ============================= */
 else if(m.kind==='chat'){
 if(m.pid===myPlayerId)return;
 if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
@@ -700,7 +602,6 @@ updateHostUI();
 toast(hostControlsVisible?'👁️ Controles visíveis':'🙈 Controles ocultados');
 }
 
-/* MODIFICADO: switchMainView agora suporta 'tiktok' */
 function switchMainView(view,fromRemote=false){
 currentMainView=view;
 document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
@@ -710,24 +611,16 @@ $('videoCont').style.position='relative';
 const el=$(id);if(el)el.style.display='';
 });
 $('shortsMainPanel').classList.remove('active');
-$('tiktokPanel').classList.remove('active');
+$('shortsFrame').src='about:blank';
 }else if(view==='shorts'){
 $('shortsMainPanel').classList.add('active');
-$('tiktokPanel').classList.remove('active');
-}else if(view==='tiktok'){
-$('shortsMainPanel').classList.remove('active');
-$('tiktokPanel').classList.add('active');
-/* NOVO: Carrega TikTok ao entrar na aba */
-if(tiktokUrl && tiktokUrl!=='about:blank'){
-$('tiktokFrame').src=tiktokUrl;
-}
+$('shortsFrame').src=SHORTS_URL;
 }
 updateHostUI();
 if(isHost && !fromRemote){
 wsSend({kind:'viewChange',view:view,playerId:myPlayerId,timestamp:Date.now()});
 }
 }
-/* ================================================== */
 
 function claimHost(){
 isHost=true;updateHostUI();
@@ -1082,7 +975,7 @@ addEventListener('mouseup',endDrag);
 addEventListener('touchend',endDrag);
 })();
 
-/* ===== SISTEMA YOUTUBE (IGUAL AO SEU ORIGINAL) ===== */
+/* ===== SISTEMA YOUTUBE (IGUAL AO ORIGINAL - NÃO MEXIDO) ===== */
 function showYoutubeUnlock(){
 ytAutoplayBlocked=true;
 const el=$('ytUnlockOverlay');
@@ -1684,218 +1577,6 @@ if(!isHost)toast('🖥️ Conectando à tela do host...');
 }
 /* ===== FIM DO SISTEMA YOUTUBE ===== */
 
-/* ===== SISTEMA SHORTS (IGUAL AO ANTERIOR) ===== */
-function extractShortInfo(url){
-url=String(url||'').trim();
-if(!url)return null;
-try{
-const x=new URL(url);
-const host=x.hostname.replace(/^www\./,'').toLowerCase();
-if(host==='tiktok.com'||host==='vm.tiktok.com'){
-const match=x.pathname.match(/\/@?[^\/]+\/video\/(\d+)/);
-if(match)return{type:'tiktok',id:match[1],url:url};
-}
-if(host==='youtube.com'||host==='m.youtube.com'||host==='youtu.be'){
-const shortsMatch=x.pathname.match(/\/shorts\/([^\/\?]+)/);
-if(shortsMatch)return{type:'youtube_short',id:shortsMatch[1],url:'https://www.youtube.com/embed/'+shortsMatch[1]};
-const v=x.searchParams.get('v');
-if(v)return{type:'youtube_short',id:v,url:'https://www.youtube.com/embed/'+v};
-if(host==='youtu.be'){
-const id=x.pathname.split('/').filter(Boolean)[0];
-if(id)return{type:'youtube_short',id:id,url:'https://www.youtube.com/embed/'+id};
-}
-}
-}catch(_){}
-return null;
-}
-
-function addShort(){
-if(!isHost)return toast('👑 Só o host pode adicionar shorts');
-const input=$('shortsInput');
-const url=input.value.trim();
-if(!url)return;
-const info=extractShortInfo(url);
-if(!info){
-toast('❌ Link inválido. Use TikTok ou YouTube Shorts.');
-return;
-}
-shortsPlaylist.push(info);
-input.value='';
-renderShorts();
-syncShorts();
-toast('✅ Short adicionado!');
-if(shortsPlaylist.length===1 && currentShortIndex===-1){
-currentShortIndex=0;
-scrollToShort(0);
-syncShorts();
-}
-}
-
-function clearShorts(){
-if(!isHost)return toast('👑 Só o host pode limpar');
-if(shortsPlaylist.length===0)return toast('📭 Playlist já está vazia');
-if(!confirm('Limpar toda a playlist de shorts?'))return;
-shortsPlaylist=[];
-currentShortIndex=-1;
-renderShorts();
-syncShorts();
-toast('🗑️ Playlist de shorts limpa!');
-}
-
-function renderShorts(){
-const container=$('shortsContainer');
-const empty=$('shortsEmpty');
-if(shortsPlaylist.length===0){
-empty.style.display='flex';
-container.innerHTML='';
-container.appendChild(empty);
-return;
-}
-empty.style.display='none';
-container.innerHTML='';
-shortsPlaylist.forEach((short,index)=>{
-const item=document.createElement('div');
-item.className='short-item';
-item.dataset.index=index;
-const iframe=document.createElement('iframe');
-iframe.src=short.url+(short.type==='youtube_short'?'?autoplay=1&controls=0&rel=0&loop=1':'');
-iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-iframe.allowFullscreen=true;
-item.appendChild(iframe);
-const info=document.createElement('div');
-info.className='short-info';
-info.textContent=(index+1)+' / '+shortsPlaylist.length+' · '+(short.type==='tiktok'?'TikTok':'YouTube');
-item.appendChild(info);
-container.appendChild(item);
-});
-}
-
-function scrollToShort(index){
-if(index<0||index>=shortsPlaylist.length)return;
-currentShortIndex=index;
-const container=$('shortsContainer');
-const item=container.children[index];
-if(item){
-item.scrollIntoView({behavior:'smooth',block:'start'});
-}
-}
-
-function prevShort(){
-if(!isHost)return toast('👑 Só o host pode controlar');
-if(shortsPlaylist.length===0)return;
-currentShortIndex=Math.max(0,currentShortIndex-1);
-scrollToShort(currentShortIndex);
-syncShorts();
-}
-
-function nextShort(){
-if(!isHost)return toast('👑 Só o host pode controlar');
-if(shortsPlaylist.length===0)return;
-currentShortIndex=Math.min(shortsPlaylist.length-1,currentShortIndex+1);
-scrollToShort(currentShortIndex);
-syncShorts();
-}
-
-function toggleAutoScroll(){
-if(!isHost)return toast('👑 Só o host pode controlar');
-autoScrollEnabled=!autoScrollEnabled;
-const btn=$('autoScrollBtn');
-if(autoScrollEnabled){
-btn.classList.add('active');
-toast('🔄 Auto-scroll ativado (10s por vídeo)');
-startAutoScroll();
-}else{
-btn.classList.remove('active');
-toast('⏸️ Auto-scroll desativado');
-stopAutoScroll();
-}
-}
-
-function startAutoScroll(){
-stopAutoScroll();
-if(!autoScrollEnabled)return;
-autoScrollTimer=setInterval(()=>{
-if(!isHost||shortsPlaylist.length===0)return;
-currentShortIndex=(currentShortIndex+1)%shortsPlaylist.length;
-scrollToShort(currentShortIndex);
-syncShorts();
-},AUTO_SCROLL_INTERVAL);
-}
-
-function stopAutoScroll(){
-if(autoScrollTimer){
-clearInterval(autoScrollTimer);
-autoScrollTimer=null;
-}
-}
-
-function syncShorts(){
-wsSend({
-kind:'shortsSync',
-playlist:shortsPlaylist,
-index:currentShortIndex,
-playerId:myPlayerId,
-timestamp:Date.now()
-});
-}
-/* ===== FIM DO SISTEMA SHORTS ===== */
-
-/* ===== NOVO: SISTEMA TIKTOK ===== */
-function loadTiktok(){
-if(!isHost)return toast('👑 Só o host pode carregar TikTok');
-const input=$('tiktokInput');
-let url=input.value.trim();
-if(!url){
-toast('❌ Digite uma URL do TikTok');
-return;
-}
-// Garante https://
-if(!url.startsWith('http'))url='https://'+url;
-tiktokUrl=url;
-input.value=tiktokUrl;
-
-// Tenta carregar no iframe
-const frame=$('tiktokFrame');
-const blocked=$('tiktokBlocked');
-frame.style.display='block';
-blocked.style.display='none';
-frame.src=tiktokUrl;
-
-// Detecta se iframe foi bloqueado (após 3s)
-setTimeout(()=>{
-try{
-// Se o frame carregou, tenta acessar contentWindow (vai falhar por CORS se o TikTok bloqueou)
-const test = frame.contentWindow.location.href;
-// Se chegou aqui, carregou OK
-}catch(e){
-// CORS error = provavelmente bloqueado
-frame.style.display='none';
-blocked.style.display='flex';
-}
-},3000);
-
-wsSend({kind:'tiktokSync',url:tiktokUrl,playerId:myPlayerId,timestamp:Date.now()});
-toast('🎵 TikTok carregado para toda a sala!');
-}
-
-function openTiktokExternal(){
-const url=tiktokUrl||'https://www.tiktok.com/foryou';
-window.open(url,'_blank');
-toast('↗️ TikTok aberto em nova aba');
-}
-
-// Detecta erro de carregamento do iframe TikTok
-document.addEventListener('DOMContentLoaded',()=>{
-const frame=$('tiktokFrame');
-if(frame){
-frame.addEventListener('error',()=>{
-frame.style.display='none';
-$('tiktokBlocked').style.display='flex';
-});
-}
-});
-/* ===== FIM DO SISTEMA TIKTOK ===== */
-
 if(window.innerWidth <= 900) {
 $('chatSide').classList.remove('hidden');
 $('divider').classList.remove('hidden');
@@ -1928,18 +1609,6 @@ if(e.key==='Escape'){
 closeDonate();
 $('emojiPop').classList.remove('active');
 closeMediaViewer(e,true);
-}
-});
-
-$('shortsContainer').addEventListener('scroll',()=>{
-if(currentMainView!=='shorts')return;
-const container=$('shortsContainer');
-const scrollTop=container.scrollTop;
-const itemHeight=container.clientHeight;
-const newIndex=Math.round(scrollTop/itemHeight);
-if(newIndex!==currentShortIndex && newIndex>=0 && newIndex<shortsPlaylist.length){
-currentShortIndex=newIndex;
-if(isHost)syncShorts();
 }
 });
 </script>
