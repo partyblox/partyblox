@@ -883,7 +883,13 @@ async function loadGamesList(){
   if(gamesList){renderGamesList(gamesList);return;}
   try{
     const res=await fetch('games/games.json?t='+Date.now());
-    if(res.ok){const data=await res.json();gamesList=[...BUILTIN_GAMES,...(data.games||[])];}
+    if(res.ok){
+      const data=await res.json();
+      // Deduplicação: só adiciona jogos do JSON se o ID não existir nos built-ins
+      const builtinIds=new Set(BUILTIN_GAMES.map(g=>g.id));
+      const extraGames=(data.games||[]).filter(g=>!builtinIds.has(g.id));
+      gamesList=[...BUILTIN_GAMES,...extraGames];
+    }
     else gamesList=[...BUILTIN_GAMES];
   }catch(e){gamesList=[...BUILTIN_GAMES];}
   renderGamesList(gamesList);
@@ -927,7 +933,12 @@ function handleGameMsg(m){
       wsSend({kind:'game_join',game:game.id,playerId:myPlayerId,name:myName});sendPlayersToIframe();break;
     case 'start_request':
       if(session.players.length>=2){
-        const list=session.players.slice(0,2).map((p,i)=>({...p,symbol:i===0?'X':'O'}));
+        // CORREÇÃO: envia TANTO symbol (jogo da velha) quanto color (xadrez/damas)
+        const list=session.players.slice(0,2).map((p,i)=>({
+          ...p, 
+          symbol:i===0?'X':'O',   // Para jogo da velha
+          color:i===0?'w':'b'     // Para xadrez e damas
+        }));
         wsSend({kind:'game_event',game:game.id,type:'start',players:list,startSymbol:'X'});
         sendToIframe({type:'start',players:list,startSymbol:'X'});
       }break;
