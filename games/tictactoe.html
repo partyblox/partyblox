@@ -65,7 +65,7 @@ h1{margin-bottom:14px;color:#fdcb6e;font-size:22px;text-align:center;}
 
 .btn-row{display:flex;gap:8px;width:100%;}
 button.action{flex:1;padding:12px;background:linear-gradient(90deg,#fd79a8,#fdcb6e);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
-button.action:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3);}
+button.action:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3);}
 button.action.secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);}
 button.action.secondary:hover{background:rgba(255,255,255,.15);}
 button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
@@ -74,9 +74,6 @@ button.action:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:n
 .score>div{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px;background:rgba(255,255,255,.04);border-radius:10px;}
 .score .val{font-size:22px;font-weight:800;color:#fdcb6e;}
 .score .lbl{font-size:10px;opacity:.7;margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
-
-.waiting{text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;animation:blink 1.5s infinite;}
-@keyframes blink{50%{opacity:.3;}}
 </style>
 </head>
 <body>
@@ -129,18 +126,17 @@ const MAX_PLAYERS=2;
 
 // ===== Estado =====
 let me={id:null,name:null,symbol:null};
-let players=[];         // [{id,name,symbol}, ...]  max 2
+let players=[];
 let board=Array(9).fill('');
 let currentTurn='X';
 let gameOver=false;
 let lastMove=-1;
-let matchStarted=false;
 let scores={X:0,O:0,D:0};
 let rematchVotes=new Set();
 let rematchRequested=false;
 const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-// ===== Comunicação com PartyBlox =====
+// ===== Comunicação =====
 function send(type,data={}){
   window.parent.postMessage({
     __game:true,
@@ -167,18 +163,14 @@ function handleMsg(m){
       renderLobby();
       break;
     case 'start':
-      startMatch(m.players,m.startSymbol||'X');
+      startMatch(m.players);
       break;
     case 'move':
       applyMove(m.move,m.player);
       break;
     case 'rematch_req':
-      handleRematchRequest(m.player);
-      break;
-    case 'rematch_yes':
       rematchVotes.add(m.player);
-      if(rematchVotes.size>=2)startRematch();
-      else updateRematchStatus();
+      updateRematch();
       break;
     case 'player_left':
       handlePlayerLeft(m.player);
@@ -217,32 +209,23 @@ function renderLobby(){
   
   const btn=$('startBtn');
   if(players.length>=2){
-    if(!matchStarted){
-      btn.disabled=false;
-      btn.textContent='🎮 Iniciar Partida';
-      btn.onclick=startMatchRequest;
-    }else{
+    btn.disabled=false;
+    btn.textContent='🎮 Iniciar Partida';
+    btn.onclick=()=>{
       btn.disabled=true;
-      btn.textContent='Partida em andamento...';
-    }
+      btn.textContent='Iniciando...';
+      send('start_request',{});
+    };
   }else{
     btn.disabled=true;
     btn.textContent='Aguardando 2 jogadores...';
   }
 }
 
-function startMatchRequest(){
-  // Quem clicou primeiro inicia - servidor escolhe quem foi
-  send('start_request',{});
-  $('startBtn').disabled=true;
-  $('startBtn').textContent='Iniciando...';
-}
-
-function startMatch(list,startSymbol){
+function startMatch(list){
   players=list;
-  matchStarted=true;
   board=Array(9).fill('');
-  currentTurn=startSymbol||'X';
+  currentTurn='X';
   gameOver=false;
   lastMove=-1;
   rematchVotes=new Set();
@@ -253,8 +236,9 @@ function startMatch(list,startSymbol){
   
   const pX=players.find(p=>p.symbol==='X')||players[0];
   const pO=players.find(p=>p.symbol==='O')||players[1];
-  if(pX){me.symbol=pX.id===me.id?'X':me.symbol;}
-  if(pO){me.symbol=pO.id===me.id?'O':me.symbol;}
+  
+  if(pX&&pX.id===me.id)me.symbol='X';
+  if(pO&&pO.id===me.id)me.symbol='O';
   
   $('nameX').textContent=pX?.name||'X';
   $('nameO').textContent=pO?.name||'O';
@@ -288,7 +272,6 @@ function renderBoard(){
     b.appendChild(c);
   }
   
-  // highlight win
   const winLine=checkWinLine();
   if(winLine){
     const cells=b.querySelectorAll('.cell');
@@ -384,29 +367,22 @@ function requestRematch(){
   rematchRequested=true;
   rematchVotes.add(me.id);
   send('rematch_req',{});
-  updateRematchStatus();
+  updateRematch();
 }
 
-function handleRematchRequest(playerId){
-  rematchVotes.add(playerId);
-  updateRematchStatus();
-}
-
-function updateRematchStatus(){
+function updateRematch(){
   if(rematchVotes.size>=2){
     startRematch();
     return;
   }
   $('rematchBtn').disabled=true;
-  const waiting=2-rematchVotes.size;
-  $('rematchBtn').textContent=`⏳ Aguardando (${waiting})...`;
+  $('rematchBtn').textContent=`⏳ Aguardando (${2-rematchVotes.size})...`;
 }
 
 function startRematch(){
   board=Array(9).fill('');
   lastMove=-1;
   gameOver=false;
-  // inverte quem começa
   currentTurn=currentTurn==='X'?'O':'X';
   rematchVotes=new Set();
   rematchRequested=false;
@@ -416,11 +392,11 @@ function startRematch(){
   updateStatus();
 }
 
-function handlePlayerLeft(playerId){
-  const status=$('status');
-  status.className='status lose';
-  const p=players.find(x=>x.id===playerId);
-  status.textContent='🚪 '+(p?.name||'Oponente')+' saiu da partida.';
+function handlePlayerLeft(pid){
+  const p=players.find(x=>x.id===pid);
+  const st=$('status');
+  st.className='status lose';
+  st.textContent='🚪 '+(p?.name||'Oponente')+' saiu da partida.';
   gameOver=true;
   $('rematchBtn').disabled=true;
 }
@@ -432,7 +408,6 @@ function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt
 // ===== Init =====
 $('leaveBtn').onclick=()=>send('leave',{});
 send('ready',{});
-
 renderLobby();
 </script>
 </body>
