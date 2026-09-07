@@ -35,7 +35,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .tb-btn:hover{background:rgba(255,255,255,.15);}
 .tb-btn.host{background:rgba(253,203,110,.25);border-color:#fdcb6e;}
 .tb-btn.donate{background:linear-gradient(90deg,#fd79a8,#e84393);border-color:#fd79a8;animation:pulseBtn 3s infinite;}
-/* ADICIONADO: Botão ocultar controles */
 .tb-btn.hide-ctrl{background:rgba(116,185,255,.25);border-color:#74b9ff;}
 @keyframes pulseBtn{0%,100%{box-shadow:0 0 0 0 rgba(253,121,168,.4);}50%{box-shadow:0 0 0 8px rgba(253,121,168,0);}}
 .main{flex:1;display:flex;overflow:hidden;position:relative;height:100%;}
@@ -69,7 +68,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .media-badge{position:absolute;top:14px;left:14px;padding:6px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:12px;font-weight:700;display:none;}
 .media-badge.active{display:flex;align-items:center;gap:6px;}
 .host-controls{position:absolute;z-index:20;top:60px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;transition:.3s;}
-/* ADICIONADO: Esconder controles */
 .host-controls.hidden{display:none !important;}
 .hc-btn{padding:8px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;white-space:nowrap;}
 .hc-btn:hover{background:rgba(253,203,110,.3);border-color:#fdcb6e;}
@@ -154,7 +152,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .donate-footer .stat-val{font-size:22px;font-weight:800;color:#fdcb6e;}
 .donate-footer .stat-lbl{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;}
 .donate-footer .thanks{font-size:12px;color:rgba(255,255,255,.7);font-style:italic;}
-/* Chat Media Styles */
 .chat-media-container{margin-top:6px;max-width:250px;position:relative;}
 .chat-media-thumb{max-width:100%;max-height:200px;border-radius:8px;cursor:pointer;display:block;transition:.2s;}
 .chat-media-thumb:hover{transform:scale(1.02);box-shadow:0 4px 15px rgba(0,0,0,.3);}
@@ -171,7 +168,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .media-viewer-content img,.media-viewer-content video{max-width:100%;max-height:90vh;border-radius:12px;}
 .media-viewer-close{position:absolute;top:-40px;right:0;background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;}
 .media-viewer-close:hover{background:rgba(255,255,255,.3);}
-/* Audio Recording UI */
 .recording-indicator{display:none;align-items:center;gap:8px;padding:6px 12px;background:rgba(231,76,60,.2);border:1px solid #e74c3c;border-radius:20px;font-size:12px;font-weight:600;}
 .recording-indicator.active{display:flex;}
 .recording-indicator .rec-dot{width:8px;height:8px;background:#e74c3c;border-radius:50%;animation:recPulse 1s infinite;}
@@ -179,20 +175,20 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .recording-timer{color:#e74c3c;font-weight:700;}
 .recording-cancel{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;margin-left:4px;}
 .recording-cancel:hover{background:rgba(255,255,255,.2);}
-/* ===== OVERLAY DE DESBLOQUEIO DO YOUTUBE ===== */
 #ytUnlockOverlay{position:absolute;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:16;cursor:pointer;backdrop-filter:blur(4px);}
 #ytUnlockOverlay.active{display:flex;}
 .yt-unlock-btn{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#fdcb6e,#ffeaa7);border:4px solid #fff;color:#2d3436;font-size:46px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 35px rgba(0,0,0,.5);transition:.2s;animation:unlockPulse 2s infinite;}
 .yt-unlock-btn:hover{transform:scale(1.12);}
 @keyframes unlockPulse{0%,100%{box-shadow:0 0 0 0 rgba(253,203,110,.5);}50%{box-shadow:0 0 0 16px rgba(253,203,110,0);}}
 .yt-unlock-text{color:#fff;font-size:15px;font-weight:600;text-align:center;max-width:320px;line-height:1.6;padding:0 20px;}
-/* ================================================ */
 
-/* ===== ADICIONADO: ESTILOS SHORTS ===== */
+/* ===== ESTILOS ABAS PRINCIPAIS ===== */
 .main-tabs{position:absolute;top:14px;left:14px;z-index:19;display:flex;gap:6px;background:rgba(0,0,0,.75);padding:6px;border-radius:12px;backdrop-filter:blur(10px);}
 .main-tab{padding:8px 16px;background:rgba(255,255,255,.08);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:.2s;}
 .main-tab:hover{background:rgba(255,255,255,.15);}
 .main-tab.active{background:#fdcb6e;color:#2d3436;}
+
+/* ===== ESTILOS SHORTS ===== */
 #shortsMainPanel{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:#000;z-index:4;}
 #shortsMainPanel.active{display:flex;}
 .shorts-header{padding:12px;background:rgba(26,26,46,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
@@ -215,7 +211,24 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 .shorts-empty .icon{font-size:100px;margin-bottom:20px;opacity:.3;}
 .shorts-empty h3{color:#aaa;margin-bottom:10px;font-size:22px;}
 .shorts-empty p{color:#777;max-width:350px;font-size:14px;line-height:1.6;}
-/* ================================================ */
+
+/* ===== ESTILOS TIKTOK ===== */
+#tiktokPanel{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:#000;z-index:4;}
+#tiktokPanel.active{display:flex;}
+.tiktok-header{padding:12px;background:rgba(26,26,46,.95);border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.tiktok-header input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:13px;outline:none;}
+.tiktok-header input:focus{border-color:#ff0050;}
+.tiktok-header button{padding:10px 14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;}
+.tiktok-header .btn-load{background:#ff0050;color:#fff;}
+.tiktok-header .btn-external{background:#74b9ff;color:#2d3436;}
+.tiktok-iframe-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
+.tiktok-iframe-wrap iframe{width:100%;height:100%;border:none;}
+.tiktok-blocked{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px;background:linear-gradient(135deg,#1a1a2e,#16213e);}
+.tiktok-blocked .icon{font-size:100px;margin-bottom:20px;}
+.tiktok-blocked h3{color:#ff0050;margin-bottom:10px;font-size:22px;}
+.tiktok-blocked p{color:#aaa;max-width:400px;font-size:14px;line-height:1.6;margin-bottom:20px;}
+.tiktok-blocked button{padding:14px 28px;background:#ff0050;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s;}
+.tiktok-blocked button:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(255,0,80,.4);}
 
 @media (max-width: 900px) and (orientation: portrait) {
 .main { flex-direction: column; }
@@ -278,7 +291,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <div class="topbar-right">
 <button class="tb-btn host" id="hostInd" style="display:none">👑 Host</button>
 <button class="tb-btn" onclick="toggleChat()" id="chatToggleBtn">💬 Chat</button>
-<!-- ADICIONADO: Botão ocultar controles -->
 <button class="tb-btn hide-ctrl" id="toggleHostBtn" style="display:none" onclick="toggleHostControls()">👁️ Controles</button>
 <button class="tb-btn donate" onclick="openDonate()">💝 Apoiar</button>
 <button class="tb-btn" onclick="copyRoomLink()">🔗 Convidar</button>
@@ -288,10 +300,11 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <div class="main">
 <div class="video-side">
 <div class="video-container" id="videoCont">
-<!-- ADICIONADO: Abas Player / Shorts -->
+<!-- ABAS: Player / Shorts / TikTok -->
 <div class="main-tabs">
 <button class="main-tab active" data-view="player" onclick="switchMainView('player')">🎬 Player</button>
 <button class="main-tab" data-view="shorts" onclick="switchMainView('shorts')">📱 Shorts</button>
+<button class="main-tab" data-view="tiktok" onclick="switchMainView('tiktok')">🎵 TikTok</button>
 </div>
 
 <div class="video-placeholder" id="placeholder">
@@ -300,7 +313,6 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <p>Se você é o host, use os botões acima para compartilhar um vídeo, imagem, áudio ou sua tela.</p>
 </div>
 <div id="youtubeOverlay"><div id="youtubePlayer"></div></div>
-<!-- OVERLAY DE DESBLOQUEIO DO YOUTUBE -->
 <div id="ytUnlockOverlay" onclick="unlockYouTube()">
   <button class="yt-unlock-btn">▶️</button>
   <div class="yt-unlock-text">Seu navegador bloqueou a reprodução automática.<br>Clique para iniciar o vídeo.</div>
@@ -342,7 +354,7 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 </div>
 </div>
 
-<!-- ADICIONADO: Painel Shorts -->
+<!-- PAINEL SHORTS -->
 <div id="shortsMainPanel">
 <div class="shorts-header">
 <input type="text" id="shortsInput" placeholder="Cole link TikTok ou YouTube Shorts" onkeypress="if(event.key==='Enter')addShort()">
@@ -360,6 +372,24 @@ body{overflow:hidden;height:100dvh;background:linear-gradient(135deg,#1a1a2e,#16
 <button class="short-btn" onclick="prevShort()" title="Anterior">⬅️</button>
 <button class="short-btn" onclick="toggleAutoScroll()" id="autoScrollBtn" title="Auto-scroll">🔄</button>
 <button class="short-btn" onclick="nextShort()" title="Próximo">➡️</button>
+</div>
+</div>
+
+<!-- PAINEL TIKTOK -->
+<div id="tiktokPanel">
+<div class="tiktok-header">
+<input type="text" id="tiktokInput" placeholder="Cole URL do TikTok (ex: tiktok.com/@user)" value="https://www.tiktok.com/foryou" onkeypress="if(event.key==='Enter')loadTiktok()">
+<button class="btn-load" onclick="loadTiktok()">🔄 Carregar</button>
+<button class="btn-external" onclick="openTiktokExternal()">↗️ Externo</button>
+</div>
+<div class="tiktok-iframe-wrap" id="tiktokIframeWrap">
+<iframe id="tiktokFrame" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<div class="tiktok-blocked" id="tiktokBlocked" style="display:none;">
+<div class="icon">🎵</div>
+<h3>TikTok bloqueou o iframe</h3>
+<p>O TikTok não permite ser aberto dentro de outros sites. Clique no botão abaixo para abrir em uma nova aba. Todos na sala receberão o mesmo link!</p>
+<button onclick="openTiktokExternal()">↗️ Abrir TikTok em Nova Aba</button>
+</div>
 </div>
 </div>
 </div>
@@ -461,7 +491,6 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 
-// ⚠️ CONFIGURAÇÃO IMPORTANTE: Coloque aqui a URL do seu backend no Render
 const BACKEND_URL = 'https://partyblox.onrender.com';
 
 const DONATE_CONFIG={
@@ -477,14 +506,11 @@ let screenStream=null,isScreenSharing=false;
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
 
-// ===== NOVAS VARIÁVEIS DO SISTEMA YOUTUBE =====
-let ytLastVideoId=null;          // último videoId carregado
-let ytSuppressStateSend=false;   // impede eco de estado ao receber sync
-let ytLastStateSent=0;           // throttle de envio
-let ytAutoplayBlocked=false;     // flag de autoplay bloqueado
-// ================================================
+let ytLastVideoId=null;
+let ytSuppressStateSend=false;
+let ytLastStateSent=0;
+let ytAutoplayBlocked=false;
 
-// ===== ADICIONADO: VARIÁVEIS SHORTS =====
 let shortsPlaylist=[];
 let currentShortIndex=-1;
 let autoScrollEnabled=false;
@@ -492,9 +518,11 @@ let autoScrollTimer=null;
 const AUTO_SCROLL_INTERVAL=10000;
 let hostControlsVisible=true;
 let currentMainView='player';
-// ================================================
 
-// Audio Recording
+/* ===== NOVO: Variáveis TikTok ===== */
+let tiktokUrl = 'https://www.tiktok.com/foryou';
+/* ================================= */
+
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
 const MAX_AUDIO_DURATION=30;
 
@@ -581,7 +609,6 @@ playerCount=Number(m.playerCount||1);
 window.__partyPlayers=m.players||[];
 updateHostUI();
 if(m.state&&m.state.media)applyMediaState(m.state.media);
-// ADICIONADO: Receber estado dos shorts e view
 if(m.state&&m.state.shorts){
 shortsPlaylist=m.state.shorts.playlist||[];
 currentShortIndex=m.state.shorts.index||-1;
@@ -591,6 +618,15 @@ if(currentShortIndex>=0)scrollToShort(currentShortIndex);
 if(m.state&&m.state.view){
 switchMainView(m.state.view,true);
 }
+/* NOVO: Receber URL do TikTok */
+if(m.state&&m.state.tiktokUrl){
+tiktokUrl=m.state.tiktokUrl;
+$('tiktokInput').value=tiktokUrl;
+if(currentMainView==='tiktok'){
+$('tiktokFrame').src=tiktokUrl;
+}
+}
+/* ============================ */
 if(m.state && m.state.screenOwner && m.state.screenOwner!==myPlayerId && m.state.media && m.state.media.type==='screen' && m.state.media.active){
 setTimeout(()=>wsSend({kind:'rtc',action:'screenRequest',from:myPlayerId,to:m.state.screenOwner}),300);
 }
@@ -606,17 +642,24 @@ else if(m.kind==='rtc'){
 handleRtcMessage(m);
 }
 else if(m.kind==='media')applyMediaState(m.state);
-// ADICIONADO: Receber sync de shorts
 else if(m.kind==='shortsSync'){
 shortsPlaylist=m.playlist||[];
 currentShortIndex=typeof m.index==='number'?m.index:-1;
 renderShorts();
 if(currentShortIndex>=0)scrollToShort(currentShortIndex);
 }
-// ADICIONADO: Receber troca de view
 else if(m.kind==='viewChange'){
 switchMainView(m.view,true);
 }
+/* NOVO: Receber sync do TikTok */
+else if(m.kind==='tiktokSync'){
+tiktokUrl=m.url||'https://www.tiktok.com/foryou';
+$('tiktokInput').value=tiktokUrl;
+if(currentMainView==='tiktok'){
+$('tiktokFrame').src=tiktokUrl;
+}
+}
+/* ============================= */
 else if(m.kind==='chat'){
 if(m.pid===myPlayerId)return;
 if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
@@ -647,19 +690,17 @@ ws.onerror=()=>{setTimeout(()=>{if(!isHost&&playerCount===1)claimHost();},3000);
 function updateHostUI(){
 $('hostInd').style.display=isHost?'inline-block':'none';
 $('hostCtrls').style.display=(isHost && hostControlsVisible)?'flex':'none';
-// ADICIONADO: Mostrar botão de ocultar controles
 $('toggleHostBtn').style.display=isHost?'inline-block':'none';
 $('toggleHostBtn').textContent=hostControlsVisible?'🙈 Ocultar':'👁️ Controles';
 }
 
-// ADICIONADO: Função ocultar controles
 function toggleHostControls(){
 hostControlsVisible=!hostControlsVisible;
 updateHostUI();
 toast(hostControlsVisible?'👁️ Controles visíveis':'🙈 Controles ocultados');
 }
 
-// ADICIONADO: Função trocar view (player/shorts)
+/* MODIFICADO: switchMainView agora suporta 'tiktok' */
 function switchMainView(view,fromRemote=false){
 currentMainView=view;
 document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
@@ -669,14 +710,24 @@ $('videoCont').style.position='relative';
 const el=$(id);if(el)el.style.display='';
 });
 $('shortsMainPanel').classList.remove('active');
-}else{
+$('tiktokPanel').classList.remove('active');
+}else if(view==='shorts'){
 $('shortsMainPanel').classList.add('active');
+$('tiktokPanel').classList.remove('active');
+}else if(view==='tiktok'){
+$('shortsMainPanel').classList.remove('active');
+$('tiktokPanel').classList.add('active');
+/* NOVO: Carrega TikTok ao entrar na aba */
+if(tiktokUrl && tiktokUrl!=='about:blank'){
+$('tiktokFrame').src=tiktokUrl;
+}
 }
 updateHostUI();
 if(isHost && !fromRemote){
 wsSend({kind:'viewChange',view:view,playerId:myPlayerId,timestamp:Date.now()});
 }
 }
+/* ================================================== */
 
 function claimHost(){
 isHost=true;updateHostUI();
@@ -1031,10 +1082,7 @@ addEventListener('mouseup',endDrag);
 addEventListener('touchend',endDrag);
 })();
 
-// ============================================================
-// ===== SISTEMA YOUTUBE CORRIGIDO =====
-// ============================================================
-
+/* ===== SISTEMA YOUTUBE (IGUAL AO SEU ORIGINAL) ===== */
 function showYoutubeUnlock(){
 ytAutoplayBlocked=true;
 const el=$('ytUnlockOverlay');
@@ -1143,7 +1191,6 @@ return false;
 const t=Math.max(0,Number(start)||0);
 
 try{
-// MESMO VÍDEO: apenas sincroniza posição e play/pause, SEM recarregar
 if(ytLastVideoId===id){
 try{
 const cur=youtubePlayer.getCurrentTime()||0;
@@ -1163,7 +1210,6 @@ hideYoutubeUnlock();
 return true;
 }
 
-// VÍDEO DIFERENTE: carrega novo
 ytLastVideoId=id;
 ytVideoId=id;
 
@@ -1252,10 +1298,6 @@ else if(state===YT.PlayerState.CUED){
 $('playBtn').textContent='▶️';
 }
 }
-
-// ============================================================
-// ===== FIM DO SISTEMA YOUTUBE CORRIGIDO =====
-// ============================================================
 
 function togglePlayPause(){
 if(!isHost)return toast('👑 Só o host pode controlar');
@@ -1640,8 +1682,9 @@ if(!isHost)toast('🖥️ Conectando à tela do host...');
 }
 }
 }
+/* ===== FIM DO SISTEMA YOUTUBE ===== */
 
-// ===== ADICIONADO: SISTEMA SHORTS COMPLETO =====
+/* ===== SISTEMA SHORTS (IGUAL AO ANTERIOR) ===== */
 function extractShortInfo(url){
 url=String(url||'').trim();
 if(!url)return null;
@@ -1795,7 +1838,63 @@ playerId:myPlayerId,
 timestamp:Date.now()
 });
 }
-// ===== FIM DO SISTEMA SHORTS =====
+/* ===== FIM DO SISTEMA SHORTS ===== */
+
+/* ===== NOVO: SISTEMA TIKTOK ===== */
+function loadTiktok(){
+if(!isHost)return toast('👑 Só o host pode carregar TikTok');
+const input=$('tiktokInput');
+let url=input.value.trim();
+if(!url){
+toast('❌ Digite uma URL do TikTok');
+return;
+}
+// Garante https://
+if(!url.startsWith('http'))url='https://'+url;
+tiktokUrl=url;
+input.value=tiktokUrl;
+
+// Tenta carregar no iframe
+const frame=$('tiktokFrame');
+const blocked=$('tiktokBlocked');
+frame.style.display='block';
+blocked.style.display='none';
+frame.src=tiktokUrl;
+
+// Detecta se iframe foi bloqueado (após 3s)
+setTimeout(()=>{
+try{
+// Se o frame carregou, tenta acessar contentWindow (vai falhar por CORS se o TikTok bloqueou)
+const test = frame.contentWindow.location.href;
+// Se chegou aqui, carregou OK
+}catch(e){
+// CORS error = provavelmente bloqueado
+frame.style.display='none';
+blocked.style.display='flex';
+}
+},3000);
+
+wsSend({kind:'tiktokSync',url:tiktokUrl,playerId:myPlayerId,timestamp:Date.now()});
+toast('🎵 TikTok carregado para toda a sala!');
+}
+
+function openTiktokExternal(){
+const url=tiktokUrl||'https://www.tiktok.com/foryou';
+window.open(url,'_blank');
+toast('↗️ TikTok aberto em nova aba');
+}
+
+// Detecta erro de carregamento do iframe TikTok
+document.addEventListener('DOMContentLoaded',()=>{
+const frame=$('tiktokFrame');
+if(frame){
+frame.addEventListener('error',()=>{
+frame.style.display='none';
+$('tiktokBlocked').style.display='flex';
+});
+}
+});
+/* ===== FIM DO SISTEMA TIKTOK ===== */
 
 if(window.innerWidth <= 900) {
 $('chatSide').classList.remove('hidden');
@@ -1808,7 +1907,6 @@ $('inRoom').value=new URLSearchParams(location.search).get('room');
 }
 updateProgress();
 
-// CLIQUE GLOBAL CORRIGIDO: agora realmente desbloqueia o YouTube
 document.addEventListener('click',()=>{
 try{
 if(mediaType==='video')$('localVideo').play().catch(()=>{});
@@ -1833,7 +1931,6 @@ closeMediaViewer(e,true);
 }
 });
 
-// ADICIONADO: Listener de scroll manual nos shorts
 $('shortsContainer').addEventListener('scroll',()=>{
 if(currentMainView!=='shorts')return;
 const container=$('shortsContainer');
