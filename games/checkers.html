@@ -205,7 +205,7 @@ function renderLobby(){
 }
 
 function startMatch(list){
-  players=list;
+  players=list.map((p,i)=>({...p,color:p.color||(i===0?'w':'b')}));
   const meP=players.find(p=>p.id===me.id);
   me.color=meP?meP.color:'w';
   const pW=players.find(p=>p.color==='w');
@@ -234,7 +234,9 @@ function pieceCaptures(b,r,c){
   const caps=[];
   const dirs=[[-1,-1],[-1,1],[1,-1],[1,1]];
   if(!isKing){
-    for(const[dr,dc]of dirs){
+    // Peão comum só captura para frente. Apenas dama pode capturar em qualquer direção.
+    const captureDirs=[[color==='w'?-1:1,-1],[color==='w'?-1:1,1]];
+    for(const[dr,dc]of captureDirs){
       const mr=r+dr,mc=c+dc,lr=r+2*dr,lc=c+2*dc;
       if(lr>=0&&lr<8&&lc>=0&&lc<8){
         const mid=b[mr*8+mc];

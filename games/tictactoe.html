@@ -223,7 +223,7 @@ function renderLobby(){
 }
 
 function startMatch(list){
-  players=list;
+  players=list.map((p,i)=>({...p,symbol:p.symbol||(i===0?'X':'O'),color:p.color||(i===0?'w':'b')}));
   board=Array(9).fill('');
   currentTurn='X';
   gameOver=false;
@@ -281,8 +281,7 @@ function renderBoard(){
 
 function makeMove(i){
   if(gameOver||currentTurn!==me.symbol||board[i])return;
-  board[i]=me.symbol;
-  lastMove=i;
+  // A jogada local é aplicada uma única vez; o servidor/parent replica para o adversário.
   send('move',{move:i,symbol:me.symbol});
   applyMove(i,me.id);
 }

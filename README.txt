@@ -1,48 +1,27 @@
-PARTYBLOX — SITE FINAL
+PARTYBLOX - VERSAO CORRIGIDA
 
-Esta versão é SOMENTE o site normal do PartyBlox:
-- Sem mundo 3D.
-- Sem avatares.
-- Sem editor de avatar.
-- Sem WorldModel.
+Estrutura:
+  index.html
+  server.js
+  package.json
+  games/checkers.html
+  games/chess.html
+  games/tictactoe.html
 
-RECURSOS:
-- Salas multiplayer por WebSocket.
-- Chat público.
-- Mensagem privada com @nome.
-- Emojis.
-- Reações.
-- Emotes.
-- Envio de imagem e vídeo no chat.
-- Gravação e envio de áudio no chat (até 30s).
-- YouTube sincronizado pelo host.
-- Upload de vídeo, imagem e áudio para o telão.
-- Controles sincronizados de vídeo/áudio.
-- Compartilhamento de tela ao vivo por WebRTC.
-- Entrada de novos participantes durante a transmissão.
-- Limpar tela encerra mídia e conexões WebRTC.
-- Host automático quando o host sai.
-- Localhost e Render.
+Limites:
+  Midia principal (host): 900 MB
+  Midia enviada pelo chat: 300 MB
 
-LOCALHOST:
-1. Instale Node.js.
-2. Abra o terminal na pasta.
-3. npm install
-4. npm start
-5. Abra http://localhost:3000
+Servidor:
+  npm install
+  npm start
 
-RENDER:
-- Faça upload/conecte esta pasta ao serviço Node.
-- Build: npm install
-- Start: npm start
-
-OBSERVAÇÕES:
-- Compartilhamento de tela exige HTTPS em produção; localhost é aceito pelo navegador.
-- O áudio da tela pode depender do navegador e da opção "compartilhar áudio" escolhida.
-- Alguns vídeos do YouTube não permitem incorporação.
-
-
-CORREÇÃO DE HOST + CONTROLES
-- Quem cria uma sala é marcado como host e essa informação é mantida para a sala criada.
-- WebSocket funciona automaticamente em localhost e Render.
-- Host possui botão para ocultar/mostrar os controles de compartilhamento.
+Correcoes principais:
+  - YouTube: removido autoplay global e sincronizacao automatica que podia recarregar o player e reiniciar estados/anuncios.
+  - Upload principal aceita ate 900 MB.
+  - Chat aceita midia ate 300 MB e usa /upload-chat.
+  - Aviso visual "Aguarde o carregamento..." durante uploads.
+  - Damas: peao comum nao pode capturar para tras; somente dama captura em qualquer direcao.
+  - Xadrez: atribuicao de cores robusta e renderizacao das pecas reforcada.
+  - Jogo da Velha: corrigido o bug que preenchia a casa antes de applyMove(), impedindo a troca de turno.
+  - Jogos: parent agora envia players com symbol/color para os iframes.

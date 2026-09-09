@@ -232,6 +232,14 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .controls-hidden .host-controls,.controls-hidden .player-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.7;}
 .chat-hint kbd{padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px;font-family:monospace;font-size:10px;border:1px solid rgba(255,255,255,.2);}
+ .upload-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:5000;}
+ .upload-overlay.active{display:flex;}
+ .upload-box{min-width:280px;max-width:90vw;padding:24px 28px;background:#1a1a2e;border:1px solid rgba(253,203,110,.45);border-radius:16px;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,.5);}
+ .upload-spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.18);border-top-color:#fdcb6e;border-radius:50%;margin:0 auto 14px;animation:uploadSpin .8s linear infinite;}
+ .upload-title{font-size:16px;font-weight:800;color:#fdcb6e;margin-bottom:6px;}
+ .upload-sub{font-size:12px;color:rgba(255,255,255,.65);line-height:1.4;}
+ @keyframes uploadSpin{to{transform:rotate(360deg);}}
+
 body.theme-light{--bg1:#f0f0f5;--bg2:#e8e8f0;--bg3:#ffffff;--bg4:#f5f5fa;--text:#2d3436;--text2:rgba(0,0,0,.7);--text3:rgba(0,0,0,.5);--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--chat-bg:#ffffff;--chat-head:#f0f0f5;--input-bg:#f5f5fa;--panel-bg:rgba(0,0,0,.05);--panel-border:rgba(0,0,0,.1);}
 body.theme-light .cmsg .text{color:#2d3436;}body.theme-light .video-placeholder{color:#666;}body.theme-light .video-placeholder h3{color:#444;}body.theme-light .video-placeholder p{color:#666;}body.theme-light .panel input[type=text]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
 body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}body.theme-light .game-play-close:hover{background:rgba(231,76,60,.2);}
@@ -248,6 +256,13 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
 </style>
 </head>
 <body>
+<div class="upload-overlay" id="uploadOverlay" aria-live="polite">
+  <div class="upload-box">
+    <div class="upload-spinner"></div>
+    <div class="upload-title" id="uploadTitle">Aguarde o carregamento...</div>
+    <div class="upload-sub" id="uploadSub">Enviando mídia, não feche esta página.</div>
+  </div>
+</div>
 <div id="landing" class="screen active">
   <div class="logo">PartyBlox</div>
   <div class="tagline">✨ Assista junto com amigos em tempo real ✨</div>
@@ -443,13 +458,19 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
 </div>
 
 <input type="file" id="fileInput" class="file-input" accept="image/*,video/*,audio/*">
-<input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*">
+<input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
+function setUploadLoading(active,title='Aguarde o carregamento...',sub='Enviando mídia, não feche esta página.'){
+  const o=$('uploadOverlay'); if(!o)return;
+  $('uploadTitle').textContent=title; $('uploadSub').textContent=sub;
+  o.classList.toggle('active',!!active);
+}
+
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 
 const BACKEND_URL = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
@@ -792,16 +813,18 @@ function sendChat(){
 function sendChatWithMedia(text,media,isPrivate=false,target=null){
   const pm=isPrivate?target:null;lastSentChat={text:text,ts:Date.now()};
   addChatMsg(myName,text,false,isPrivate,pm,media);
+  setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${media.type==='image'?'imagem':media.type==='video'?'vídeo':'áudio'} do chat (máx. 300MB).`);
   uploadChatMedia(media).then(uploadedMedia=>{
     wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:text,to:pm||undefined,media:uploadedMedia});
-  }).catch(e=>{toast('❌ Erro: '+e.message);});
+  }).catch(e=>{toast('❌ Erro: '+e.message);})
+    .finally(()=>setUploadLoading(false));
 }
 
 async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
     const response=await fetch(media.url);const blob=await response.blob();const fd=new FormData();
     fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
-    const res=await fetch(BACKEND_URL+'/upload',{method:'POST',body:fd,cache:'no-store'});
+    const res=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
     const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
     if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
     else{await res.text();throw new Error('Backend respondeu HTML');}
@@ -815,7 +838,7 @@ async function handleChatMediaUpload(){
   const f=$('chatMediaInput').files&&$('chatMediaInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/'))){$('chatMediaInput').value='';return;}
-  if(f.size>50*1024*1024){$('chatMediaInput').value='';toast('❌ Máx 50MB');return;}
+  if(f.size>300*1024*1024){$('chatMediaInput').value='';toast('❌ Máx 300MB');return;}
   const mediaType=t.startsWith('image/')?'image':'video';const mediaUrl=URL.createObjectURL(f);
   const input=$('chatText');const text=input.value.trim();const pm=text.match(/^@(\S+)\s+(.+)/);
   if(pm){sendChatWithMedia(pm[2]||'[Mídia]',{type:mediaType,url:mediaUrl},true,pm[1]);input.value='';}
@@ -948,7 +971,16 @@ function handleGameMsg(m){
   }
 }
 
-function sendPlayersToIframe(){const session=gameSessions[currentGame?.id];if(!session||!currentGame)return;sendToIframe({type:'players',players:session.players});}
+function sendPlayersToIframe(){
+  const session=gameSessions[currentGame?.id];if(!session||!currentGame)return;
+  const players=session.players.slice(0,2).map((p,i)=>({
+    ...p,
+    symbol:i===0?'X':'O',
+    color:i===0?'w':'b'
+  }));
+  session.players=players;
+  sendToIframe({type:'players',players});
+}
 function sendToIframe(msg){const iframe=$('gameIframe');if(iframe&&iframe.contentWindow)iframe.contentWindow.postMessage({__game:true,game:currentGame.id,...msg},'*');}
 
 const EMOJIS=['😀','😂','😍','😢','😡','🥳','❤️','🔥','👍','💃','🙌','✨','🌈','🍔','🍻','🏀','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
@@ -1002,24 +1034,13 @@ function createYTPlayer(){
 function onYTState(e){
   if(e.data===YT.PlayerState.PLAYING){
     mediaType='youtube';updateMediaBadge('🎬','YouTube');showPlayerCtrl();$('playBtn').textContent='⏸️';
-    if(isHost && (!serverMultiHost || myPlayerId===founderId)){
-      const now=Date.now();
-      if(!ytSuppressStateSend && now-ytLastStateSent>1500){
-        ytLastStateSent=now;wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:false,time:getYTTime()}});
-      }
-    }
   }else if(e.data===YT.PlayerState.PAUSED){
     $('playBtn').textContent='▶️';
-    if(isHost && (!serverMultiHost || myPlayerId===founderId)){
-      const now=Date.now();
-      if(!ytSuppressStateSend && now-ytLastStateSent>1500){
-        ytLastStateSent=now;wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime()}});
-      }
-    }
   }else if(e.data===YT.PlayerState.ENDED){
     $('playBtn').textContent='▶️';
-    if(isHost && (!serverMultiHost || myPlayerId===founderId))
-      wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:0}});
+    // O estado ENDED do player não é retransmitido automaticamente.
+    // Isso evita que anúncios/estados internos do YouTube provoquem reloads
+    // e reinícios em outros clientes.
   }
 }
 function extractYTId(u){try{const x=new URL(u);if(x.hostname.includes('youtu.be'))return x.pathname.split('/').filter(Boolean)[0]||'';
@@ -1111,8 +1132,9 @@ async function handleFileUpload(){
   const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
-  if(f.size>300*1024*1024)return;
+  if(f.size>900*1024*1024){toast('❌ Máx 900MB');$('fileInput').value='';return;}
   try{
+    setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${t.startsWith('image/')?'imagem':t.startsWith('video/')?'vídeo':'áudio'} (${(f.size/1024/1024).toFixed(1)} MB).`);
     const fd=new FormData();fd.append('media',f,f.name);
     const res=await fetch(BACKEND_URL+'/upload',{method:'POST',body:fd,cache:'no-store'});
     const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
@@ -1123,6 +1145,7 @@ async function handleFileUpload(){
     const state={type:ty,url:data.url,name:f.name,mime:t};
     applyMediaState(state);wsSend({kind:'media',state:state});$('fileInput').value='';
   }catch(e){toast('❌ '+e.message);$('fileInput').value='';}
+  finally{setUploadLoading(false);}
 }
 
 async function toggleScreenShare(){
@@ -1262,16 +1285,7 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-document.addEventListener('click',()=>{
-  try{
-    if(mediaType==='video')$('localVideo').play().catch(()=>{});
-    if(mediaType==='audio')$('localAudio').play().catch(()=>{});
-    if(mediaType==='youtube'&&youtubePlayer){
-      const st=youtubePlayer.getPlayerState();
-      if(st===YT.PlayerState.CUED||st===-1||st===YT.PlayerState.PAUSED)youtubePlayer.playVideo();
-    }
-  }catch(_){}
-});
+
 
 updateProgress();loadTheme();
 </script>

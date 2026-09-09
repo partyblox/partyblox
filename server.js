@@ -35,7 +35,9 @@ const fileFilter = (req, file, cb) => {
     else cb(new Error("Formato não permitido."), false);
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 300 * 1024 * 1024 } });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 900 * 1024 * 1024 } });
+const chatUpload = multer({ storage, fileFilter, limits: { fileSize: 300 * 1024 * 1024 } });
+
 
 app.use(express.static(publicDir));
 app.use("/uploads", express.static(uploadsDir));
@@ -44,6 +46,24 @@ app.post("/upload", (req, res) => {
     upload.single("media")(req, res, (err) => {
         if (err) {
             if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: "Arquivo muito grande." });
+            return res.status(400).json({ error: err.message });
+        }
+        if (!req.file) return res.status(400).json({ error: "Nenhum arquivo." });
+        const forwardedProto = String(req.headers["x-forwarded-proto"] || " ").split(",")[0].trim();
+        const proto = forwardedProto || req.protocol || "http";
+        const base = `${proto}://${req.get("host")}`;
+        res.json({
+            url: `${base}/uploads/${req.file.filename}`,
+            type: req.file.mimetype,
+            name: req.file.originalname
+        });
+    });
+});
+
+app.post("/upload-chat", (req, res) => {
+    chatUpload.single("media")(req, res, (err) => {
+        if (err) {
+            if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: "Arquivo do chat muito grande. Limite: 300MB." });
             return res.status(400).json({ error: err.message });
         }
         if (!req.file) return res.status(400).json({ error: "Nenhum arquivo." });
