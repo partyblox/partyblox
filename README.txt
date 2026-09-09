@@ -1,32 +1,20 @@
-PARTYBLOX - VERSAO 2.1 CORRIGIDA
+PARTYBLOX - PiP + TELA FLUTUANTE
 
-CORRECOES DESTA VERSAO:
-- Quem entra depois que a mídia já começou recebe o estado atual de YouTube, vídeo, áudio e imagem.
-- YouTube não é recarregado desnecessariamente quando chega uma atualização do mesmo vídeo, evitando reinícios.
-- Vídeos e áudios tentam iniciar no ponto atual; se o navegador bloquear autoplay com som, aparece um botão "Assistir/Ativar áudio".
-- Imagens são carregadas novamente para novos participantes.
-- Compartilhamento de tela agora usa WebRTC entre o host que compartilha e cada novo participante, com ICE/STUN e negociação offer/answer/candidate.
-- Se alguém entrar durante o compartilhamento de tela, o servidor solicita automaticamente ao host uma nova conexão WebRTC.
-- Novo botão "🪟 Flutuante" no topo.
-- Tela flutuante fica sobre o chat, pode ser arrastada pelo puxador superior e redimensionada pelo canto inferior direito.
-- O usuário pode continuar usando chat, reações, temas e jogos enquanto a mídia fica em uma janela flutuante.
+Esta versão mantém a janela "Flutuante" dentro da página e adiciona o botão "⧉ PiP".
 
-LIMITES:
-- Mídia principal: 900 MB.
-- Mídia do chat: 300 MB.
+PICTURE-IN-PICTURE (PiP):
+- O botão PiP usa o Picture-in-Picture nativo do navegador.
+- Em vídeos enviados e compartilhamento de tela, a janela PiP pode ficar sobre outras janelas.
+- Assim, você pode minimizar o navegador e continuar vendo o vídeo na janela PiP.
+- A janela PiP é controlada pelo próprio navegador/Windows e pode ser reposicionada/redimensionada conforme o navegador permitir.
+- Para YouTube, o vídeo está dentro de um iframe; o botão do PartyBlox não consegue chamar requestPictureInPicture() diretamente no iframe. Use o botão PiP do próprio player do YouTube quando disponível.
+- Imagens e áudio puro não podem usar o PiP nativo como um vídeo sem criar uma composição de vídeo artificial.
 
-ESTRUTURA:
-index.html
-server.js
-package.json
-games/checkers.html
-games/chess.html
-games/tictactoe.html
+TELA FLUTUANTE:
+- "🪟 Flutuante" continua sendo a janela dentro do site.
+- Pode arrastar e redimensionar.
+- Para ficar visível mesmo com o navegador minimizado, use "⧉ PiP".
 
-EXECUCAO:
+EXECUÇÃO:
 npm install
 npm start
-
-OBSERVACAO:
-- Navegadores podem bloquear reprodução automática de áudio por política de autoplay. Nesse caso, use o botão exibido sobre a mídia para ativar o som.
-- Compartilhamento de tela usa conexão WebRTC direta entre participantes. STUN está configurado; redes muito restritivas podem exigir TURN.

@@ -272,6 +272,7 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
 .media-interaction-box div{font-size:13px;color:#fff;margin-bottom:10px;}
 .media-interaction-box button{padding:9px 18px;border:0;border-radius:9px;background:#fdcb6e;color:#2d3436;font-weight:800;cursor:pointer;}
 @media(max-width:900px){.video-side.floating-player{left:10px;top:70px;width:min(92vw,520px);height:min(50vh,300px);}}
+#pipMediaBtn{background:rgba(116,185,255,.12);border-color:rgba(116,185,255,.35);}#pipMediaBtn:hover{background:rgba(116,185,255,.25);}
 </style>
 </head>
 <body>
@@ -308,6 +309,7 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
     <div class="topbar-right" id="topbarRight">
       <button class="tb-btn" id="toggleVideoBtn">📺 Tela</button>
        <button class="tb-btn" id="floatMediaBtn">🪟 Flutuante</button>
+       <button class="tb-btn" id="pipMediaBtn">⧉ PiP</button>
       <button class="tb-btn" id="toggleCtrlBtn">👁️ UI</button>
       <button class="tb-btn" id="chatToggleBtn">💬 Chat</button>
       <button class="tb-btn donate" id="donateBtn">💝 Apoiar</button>
@@ -521,6 +523,7 @@ let screenStream=null,isScreenSharing=false;
 let rtcPeers=new Map();
 let floatingPlayer=false;
 let mediaNeedsInteraction=false;
+let pipActive=false;
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
 let connectedPlayers=[];
@@ -551,6 +554,29 @@ function toggleFloatingPlayer(){
     $('chatSide').classList.remove('full');if(!videoSideHidden)$('divider').classList.remove('hidden');
   }
 }
+async function togglePictureInPicture(){
+  try{
+    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
+    let target=null;
+    if(mediaType==='video') target=$('localVideo');
+    else if(mediaType==='screen') target=$('screenVideo');
+    if(mediaType==='youtube'){ toast('▶️ No YouTube, use o botão PiP do próprio player.'); return; }
+    if(!target || !(target instanceof HTMLVideoElement)){ toast('⧉ PiP está disponível para vídeos e compartilhamento de tela.'); return; }
+    if(!document.pictureInPictureEnabled || !target.requestPictureInPicture){ toast('⚠️ Seu navegador não suporta Picture-in-Picture.'); return; }
+    if(target.readyState < 2){ toast('⏳ Aguarde o vídeo carregar para ativar o PiP.'); return; }
+    if(target.paused && mediaType==='video'){ try{ await target.play(); }catch(_){} }
+    await target.requestPictureInPicture();
+  }catch(e){
+    if(e && e.name==='NotAllowedError') toast('⚠️ Clique novamente no botão PiP para permitir a janela flutuante.');
+    else toast('❌ Não foi possível abrir a janela PiP.');
+  }
+}
+function updatePipButton(){
+  const b=$('pipMediaBtn'); if(!b)return;
+  if(document.pictureInPictureElement){ b.innerHTML='⧉ Fechar PiP'; b.title='Fechar janela de vídeo flutuante'; }
+  else { b.innerHTML='⧉ PiP'; b.title='Abrir vídeo em janela flutuante fora do navegador'; }
+}
+
 function showMediaInteraction(text='Clique para reproduzir com som'){mediaNeedsInteraction=true;$('mediaInteractionText').textContent=text;$('mediaInteraction').style.display='flex';}
 function hideMediaInteraction(){mediaNeedsInteraction=false;$('mediaInteraction').style.display='none';}
 function resumeCurrentMedia(){try{if(mediaType==='video'){const v=$('localVideo');v.muted=false;v.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='audio'){const a=$('localAudio');a.muted=false;a.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='youtube'&&youtubePlayer){youtubePlayer.unMute();youtubePlayer.playVideo();hideMediaInteraction();}else hideMediaInteraction();}catch(_){} }
@@ -1274,6 +1300,11 @@ if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSea
 
 $('toggleVideoBtn').addEventListener('click',toggleVideoSide);
 $('floatMediaBtn').addEventListener('click',toggleFloatingPlayer);
+$('pipMediaBtn').addEventListener('click',togglePictureInPicture);
+$('localVideo').addEventListener('enterpictureinpicture',()=>{pipActive=true;updatePipButton();});
+$('localVideo').addEventListener('leavepictureinpicture',()=>{pipActive=false;updatePipButton();});
+$('screenVideo').addEventListener('enterpictureinpicture',()=>{pipActive=true;updatePipButton();});
+$('screenVideo').addEventListener('leavepictureinpicture',()=>{pipActive=false;updatePipButton();});
 $('toggleCtrlBtn').addEventListener('click',toggleControls);
 $('chatToggleBtn').addEventListener('click',toggleChat);
 $('closeChatBtn').addEventListener('click',toggleChat);
