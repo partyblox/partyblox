@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+[source: 1]<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -516,7 +516,7 @@ const DONATE_CONFIG={
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let hosts=[];
 let founderId=null;
-let serverMultiHost=true; // detecta se o server suporta multi-host
+let serverMultiHost=true;
 let ws=null,wsReady=false,playerCount=1;
 let mediaType=null,youtubePlayer=null,ytReady=false,ytVideoId=null;
 let screenStream=null,isScreenSharing=false;
@@ -658,15 +658,12 @@ function connectRoom(creator){
       let m;try{m=JSON.parse(e.data)}catch(_){return}
       
       if(m.kind==='roomState'){
-        // ===== DETECÇÃO AUTOMÁTICA DE TIPO DE SERVER =====
         if(Array.isArray(m.hosts)){
-          // Server novo (multi-host)
           serverMultiHost=true;
           hosts=m.hosts;
           founderId=m.founder||null;
           isHost=hosts.includes(myPlayerId);
         }else{
-          // Server antigo (single-host) - fallback
           serverMultiHost=false;
           isHost=!!m.host;
           founderId=m.hostId||null;
@@ -690,7 +687,6 @@ function connectRoom(creator){
         }
       }
       else if(m.kind==='hostChanged'){
-        // Compatibilidade com server antigo
         if(m.playerId===myPlayerId){
           isHost=true;hosts=[myPlayerId];founderId=myPlayerId;
         }else{
@@ -984,7 +980,6 @@ async function loadGamesList(){
     const res=await fetch('games/games.json?t='+Date.now());
     if(res.ok){
       const data=await res.json();
-      // Deduplicação: só adiciona jogos do JSON se o ID não existir nos built-ins
       const builtinIds=new Set(BUILTIN_GAMES.map(g=>g.id));
       const extraGames=(data.games||[]).filter(g=>!builtinIds.has(g.id));
       gamesList=[...BUILTIN_GAMES,...extraGames];
@@ -1032,11 +1027,10 @@ function handleGameMsg(m){
       wsSend({kind:'game_join',game:game.id,playerId:myPlayerId,name:myName});sendPlayersToIframe();break;
     case 'start_request':
       if(session.players.length>=2){
-        // CORREÇÃO: envia TANTO symbol (jogo da velha) quanto color (xadrez/damas)
         const list=session.players.slice(0,2).map((p,i)=>({
           ...p, 
-          symbol:i===0?'X':'O',   // Para jogo da velha
-          color:i===0?'w':'b'     // Para xadrez e damas
+          symbol:i===0?'X':'O',
+          color:i===0?'w':'b'
         }));
         wsSend({kind:'game_event',game:game.id,type:'start',players:list,startSymbol:'X'});
         sendToIframe({type:'start',players:list,startSymbol:'X'});
@@ -1115,9 +1109,6 @@ function onYTState(e){
     $('playBtn').textContent='▶️';
   }else if(e.data===YT.PlayerState.ENDED){
     $('playBtn').textContent='▶️';
-    // O estado ENDED do player não é retransmitido automaticamente.
-    // Isso evita que anúncios/estados internos do YouTube provoquem reloads
-    // e reinícios em outros clientes.
   }
 }
 function extractYTId(u){try{const x=new URL(u);if(x.hostname.includes('youtu.be'))return x.pathname.split('/').filter(Boolean)[0]||'';
@@ -1183,183 +1174,119 @@ function toggleMute(){
   else if(mediaType==='audio'){const a=$('localAudio');a.muted=!a.muted;$('muteBtn').textContent=a.muted?'🔇':'🔊';}
 }
 function setVolume(v){
-  const vol=v/100;
-  if(mediaType==='youtube')youtubePlayer.setVolume(v);
-  else if(mediaType==='video')$('localVideo').volume=vol;
-  else if(mediaType==='audio')$('localAudio').volume=vol;
-  $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
+  const val=v/100;
+  if(mediaType==='youtube'&&youtubePlayer)youtubePlayer.setVolume(v);
+  else if(mediaType==='video')$('localVideo').volume=val;
+  else if(mediaType==='audio')$('localAudio').volume=val;
 }
-function updateProgress(){
-  if(mediaType==='youtube'){const c=getYTTime(),d=getYTDur();const p=d?(c/d)*100:0;$('progFill').style.width=p+'%';$('curTime').textContent=fmtTime(c);$('totTime').textContent=fmtTime(d);}
-  else if(mediaType==='video'){const v=$('localVideo');const p=v.duration?(v.currentTime/v.duration)*100:0;$('progFill').style.width=p+'%';$('curTime').textContent=fmtTime(v.currentTime);$('totTime').textContent=fmtTime(v.duration);}
-  else if(mediaType==='audio'){const a=$('localAudio');const p=a.duration?(a.currentTime/a.duration)*100:0;$('progFill').style.width=p+'%';$('curTime').textContent=fmtTime(a.currentTime);$('totTime').textContent=fmtTime(a.duration);}
-  setTimeout(updateProgress,250);
-}
+
+function updateMediaBadge(icon,text){$('mediaTypeIcon').textContent=icon;$('mediaTypeText').textContent=text;$('mediaBadge').classList.add('active');}
 function showPlayerCtrl(){$('playerCtrl').style.display='block';}
-function updateMediaBadge(icon,text){$('mediaBadge').classList.add('active');$('mediaTypeIcon').textContent=icon;$('mediaTypeText').textContent=text;}
-function sendLocalState(){
-  if(!isHost)return;
-  const el=mediaType==='video'?$('localVideo'):mediaType==='audio'?$('localAudio'):null;
-  if(!el)return;
-  wsSend({kind:'media',state:{type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||''}});
-}
+function hidePlayerCtrl(){$('playerCtrl').style.display='none';}
 
-async function handleFileUpload(){
-  if(!isHost)return;
-  const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
-  const t=f.type||'';
-  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
-  if(f.size>900*1024*1024){toast('❌ Máx 900MB');$('fileInput').value='';return;}
-  try{
-    setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${t.startsWith('image/')?'imagem':t.startsWith('video/')?'vídeo':'áudio'} (${(f.size/1024/1024).toFixed(1)} MB).`);
-    const fd=new FormData();fd.append('media',f,f.name);
-    const res=await fetch(BACKEND_URL+'/upload',{method:'POST',body:fd,cache:'no-store'});
-    const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
-    if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
-    else{await res.text();throw new Error('Backend respondeu HTML');}
-    if(!res.ok||!data||!data.url)throw new Error((data&&data.error)||'Upload falhou');
-    const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-    const state={type:ty,url:data.url,name:f.name,mime:t};
-    applyMediaState(state);wsSend({kind:'media',state:state});$('fileInput').value='';
-  }catch(e){toast('❌ '+e.message);$('fileInput').value='';}
-  finally{setUploadLoading(false);}
+function updateProgressLoop(){
+  let cur=0,dur=0;
+  if(mediaType==='youtube'){cur=getYTTime();dur=getYTDur();}
+  else if(mediaType==='video'){const v=$('localVideo');cur=v.currentTime;dur=v.duration;}
+  else if(mediaType==='audio'){const a=$('localAudio');cur=a.currentTime;dur=a.duration;}
+  if(dur>0){
+    const pct=(cur/dur)*100;$('progFill').style.width=pct+'%';
+    $('curTime').textContent=fmtTime(cur);$('totTime').textContent=fmtTime(dur);
+  }
+  requestAnimationFrame(updateProgressLoop);
 }
+requestAnimationFrame(updateProgressLoop);
 
-function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
-function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
-function closeAllRTCPeers(){[...rtcPeers.keys()].forEach(closeRTCPeer);}
-function createPeer(pid){closeRTCPeer(pid);const pc=new RTCPeerConnection(rtcConfig());rtcPeers.set(pid,pc);pc.onicecandidate=e=>{if(e.candidate)wsSend({kind:'rtc',action:'candidate',to:pid,candidate:e.candidate});};pc.ontrack=e=>{const sv=$('screenVideo');if(e.streams&&e.streams[0])sv.srcObject=e.streams[0];sv.muted=false;sv.style.display='block';sv.playsInline=true;$('placeholder').style.display='none';mediaType='screen';sv.play().catch(()=>showMediaInteraction('Clique para ouvir o áudio da tela'));};if(screenStream)screenStream.getTracks().forEach(t=>pc.addTrack(t,screenStream));return pc;}
-function requestScreenFromOwner(){if(!wsReady||isScreenSharing)return;}
-async function handleRTCMessage(m){
-  if(m.action==='screenRequest'){if(!isScreenSharing||!screenStream||!m.from)return;try{const pc=createPeer(m.from);const offer=await pc.createOffer();await pc.setLocalDescription(offer);wsSend({kind:'rtc',action:'offer',to:m.from,offer:pc.localDescription});}catch(_){ }return;}
-  if(m.action==='offer'&&m.from&&m.offer){try{const pc=createPeer(m.from);await pc.setRemoteDescription(new RTCSessionDescription(m.offer));const answer=await pc.createAnswer();await pc.setLocalDescription(answer);wsSend({kind:'rtc',action:'answer',to:m.from,answer:pc.localDescription});}catch(_){ }return;}
-  if(m.action==='answer'&&m.from&&m.answer){const pc=rtcPeers.get(m.from);if(pc)try{await pc.setRemoteDescription(new RTCSessionDescription(m.answer));}catch(_){ }return;}
-  if(m.action==='candidate'&&m.from&&m.candidate){const pc=rtcPeers.get(m.from);if(pc)try{await pc.addIceCandidate(new RTCIceCandidate(m.candidate));}catch(_){ }return;}
-  if(m.action==='screenStopped'){closeRTCPeer(m.from);if(!isScreenSharing){$('screenVideo').srcObject=null;$('screenVideo').style.display='none';}}
-}
-
-async function toggleScreenShare(){
-  if(!isHost)return;
-  if(!isScreenSharing){
-    try{
-      const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true});
-      screenStream=stream;const sv=$('screenVideo');sv.srcObject=stream;sv.muted=false;sv.style.display='block';
-      await sv.play();isScreenSharing=true;mediaType='screen';
-      $('scrBtn').classList.add('live');$('scrBtn').textContent='🛑 Parar';
-      $('placeholder').style.display='none';updateMediaBadge('🖥️','Tela');
-      stream.getVideoTracks()[0].addEventListener('ended',()=>stopScreenShare(),{once:true});
-      wsSend({kind:'media',state:{type:'screen',active:true,name:myName}});
-    }catch(e){}
-  }else stopScreenShare();
-}
-function stopScreenShare(){
-  closeAllRTCPeers();
-  if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;}
-  $('screenVideo').srcObject=null;$('screenVideo').style.display='none';
-  isScreenSharing=false;mediaType=null;
-  $('scrBtn').classList.remove('live');$('scrBtn').textContent='🖥️ Compartilhar Tela';
-  wsSend({kind:'media',state:{type:'clear'}});
-  $('placeholder').style.display='flex';$('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';
-}
-function clearMedia(){
-  if(!isHost)return;
-  if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
-  ytVideoId=null;$('youtubeOverlay').style.display='none';
-  $('localVideo').pause();$('localVideo').removeAttribute('src');$('localVideo').style.display='none';
-  $('localAudio').pause();$('localAudio').removeAttribute('src');
-  if(isScreenSharing)stopScreenShare();
-  mediaType=null;$('placeholder').style.display='flex';
-  $('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';
-  wsSend({kind:'media',state:{type:'clear'}});
-}
 function applyMediaState(state){
   if(!state)return;
-  if(state.type==='clear'){
-    closeAllRTCPeers();
-    if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
-    ytVideoId=null;$('youtubeOverlay').style.display='none';$('localVideo').pause();$('localVideo').removeAttribute('src');$('localVideo').style.display='none';$('localAudio').pause();$('localAudio').removeAttribute('src');$('screenVideo').pause();$('screenVideo').srcObject=null;$('screenVideo').style.display='none';$('imageHolder').style.display='none';mediaType=null;$('placeholder').style.display='flex';$('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';hideMediaInteraction();return;
-  }
-  ytSuppressStateSend=true;
   if(state.type==='youtube'){
-    $('localVideo').style.display='none';$('localAudio').removeAttribute('src');$('screenVideo').style.display='none';$('imageHolder').style.display='none';$('placeholder').style.display='none';$('youtubeOverlay').style.display='block';mediaType='youtube';ytVideoId=state.videoId;if(!youtubePlayer)createYTPlayer();
-    const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId);
-    if(!sameVideo){loadYouTube(state.videoId,state.paused===false,state.time||0);if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId;}else{try{const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-Number(state.time||0));if(delta>2)youtubePlayer.seekTo(Number(state.time)||0,true);if(state.paused===false)youtubePlayer.playVideo();else youtubePlayer.pauseVideo();}catch(_){}}
-    updateMediaBadge('🎬','YouTube');showPlayerCtrl();$('playBtn').textContent=state.paused?'▶️':'⏸️';if(state.paused===false)showMediaInteraction('Clique para ativar o som');
-  }else if(state.type==='video'){
-    $('youtubeOverlay').style.display='none';$('screenVideo').style.display='none';$('imageHolder').style.display='none';const v=$('localVideo');if(state.url&&v.src!==state.url){v.src=state.url;v.load();}v.dataset.name=state.name||'';v.muted=false;v.style.display='block';$('placeholder').style.display='none';mediaType='video';updateMediaBadge('🎬','Vídeo');showPlayerCtrl();const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{v.currentTime=state.time;}catch(_){}};if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});if(state.paused===false||state.paused===undefined)v.play().then(hideMediaInteraction).catch(()=>showMediaInteraction('Clique para reproduzir com som'));else v.pause();$('playBtn').textContent=state.paused?'▶️':'⏸️';
-  }else if(state.type==='audio'){
-    $('youtubeOverlay').style.display='none';$('localVideo').style.display='none';$('screenVideo').style.display='none';$('imageHolder').style.display='none';const a=$('localAudio');if(state.url&&a.src!==state.url){a.src=state.url;a.load();}a.dataset.name=state.name||'';a.muted=false;$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>';$('placeholder').style.display='flex';mediaType='audio';updateMediaBadge('🎵','Áudio');showPlayerCtrl();const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}};if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true});if(state.paused===false||state.paused===undefined)a.play().then(hideMediaInteraction).catch(()=>showMediaInteraction('Clique para ouvir o áudio'));else a.pause();$('playBtn').textContent=state.paused?'▶️':'⏸️';
-  }else if(state.type==='image'){
-    $('youtubeOverlay').style.display='none';$('localVideo').style.display='none';$('localAudio').removeAttribute('src');$('screenVideo').style.display='none';const c=$('imageHolder'),img=new Image();img.onload=()=>{c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;const ctx=c.getContext('2d');const r=Math.min(c.width/img.width,c.height/img.height);const w=img.width*r,h=img.height*r;ctx.fillStyle='#000';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);c.style.display='block';$('placeholder').style.display='none';updateMediaBadge('🖼️','Imagem');};img.onerror=()=>toast('❌ Não foi possível carregar a imagem');img.src=state.url;mediaType='image';showPlayerCtrl();hideMediaInteraction();
-  }else if(state.type==='screen'){
-    $('youtubeOverlay').style.display='none';$('localVideo').style.display='none';$('localAudio').removeAttribute('src');$('imageHolder').style.display='none';if(state.active){mediaType='screen';$('placeholder').innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>';$('placeholder').style.display='none';updateMediaBadge('🖥️','Tela ao vivo');showPlayerCtrl();requestScreenFromOwner();}}
-  setTimeout(()=>{ytSuppressStateSend=false;},2000);
+    if(ytVideoId!==state.videoId) loadYouTube(state.videoId,!state.paused,state.time||0);
+    else if(youtubePlayer&&youtubePlayer.seekTo){
+      const cur=getYTTime();
+      if(Math.abs(cur-(state.time||0))>2) youtubePlayer.seekTo(state.time||0,true);
+      if(state.paused) youtubePlayer.pauseVideo(); else youtubePlayer.playVideo();
+    }
+  }else if(state.type==='clear'||!state.type){
+    clearMedia();
+  }
 }
 
-if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSearchParams(location.search).get('room');
+function clearMedia(){
+  mediaType=null;ytVideoId=null;
+  $('placeholder').style.display='flex';
+  $('youtubeOverlay').style.display='none';
+  $('localVideo').style.display='none';$('localVideo').pause();$('localVideo').src='';
+  $('localAudio').pause();$('localAudio').src='';
+  $('screenVideo').style.display='none';
+  $('imageHolder').style.display='none';
+  $('mediaBadge').classList.remove('active');
+  hidePlayerCtrl();
+  hideMediaInteraction();
+}
 
-$('toggleVideoBtn').addEventListener('click',toggleVideoSide);
-$('floatMediaBtn').addEventListener('click',toggleFloatingPlayer);
-$('pipMediaBtn').addEventListener('click',togglePictureInPicture);
-$('localVideo').addEventListener('enterpictureinpicture',()=>{pipActive=true;updatePipButton();});
-$('localVideo').addEventListener('leavepictureinpicture',()=>{pipActive=false;updatePipButton();});
-$('screenVideo').addEventListener('enterpictureinpicture',()=>{pipActive=true;updatePipButton();});
-$('screenVideo').addEventListener('leavepictureinpicture',()=>{pipActive=false;updatePipButton();});
-$('toggleCtrlBtn').addEventListener('click',toggleControls);
-$('chatToggleBtn').addEventListener('click',toggleChat);
-$('closeChatBtn').addEventListener('click',toggleChat);
-$('donateBtn').addEventListener('click',openDonate);
-$('copyLinkBtn').addEventListener('click',copyRoomLink);
-$('leaveBtn').addEventListener('click',leaveRoom);
-$('closeDonateBtn').addEventListener('click',closeDonate);
-$('livePixBtn').addEventListener('click',openLivePix);
-$('copyPixBtn').addEventListener('click',copyPix);
-$('ytBtn').addEventListener('click',showYTInput);
-$('fileBtn').addEventListener('click',()=>$('fileInput').click());
-$('scrBtn').addEventListener('click',toggleScreenShare);
-$('clearBtn').addEventListener('click',clearMedia);
-$('playBtn').addEventListener('click',togglePlayPause);
-$('backBtn').addEventListener('click',()=>skip(-10));
-$('fwdBtn').addEventListener('click',()=>skip(10));
-$('muteBtn').addEventListener('click',toggleMute);
-$('volSlider').addEventListener('input',e=>setVolume(e.target.value));
-$('closeCtrlBtn').addEventListener('click',clearMedia);
-$('mediaInteractionBtn').addEventListener('click',resumeCurrentMedia);
-$('progBar').addEventListener('click',seekTo);
-$('emojiBtn').addEventListener('click',toggleEmoji);
-$('attachBtn').addEventListener('click',()=>$('chatMediaInput').click());
-$('micBtn').addEventListener('click',toggleAudioRecording);
-$('cancelRecBtn').addEventListener('click',cancelRecording);
-$('sendBtn').addEventListener('click',sendChat);
-$('fileInput').addEventListener('change',handleFileUpload);
-$('chatMediaInput').addEventListener('change',handleChatMediaUpload);
-$('mediaViewerModal').addEventListener('click',e=>{if(e.target===$('mediaViewerModal'))closeMediaViewer();});
-$('closeMediaViewerBtn').addEventListener('click',closeMediaViewer);
-$('donateModal').addEventListener('click',e=>{if(e.target===$('donateModal'))closeDonate();});
-$('closeGameBtn').addEventListener('click',closeGame);
+function sendLocalState(){
+  if(!isHost)return;
+  let t=0,paused=true;
+  if(mediaType==='video'){const v=$('localVideo');t=v.currentTime;paused=v.paused;}
+  else if(mediaType==='audio'){const a=$('localAudio');t=a.currentTime;paused=a.paused;}
+  wsSend({kind:'media',state:{type:mediaType,paused:paused,time:t}});
+}
 
-document.querySelectorAll('.c-tab').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
-document.querySelectorAll('.theme-option').forEach(btn=>btn.addEventListener('click',(e)=>{e.stopPropagation();setTheme(btn.dataset.theme);}));
-document.querySelectorAll('.tier').forEach(t=>t.addEventListener('click',()=>selectTier(t,parseInt(t.dataset.amt))));
-$('chatText').addEventListener('keypress',e=>{if(e.key==='Enter')sendChat();});
+// Event Listeners dos Botões e Controles
+document.addEventListener('DOMContentLoaded',loadTheme);
+$('playBtn').onclick=togglePlayPause;
+$('backBtn').onclick=()=>skip(-10);
+$('fwdBtn').onclick=()=>skip(10);
+$('progBar').onclick=seekTo;
+$('muteBtn').onclick=toggleMute;
+$('volSlider').oninput=e=>setVolume(e.target.value);
+$('closeCtrlBtn').onclick=hidePlayerCtrl;
+$('ytBtn').onclick=showYTInput;
+$('clearBtn').onclick=()=>{
+  if(!isHost)return toast('👑 Só hosts podem limpar');
+  clearMedia();
+  wsSend({kind:'media',state:{type:'clear'}});
+};
+$('toggleVideoBtn').onclick=toggleVideoSide;
+$('floatMediaBtn').onclick=toggleFloatingPlayer;
+$('pipMediaBtn').onclick=togglePictureInPicture;
+$('toggleCtrlBtn').onclick=toggleControls;
+$('chatToggleBtn').onclick=toggleChat;
+$('closeChatBtn').onclick=toggleChat;
+$('copyLinkBtn').onclick=copyRoomLink;
+$('leaveBtn').onclick=leaveRoom;
+$('donateBtn').onclick=openDonate;
+$('closeDonateBtn').onclick=closeDonate;
+$('copyPixBtn').onclick=copyPix;
+$('livePixBtn').onclick=openLivePix;
+$('sendBtn').onclick=sendChat;
+$('chatText').onkeydown=e=>{if(e.key==='Enter')sendChat();};
+$('emojiBtn').onclick=toggleEmoji;
+$('attachBtn').onclick=()=>$('chatMediaInput').click();
+$('chatMediaInput').onchange=handleChatMediaUpload;
+$('micBtn').onclick=toggleAudioRecording;
+$('cancelRecBtn').onclick=cancelRecording;
+$('closeMediaViewerBtn').onclick=closeMediaViewer;
+$('closeGameBtn').onclick=closeGame;
+$('mediaInteractionBtn').onclick=resumeCurrentMedia;
 
-document.addEventListener('click',e=>{
-  const ep=$('emojiPop');
-  if(ep&&ep.classList.contains('active')&&!ep.contains(e.target)&&e.target!==$('emojiBtn'))ep.classList.remove('active');
-});
+document.querySelectorAll('.c-tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+document.querySelectorAll('.theme-option').forEach(el=>el.onclick=()=>setTheme(el.dataset.theme));
+document.querySelectorAll('.tier').forEach(t=>t.onclick=()=>selectTier(t,Number(t.dataset.amt)));
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeDonate();$('emojiPop').classList.remove('active');closeMediaViewer();if(currentGame)closeGame();}
-  if(e.key===';' && !$('landing').classList.contains('active')){
-    const active=document.activeElement;
-    const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.isContentEditable);
-    if(!isInput){e.preventDefault();focusChat();}
+  if(e.key===';'&&document.activeElement!==$('chatText')){
+    e.preventDefault();
+    focusChat(e);
   }
 });
 
-
-
-updateProgress();loadTheme();
+document.addEventListener('fullscreenchange',updatePipButton);
+document.addEventListener('webkitfullscreenchange',updatePipButton);
+if('pictureInPictureEnabled' in document){
+  document.addEventListener('enterpictureinpicture',updatePipButton);
+  document.addEventListener('leavepictureinpicture',updatePipButton);
+}
 </script>
 </body>
 </html>
