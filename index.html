@@ -2,1061 +2,629 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PartyBlox - Sala</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PartyBlox</title>
+<script src="https://www.youtube.com/iframe_api"></script>
 <style>
-    :root {
-        --bg-dark: #0f0f13;
-        --bg-panel: #1a1a24;
-        --bg-input: #252535;
-        --accent: #8b5cf6;
-        --accent-hover: #7c3aed;
-        --text-main: #f3f4f6;
-        --text-muted: #9ca3af;
-        --border: #374151;
-        --danger: #ef4444;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-    body {
-        background-color: var(--bg-dark);
-        color: var(--text-main);
-        min-height: 100vh;
-        overflow-x: hidden;
-    }
-
-    /* LOADING SCREEN */
-    .loading-screen {
-        position: fixed;
-        inset: 0;
-        background: var(--bg-dark);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        transition: opacity 0.5s;
-    }
-
-    .loading-screen.hidden { opacity: 0; pointer-events: none; }
-
-    .loading-screen .spinner {
-        width: 50px; height: 50px;
-        border: 4px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* WELCOME SCREEN */
-    .welcome-screen {
-        position: fixed;
-        inset: 0;
-        background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 900;
-        padding: 20px;
-    }
-
-    .welcome-screen.hidden { display: none; }
-
-    .welcome-box {
-        background: var(--bg-panel);
-        padding: 40px;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        max-width: 450px;
-        width: 100%;
-        text-align: center;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-
-    .welcome-box h1 {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }
-
-    .welcome-box h1 span { color: var(--accent); }
-
-    .welcome-box .tagline {
-        color: var(--text-muted);
-        margin-bottom: 30px;
-        font-size: 1.1rem;
-    }
-
-    .welcome-box input {
-        width: 100%;
-        background: var(--bg-input);
-        border: 1px solid var(--border);
-        color: var(--text-main);
-        padding: 14px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        font-size: 1rem;
-    }
-
-    .welcome-box .btns {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-    }
-
-    .welcome-box button {
-        flex: 1;
-        padding: 14px;
-        border-radius: 10px;
-        border: none;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: transform 0.1s, background 0.2s;
-    }
-
-    .welcome-box button:active { transform: scale(0.97); }
-
-    .btn-create { background: var(--accent); color: white; }
-    .btn-create:hover { background: var(--accent-hover); }
-    .btn-join { background: var(--border); color: white; }
-
-    .welcome-footer {
-        margin-top: 25px;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-    }
-
-    .welcome-footer a { color: var(--accent); text-decoration: none; }
-
-    /* TOP BAR */
-    .top-bar {
-        background: var(--bg-panel);
-        padding: 12px 20px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .top-bar .logo {
-        font-size: 1.4rem;
-        font-weight: bold;
-    }
-
-    .top-bar .logo span { color: var(--accent); }
-
-    .top-nav {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .nav-btn {
-        background: var(--bg-input);
-        color: var(--text-main);
-        border: 1px solid var(--border);
-        padding: 8px 14px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .nav-btn:hover { background: var(--border); }
-    .nav-btn.active { background: var(--accent); border-color: var(--accent); }
-
-    /* MAIN CONTAINER */
-    .main-container {
-        display: flex;
-        padding: 20px;
-        gap: 20px;
-        max-width: 1800px;
-        margin: 0 auto;
-        width: 100%;
-    }
-
-    .video-section {
-        flex: 3;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        min-width: 0;
-    }
-
-    /* STATUS BANNER */
-    .media-status {
-        background: var(--bg-panel);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 25px;
-        text-align: center;
-        min-height: 300px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .media-status.playing { display: none; }
-
-    .media-status h2 { color: var(--text-muted); font-weight: normal; }
-
-    /* VIDEO WRAPPER (O IFRAME FICA AQUI) */
-    .video-wrapper {
-        position: relative;
-        width: 100%;
-        padding-bottom: 56.25%;
-        background: #000;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        display: none;
-    }
-
-    .video-wrapper.active { display: block; }
-
-    .video-wrapper iframe {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        border: none;
-    }
-
-    /* MEDIA CONTROLS (ABAIXO DO IFRAME - NÃO SOBREPOSTO) */
-    .media-controls {
-        background: var(--bg-panel);
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .source-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .source-btn {
-        flex: 1;
-        min-width: 130px;
-        padding: 12px;
-        background: var(--bg-input);
-        color: var(--text-main);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.2s;
-    }
-
-    .source-btn:hover { background: var(--border); transform: translateY(-2px); }
-    .source-btn.yt { color: #ff4444; border-color: #ff4444; }
-    .source-btn.yt:hover { background: #ff444422; }
-
-    /* SISTEMA DE LINK DO YOUTUBE (ESTILO WATCHPARTY.ME) */
-    .yt-link-container {
-        background: var(--bg-input);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .yt-link-container .yt-icon {
-        background: #ff0000;
-        color: white;
-        width: 40px; height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        flex-shrink: 0;
-    }
-
-    .yt-link-container input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: var(--text-main);
-        font-size: 0.95rem;
-        padding: 8px;
-    }
-
-    .yt-link-container input:focus { outline: none; }
-
-    .yt-link-container input::placeholder { color: var(--text-muted); }
-
-    .yt-link-container .load-btn {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.2s;
-        white-space: nowrap;
-    }
-
-    .yt-link-container .load-btn:hover { background: var(--accent-hover); }
-
-    .yt-history {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-    }
-
-    .yt-history-badge {
-        background: var(--accent);
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-    }
-
-    /* PLAYBACK BAR */
-    .playback-bar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        padding: 5px 0;
-    }
-
-    .playback-bar button {
-        background: none;
-        border: none;
-        color: var(--text-main);
-        font-size: 1.3rem;
-        cursor: pointer;
-        width: 38px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: background 0.2s;
-    }
-
-    .playback-bar button:hover { background: rgba(255,255,255,0.1); }
-    .playback-bar .play-btn { font-size: 1.8rem; }
-
-    .progress-bar {
-        flex: 1;
-        height: 6px;
-        background: #374151;
-        border-radius: 3px;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: var(--accent);
-        border-radius: 3px;
-        width: 0%;
-        transition: width 0.3s;
-    }
-
-    /* CHAT SECTION */
-    .chat-section {
-        flex: 1;
-        background: var(--bg-panel);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        min-width: 320px;
-        max-width: 400px;
-        height: 75vh;
-    }
-
-    .chat-tabs {
-        display: flex;
-        border-bottom: 1px solid var(--border);
-        background: var(--bg-input);
-        border-radius: 12px 12px 0 0;
-    }
-
-    .chat-tab {
-        flex: 1;
-        padding: 12px;
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-
-    .chat-tab.active {
-        color: var(--accent);
-        background: var(--bg-panel);
-        border-bottom: 2px solid var(--accent);
-    }
-
-    .chat-messages {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .msg {
-        font-size: 0.9rem;
-        line-height: 1.5;
-        padding: 4px 0;
-        word-wrap: break-word;
-    }
-
-    .msg .user {
-        color: var(--accent);
-        font-weight: bold;
-        margin-right: 6px;
-    }
-
-    .msg .host-badge {
-        background: #f59e0b;
-        color: #000;
-        font-size: 0.7rem;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-right: 6px;
-        font-weight: bold;
-    }
-
-    .msg.system {
-        color: var(--text-muted);
-        font-style: italic;
-        text-align: center;
-        font-size: 0.85rem;
-    }
-
-    .chat-input-area {
-        padding: 12px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .reaction-bar {
-        padding: 8px 12px;
-        display: flex;
-        gap: 6px;
-        border-top: 1px solid var(--border);
-        background: var(--bg-input);
-        overflow-x: auto;
-    }
-
-    .reaction-btn {
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 4px 10px;
-        cursor: pointer;
-        font-size: 1.1rem;
-        transition: all 0.2s;
-    }
-
-    .reaction-btn:hover {
-        background: var(--accent);
-        transform: scale(1.1);
-    }
-
-    .chat-input-area input {
-        flex: 1;
-        background: var(--bg-input);
-        border: 1px solid var(--border);
-        color: white;
-        padding: 10px 14px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-    }
-
-    .chat-input-area input:focus { outline: none; border-color: var(--accent); }
-
-    .chat-input-area button {
-        background: var(--accent);
-        border: none;
-        color: white;
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.1rem;
-    }
-
-    /* FLOATING REACTION */
-    .floating-reaction {
-        position: fixed;
-        font-size: 4rem;
-        pointer-events: none;
-        animation: floatUp 3s ease-out forwards;
-        z-index: 2000;
-    }
-
-    @keyframes floatUp {
-        0% { transform: translateY(0) scale(0.5); opacity: 0; }
-        20% { transform: translateY(-50px) scale(1.2); opacity: 1; }
-        100% { transform: translateY(-400px) scale(0.8); opacity: 0; }
-    }
-
-    /* DONATION MODAL */
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 800;
-        padding: 20px;
-    }
-
-    .modal-overlay.active { display: flex; }
-
-    .modal {
-        background: var(--bg-panel);
-        border-radius: 20px;
-        padding: 30px;
-        max-width: 500px;
-        width: 100%;
-        border: 1px solid var(--border);
-        position: relative;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .modal h2 { margin-bottom: 10px; }
-    .modal .subtitle { color: var(--text-muted); margin-bottom: 20px; }
-
-    .donation-tiers {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .tier {
-        background: var(--bg-input);
-        padding: 15px;
-        border-radius: 12px;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.2s;
-        border: 2px solid transparent;
-    }
-
-    .tier:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .tier .amount { font-size: 1.3rem; font-weight: bold; color: var(--accent); }
-    .tier .label { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
-
-    .pix-box {
-        background: var(--bg-input);
-        padding: 15px;
-        border-radius: 12px;
-        margin-top: 15px;
-    }
-
-    .pix-key {
-        background: var(--bg-dark);
-        padding: 12px;
-        border-radius: 8px;
-        font-family: monospace;
-        word-break: break-all;
-        margin: 10px 0;
-    }
-
-    .close-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: var(--border);
-        border: none;
-        color: white;
-        width: 35px; height: 35px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.2rem;
-    }
-
-    .copy-btn {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-        .main-container { flex-direction: column; }
-        .chat-section { max-width: 100%; height: 500px; }
-        .source-buttons { flex-direction: column; }
-        .source-btn { min-width: 100%; }
-    }
+:root{
+  --bg1:#1a1a2e;--bg2:#16213e;--bg3:#161620;--bg4:#121218;
+  --text:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.15);
+  --accent:#fdcb6e;--accent2:#fd79a8;--accent3:#74b9ff;
+  --chat-bg:#161620;--chat-head:#1a1a2e;--input-bg:#1a1a2e;
+  --panel-bg:rgba(255,255,255,.12);--panel-border:rgba(255,255,255,.2);
+  --grad1:#667eea;--grad2:#764ba2;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;}
+body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
+
+/* ===== TELAS INICIAIS ===== */
+.screen{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--grad1),var(--grad2));}
+.screen.active{display:flex;}
+.logo{font-size:clamp(42px,10vw,72px);font-weight:900;background:linear-gradient(90deg,#fff,#ffeaa7,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-2px;}
+.tagline{font-size:clamp(14px,3vw,22px);margin:10px 0 36px;opacity:.9;text-align:center;padding:0 16px;}
+.panel{background:var(--panel-bg);backdrop-filter:blur(20px);padding:clamp(16px,4vw,38px);border-radius:24px;border:1px solid var(--panel-border);width:min(460px,92%);}
+.panel h2{color:var(--text);margin-bottom:18px;font-size:clamp(18px,4vw,22px);}
+.panel input[type=text]{width:100%;padding:14px 16px;border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:15px;margin-bottom:14px;outline:none;transition:.2s;}
+.panel input[type=text]:focus{border-color:var(--accent);}
+.btn-start{width:100%;padding:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#000;font-size:17px;font-weight:800;cursor:pointer;transition:.2s;}
+.btn-start:hover{transform:translateY(-2px);}
+.panel input[type=text]{width:100%;}
+.panel .btns{display:flex;gap:10px;margin-top:6px;}
+.panel .btns button{flex:1;padding:13px;border-radius:12px;border:none;font-weight:700;cursor:pointer;font-size:14px;}
+.btn-create{background:var(--accent);color:#000;}
+.btn-join{background:rgba(255,255,255,.2);color:#fff;}
+.footer-note{margin-top:22px;font-size:12px;color:rgba(255,255,255,.7);text-align:center;}
+.footer-note a{color:var(--accent);cursor:pointer;}
+.spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== SALA PRINCIPAL ===== */
+.room{display:none;height:100dvh;flex-direction:column;}
+.room.active{display:flex;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:8px;}
+.top-bar .logo{font-size:18px;}
+.top-bar .room-name{font-size:13px;color:var(--text2);margin-left:8px;}
+.top-nav{display:flex;gap:6px;flex-wrap:wrap;}
+.nav-btn{background:var(--bg4);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:.2s;}
+.nav-btn:hover{background:var(--bg2);color:#fff;}
+
+.main-area{flex:1;display:flex;min-height:0;overflow:hidden;}
+.video-side{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg4);}
+
+/* ============================================
+   PLAYER ESTILO WATCHPARTY.ME
+   - vídeo em cima (video-wrapper)
+   - controles EMBAIXO (não sobrepostos)
+   ============================================ */
+.video-container{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:0;}
+
+/* área do vídeo (iframe / placeholder) */
+.video-wrapper{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;background:#000;}
+
+.video-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;text-align:center;padding:24px;position:absolute;inset:0;}
+.video-placeholder .icon{font-size:clamp(60px,15vw,110px);margin-bottom:18px;opacity:.3;}
+.video-placeholder h3{color:#aaa;margin-bottom:8px;font-size:clamp(16px,4vw,22px);}
+.video-placeholder p{color:#777;max-width:420px;font-size:13px;line-height:1.5;}
+
+#youtubeOverlay{position:absolute;inset:0;display:none;}
+#youtubeOverlay iframe{width:100%;height:100%;}
+
+.media-badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);padding:6px 12px;border-radius:8px;font-size:12px;display:flex;gap:6px;align-items:center;pointer-events:none;z-index:5;}
+.viewer-count{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.7);padding:6px 12px;border-radius:8px;font-size:12px;pointer-events:none;z-index:5;}
+.chat-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:4px 12px;border-radius:20px;font-size:11px;color:var(--text2);pointer-events:none;z-index:5;}
+.chat-hint kbd{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-size:10px;}
+
+/* controles do host (acima do vídeo, no canto) */
+.host-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:60%;z-index:6;}
+.hc-btn{padding:8px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;white-space:nowrap;}
+.hc-btn:hover{background:rgba(0,0,0,.9);border-color:var(--accent);}
+
+/* ===== INPUT INLINE DO YOUTUBE (estilo watchparty.me) ===== */
+.yt-inline-input{display:none;padding:14px 16px;background:var(--bg3);border-top:1px solid var(--border);flex-shrink:0;}
+.yt-inline-input.show{display:block;}
+.yt-inline-inner{display:flex;gap:10px;align-items:center;max-width:900px;margin:0 auto;}
+.yt-icon-box{background:#ff0000;color:#fff;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.yt-inline-inner input{flex:1;padding:12px 16px;border-radius:10px;border:1px solid var(--border2);background:var(--bg4);color:#fff;font-size:14px;outline:none;transition:.2s;}
+.yt-inline-inner input:focus{border-color:var(--accent);}
+.yt-load-btn{padding:12px 22px;background:var(--accent);color:#000;border:none;border-radius:10px;font-weight:800;cursor:pointer;white-space:nowrap;font-size:14px;transition:.2s;}
+.yt-load-btn:hover{filter:brightness(1.1);}
+.yt-hint{font-size:11px;color:var(--text3);margin-top:8px;max-width:900px;margin-left:auto;margin-right:auto;}
+
+/* ===== CONTROLES DO PLAYER (EMBAIXO DO VÍDEO) ===== */
+.player-controls{background:var(--bg3);padding:14px 16px;opacity:1;pointer-events:auto;border-top:1px solid var(--border);flex-shrink:0;}
+.progress{width:100%;height:6px;background:rgba(255,255,255,.15);border-radius:3px;cursor:pointer;position:relative;margin-bottom:12px;transition:.2s;}
+.progress:hover{height:9px;}
+.progress-bar{height:100%;background:var(--accent);border-radius:3px;width:0%;position:relative;}
+.progress-bar::after{content:'';position:absolute;right:-7px;top:50%;transform:translateY(-50%);width:14px;height:14px;background:var(--accent);border-radius:50%;opacity:0;transition:.2s;}
+.progress:hover .progress-bar::after{opacity:1;}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.ctrl-l,.ctrl-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cbtn{background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0;}
+.cbtn:hover{background:rgba(255,255,255,.25);}
+.cbtn.play{width:48px;height:48px;font-size:20px;background:var(--accent);color:#000;}
+.time{font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums;}
+.vol-wrap{display:flex;align-items:center;gap:8px;}
+.vol-slider{width:80px;accent-color:var(--accent);}
+
+/* ===== CHAT ===== */
+.chat-side{width:340px;background:var(--chat-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--chat-head);border-bottom:1px solid var(--border);}
+.chat-head .title{font-weight:700;font-size:14px;}
+.chat-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg4);}
+.c-tab{flex:1;padding:10px 4px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:12px;transition:.2s;border-bottom:2px solid transparent;}
+.c-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.chat-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.chat-msg{font-size:13px;line-height:1.4;word-wrap:break-word;}
+.chat-msg .user{color:var(--accent3);font-weight:700;margin-right:6px;}
+.chat-msg .host-badge{background:#f59e0b;color:#000;font-size:10px;padding:1px 5px;border-radius:4px;margin-right:5px;font-weight:700;}
+.chat-msg.system{color:var(--text3);font-style:italic;text-align:center;font-size:12px;}
+.chat-input-area{padding:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;}
+.chat-input-area input{flex:1;background:var(--input-bg);border:1px solid var(--border);color:#fff;padding:10px 14px;border-radius:20px;font-size:13px;outline:none;}
+.chat-input-area input:focus{border-color:var(--accent);}
+.chat-input-area button{background:var(--accent);border:none;color:#000;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0;}
+.reaction-bar{padding:8px 10px;display:flex;gap:6px;border-top:1px solid var(--border);overflow-x:auto;background:var(--bg4);}
+.reaction-btn{background:transparent;border:1px solid var(--border);border-radius:18px;padding:4px 10px;cursor:pointer;font-size:16px;transition:.2s;flex-shrink:0;}
+.reaction-btn:hover{background:var(--accent);transform:scale(1.1);}
+
+/* ===== MODAIS ===== */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.modal.active{display:flex;}
+.modal-box{background:var(--bg3);border-radius:20px;padding:28px;max-width:480px;width:100%;border:1px solid var(--border2);position:relative;max-height:88vh;overflow-y:auto;}
+.modal-box h2{margin-bottom:8px;font-size:22px;}
+.modal-box .sub{color:var(--text2);margin-bottom:18px;font-size:14px;line-height:1.5;}
+.close-x{position:absolute;top:14px;right:14px;background:var(--bg4);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;}
+.tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+.tier{background:var(--bg4);padding:16px 10px;border-radius:12px;cursor:pointer;text-align:center;transition:.2s;border:2px solid transparent;}
+.tier:hover{border-color:var(--accent);transform:translateY(-2px);}
+.tier .amt{font-size:20px;font-weight:800;color:var(--accent);}
+.tier .lbl{font-size:12px;color:var(--text2);margin-top:4px;}
+.pix-box{background:var(--bg4);padding:16px;border-radius:12px;margin-top:14px;}
+.pix-key{background:var(--bg1);padding:12px;border-radius:8px;font-family:monospace;word-break:break-all;margin:10px 0;font-size:13px;}
+.copy-btn{background:var(--accent);color:#000;border:none;padding:12px;border-radius:10px;cursor:pointer;font-weight:800;width:100%;margin-top:8px;font-size:14px;}
+.stats{display:flex;justify-content:space-around;margin-top:16px;padding:14px;background:var(--bg4);border-radius:10px;}
+.stats .num{font-size:20px;font-weight:800;color:var(--accent);}
+.stats .lbl{font-size:11px;color:var(--text2);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);padding:12px 22px;border-radius:12px;font-size:14px;z-index:2000;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.floating-reaction{position:fixed;font-size:56px;pointer-events:none;z-index:3000;animation:floatUp 3s ease-out forwards;}
+@keyframes floatUp{0%{transform:translateY(0) scale(.5);opacity:0}20%{transform:translateY(-60px) scale(1.2);opacity:1}100%{transform:translateY(-420px) scale(.8);opacity:0}}
+
+@media(max-width:860px){
+  .main-area{flex-direction:column;}
+  .chat-side{width:100%;height:44vh;border-left:none;border-top:1px solid var(--border);}
+  .host-controls{position:static;max-width:100%;padding:10px;justify-content:center;background:var(--bg3);}
+}
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
-<div class="loading-screen" id="loadingScreen">
-    <div class="spinner"></div>
-    <h3>PartyBlox</h3>
-    <p style="color: var(--text-muted); margin-top: 10px;">Aguarde o carregamento...</p>
+<div class="screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div style="font-size:20px;font-weight:700;">PartyBlox</div>
+  <div style="margin-top:8px;color:var(--text2);">Aguarde o carregamento...</div>
 </div>
 
-<!-- WELCOME SCREEN -->
-<div class="welcome-screen" id="welcomeScreen" style="display: none;">
-    <div class="welcome-box">
-        <h1>✨ <span>PartyBlox</span></h1>
-        <p class="tagline">✨ Assista junto com amigos em tempo real ✨</p>
-        
-        <input type="text" id="nickname" placeholder="👤 Seu apelido" value="Convidado_92" />
-        <input type="text" id="roomName" placeholder="🏠 Nome da sala" />
-        
-        <div class="btns">
-            <button class="btn-create" onclick="createRoom()">➕ Criar Sala</button>
-            <button class="btn-join" onclick="joinRoom()">🔗 Entrar em Sala</button>
-        </div>
-        
-        <div class="welcome-footer">
-            100% grátis · Sem cadastro · <a href="#" onclick="openDonation()">PIX para manter no ar 💝</a>
-        </div>
+<!-- LANDING -->
+<div class="screen active" id="landing">
+  <div class="logo">PartyBlox</div>
+  <div class="tagline">✨ Assista junto com amigos em tempo real ✨</div>
+  <div class="panel">
+    <button class="btn-start" id="startBtn">🚀 Começar</button>
+  </div>
+  <div class="footer-note">100% grátis · Sem cadastro · <a id="pixFooter">PIX para manter no ar 💝</a></div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="setup">
+  <div class="logo" style="font-size:36px;">PartyBlox</div>
+  <div class="panel" style="margin-top:24px;">
+    <h2>Criar sua sala</h2>
+    <input type="text" id="nickname" placeholder="👤 Seu apelido">
+    <input type="text" id="roomName" placeholder="🏠 Nome da sala">
+    <div class="btns">
+      <button class="btn-create" id="createBtn">➕ Criar Sala</button>
+      <button class="btn-join" id="joinBtn">🔗 Entrar em Sala</button>
     </div>
+  </div>
 </div>
 
-<!-- TOP BAR -->
-<div class="top-bar" id="topBar" style="display: none;">
-    <div class="logo">✨ <span>PartyBlox</span> 🏠 — Sala Demo</div>
+<!-- SALA -->
+<div class="room" id="room">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;">
+      <div class="logo" style="font-size:18px;">🎬 PartyBlox</div>
+      <span class="room-name" id="roomLabel">🏠 —</span>
+    </div>
     <div class="top-nav">
-        <button class="nav-btn" onclick="toggleFloating()">🪟 Flutuante</button>
-        <button class="nav-btn" onclick="togglePiP()">⧉ PiP</button>
-        <button class="nav-btn active">💬 Chat</button>
-        <button class="nav-btn" onclick="openDonation()">💝 Apoiar</button>
-        <button class="nav-btn" onclick="inviteFriends()">🔗 Convidar</button>
-        <button class="nav-btn" onclick="exitRoom()">🚪 Sair</button>
+      <button class="nav-btn" id="screenBtn">📺 Tela</button>
+      <button class="nav-btn" id="floatBtn">🪟 Flutuante</button>
+      <button class="nav-btn" id="pipBtn">⧉ PiP</button>
+      <button class="nav-btn" id="uiBtn">👁️ UI</button>
+      <button class="nav-btn" id="chatToggleBtn">💬 Chat</button>
+      <button class="nav-btn" id="donateBtn">💝 Apoiar</button>
+      <button class="nav-btn" id="inviteBtn">🔗 Convidar</button>
+      <button class="nav-btn" id="exitBtn">🚪 Sair</button>
     </div>
-</div>
+  </div>
 
-<!-- MAIN -->
-<div class="main-container" id="mainContainer" style="display: none;">
-    <!-- VIDEO SECTION -->
-    <div class="video-section">
-        <!-- Status quando vazio -->
-        <div class="media-status" id="mediaStatus">
-            <h2>🎬 Nenhuma mídia tocando</h2>
-            <p style="color: var(--text-muted);">Se você é o host, use os botões abaixo para compartilhar um vídeo, imagem, áudio ou sua tela.</p>
-            <button class="btn-create" style="padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px;" onclick="document.getElementById('ytLinkInput').focus()">▶️ Começar a assistir</button>
+  <div class="main-area">
+    <!-- LADO DO VÍDEO -->
+    <div class="video-side">
+      <div class="video-container" id="videoCont">
+        <!-- ÁREA DO VÍDEO (em cima) -->
+        <div class="video-wrapper">
+          <div class="video-placeholder" id="placeholder">
+            <div class="icon">🎬</div>
+            <h3>Nenhuma mídia tocando</h3>
+            <p>Se você é o host, use os botões abaixo para compartilhar um vídeo, imagem, áudio ou sua tela.</p>
+          </div>
+          <div id="youtubeOverlay"><div id="youtubePlayer"></div></div>
+          <div class="media-badge" id="mediaBadge" style="display:none;">
+            <span id="mediaTypeIcon">🎬</span><span id="mediaTypeText">YouTube</span>
+          </div>
+          <div class="viewer-count"><span id="vcNum">1</span> assistindo</div>
+          <div class="chat-hint">Pressione <kbd>;</kbd> para digitar</div>
+          <div class="host-controls" id="hostCtrls">
+            <button class="hc-btn" id="ytBtn">🔗 YouTube</button>
+            <button class="hc-btn" id="fileBtn">📁 Enviar Mídia</button>
+            <button class="hc-btn" id="scrBtn">🖥️ Compartilhar Tela</button>
+            <button class="hc-btn" id="clearBtn">🗑️ Limpar</button>
+          </div>
         </div>
 
-        <!-- VIDEO WRAPPER (IFRAME AQUI) -->
-        <div class="video-wrapper" id="videoWrapper">
-            <iframe id="ytPlayer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <!-- INPUT INLINE DO YOUTUBE (estilo watchparty.me) -->
+        <div class="yt-inline-input" id="ytInlineInput">
+          <div class="yt-inline-inner">
+            <div class="yt-icon-box">▶</div>
+            <input type="text" id="ytUrlInput" placeholder="Cole o link do YouTube aqui e pressione Enter...">
+            <button class="yt-load-btn" id="ytLoadBtn">🔗 Carregar</button>
+          </div>
+          <div class="yt-hint">Aceita: youtube.com/watch?v=..., youtu.be/..., shorts, lives e embeds</div>
         </div>
 
-        <!-- MEDIA CONTROLS (EMBAIXO DO IFRAME - NÃO SOBREPOSTO) -->
-        <div class="media-controls">
-            <!-- Botões de Fonte -->
-            <div class="source-buttons">
-                <button class="source-btn yt" onclick="document.getElementById('ytLinkInput').focus()">🎬 YouTube <span style="background:#ff0000; color:white; padding: 2px 6px; border-radius:10px; font-size:0.7rem;">1</span></button>
-                <button class="source-btn" onclick="alert('Upload de mídia em breve!')">📁 Enviar Mídia</button>
-                <button class="source-btn" onclick="shareScreen()">🖥️ Compartilhar Tela</button>
-                <button class="source-btn" onclick="clearMedia()">🗑️ Limpar</button>
+        <!-- CONTROLES DO PLAYER (embaixo, NÃO sobrepostos) -->
+        <div class="player-controls" id="playerCtrl">
+          <div class="progress" id="progBar">
+            <div class="progress-bar" id="progFill"></div>
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-l">
+              <button class="cbtn play" id="playBtn">▶️</button>
+              <button class="cbtn" id="backBtn" title="Voltar 10s">⏮️</button>
+              <button class="cbtn" id="fwdBtn" title="Avançar 10s">⏭️</button>
+              <div class="time"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></div>
             </div>
-
-            <!-- SISTEMA DE LINK DO YOUTUBE (WATCHPARTY.ME STYLE) -->
-            <div class="yt-link-container">
-                <div class="yt-icon">▶</div>
-                <input type="text" id="ytLinkInput" placeholder="Pressione  ;  para digitar · Cole um link do YouTube..." />
-                <button class="load-btn" onclick="loadVideo()">🔗 Carregar</button>
+            <div class="ctrl-r">
+              <div class="vol-wrap">
+                <button class="cbtn" id="muteBtn">🔊</button>
+                <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="100">
+              </div>
+              <button class="cbtn" id="closeCtrlBtn" title="Fechar mídia">✕</button>
             </div>
-
-            <div class="yt-history">
-                <span class="yt-history-badge">assistindo</span>
-                <span id="currentVideoTitle">Nenhum vídeo carregado</span>
-            </div>
-
-            <!-- Playback Bar -->
-            <div class="playback-bar">
-                <button class="play-btn" id="playPauseBtn" onclick="togglePlay()">▶️</button>
-                <button onclick="prevVideo()">⏮️</button>
-                <button onclick="nextVideo()">⏭️</button>
-                <span id="currentTime">0:00</span>
-                <div class="progress-bar" onclick="seekVideo(event)">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <span id="totalTime">0:00</span>
-                <button onclick="toggleMute()">🔊</button>
-                <button>✕</button>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- CHAT -->
-    <div class="chat-section">
-        <div class="chat-tabs">
-            <button class="chat-tab active" onclick="switchTab(this, 'chat')">💬 Chat</button>
-            <button class="chat-tab" onclick="switchTab(this, 'reactions')">😂 Reações</button>
-            <button class="chat-tab" onclick="switchTab(this, 'games')">🎮 Jogos</button>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-            <div class="msg system">👋 Bem-vindo à sala!</div>
-            <div class="msg"><span class="host-badge">HOST</span><span class="user">Admin:</span> Bem-vindos ao PartyBlox! 🎉</div>
-            <div class="msg"><span class="user">JoaoGamer:</span> O vídeo carregou muito rápido!</div>
-            <div class="msg"><span class="user">Maria_Lua:</span> 😂😂😂</div>
-            <div class="msg"><span class="user">Pedro123:</span> Alguém mais travou?</div>
-        </div>
-
-        <div class="reaction-btn" id="reactionsPanel" style="display: none;">
-            <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;">
-                <button class="reaction-btn" onclick="sendReaction('😂')">😂</button>
-                <button class="reaction-btn" onclick="sendReaction('❤️')">❤️</button>
-                <button class="reaction-btn" onclick="sendReaction('🔥')">🔥</button>
-                <button class="reaction-btn" onclick="sendReaction('👏')">👏</button>
-                <button class="reaction-btn" onclick="sendReaction('😮')">😮</button>
-                <button class="reaction-btn" onclick="sendReaction('😢')">😢</button>
-                <button class="reaction-btn" onclick="sendReaction('🎉')">🎉</button>
-                <button class="reaction-btn" onclick="sendReaction('🤔')">🤔</button>
-            </div>
-        </div>
-
-        <div class="chat-input-area">
-            <button style="background: var(--bg-input); color: var(--text-main);" onclick="toggleReactions()">😊</button>
-            <input type="text" placeholder="Digite uma mensagem..." id="chatInput" onkeypress="handleChatKey(event)" />
-            <button onclick="sendChat()">➤</button>
-        </div>
+    <div class="chat-side" id="chatSide">
+      <div class="chat-head">
+        <div class="title">💬 Chat da Sala</div>
+        <button class="close-x" style="position:static;width:28px;height:28px;font-size:12px;" id="closeChatBtn">✕</button>
+      </div>
+      <div class="chat-tabs">
+        <button class="c-tab active" data-tab="chat">💬 Chat</button>
+        <button class="c-tab" data-tab="reactions">😂 Reações</button>
+        <button class="c-tab" data-tab="host">👑 Host</button>
+        <button class="c-tab" data-tab="games">🎮 Jogos</button>
+      </div>
+      <div class="chat-body" id="chatBody">
+        <div class="chat-msg system">👋 Bem-vindo à sala!</div>
+      </div>
+      <div class="reaction-bar" id="reactionBar" style="display:none;">
+        <button class="reaction-btn">😂</button>
+        <button class="reaction-btn">❤️</button>
+        <button class="reaction-btn">🔥</button>
+        <button class="reaction-btn">👏</button>
+        <button class="reaction-btn">😮</button>
+        <button class="reaction-btn">😢</button>
+        <button class="reaction-btn">🎉</button>
+        <button class="reaction-btn">🤔</button>
+      </div>
+      <div class="chat-input-area">
+        <button id="emojiBtn">😊</button>
+        <input type="text" id="chatText" placeholder="Digite uma mensagem...">
+        <button id="sendBtn">➤</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- DONATION MODAL -->
-<div class="modal-overlay" id="donationModal">
-    <div class="modal">
-        <button class="close-btn" onclick="closeDonation()">✕</button>
-        <h2>💝 Apoie o PartyBlox</h2>
-        <p class="subtitle">Me ajude a manter este site no ar! Sua doação cobre servidor, domínio e melhorias. Qualquer valor faz diferença! ❤️</p>
-        
-        <div class="donation-tiers">
-            <div class="tier"><div class="amount">R$5</div><div class="label">☕ Café</div></div>
-            <div class="tier"><div class="amount">R$10</div><div class="label">🍕 Lanche</div></div>
-            <div class="tier"><div class="amount">R$25</div><div class="label">⭐ Fã</div></div>
-            <div class="tier"><div class="amount">R$50</div><div class="label">💎 VIP</div></div>
-        </div>
-
-        <div class="pix-box">
-            <strong>🔑 CHAVE PIX (COPIE E COLE)</strong>
-            <div class="pix-key" id="pixKey">watchparty@livepix.gg</div>
-            <button class="copy-btn" onclick="copyPix()">📋 COPIAR</button>
-            <p style="margin-top: 15px; color: var(--text-muted); font-size: 0.9rem;">📱 OU ESCANEIE O QR CODE<br>Aponte a câmera do app do seu banco</p>
-            <button class="copy-btn" style="background: #22c55e;" onclick="window.open('https://livepix.gg/', '_blank')">🚀 Abrir LivePix (Doação Rápida)</button>
-        </div>
-
-        <div style="margin-top: 20px; padding: 15px; background: var(--bg-input); border-radius: 10px; text-align: center;">
-            <div style="display: flex; justify-content: space-around;">
-                <div><strong style="color: var(--accent);">127</strong><br><small>Doadores</small></div>
-                <div><strong style="color: var(--accent);">R$2.340</strong><br><small>Arrecadado</small></div>
-            </div>
-            <p style="margin-top: 10px; color: var(--text-muted); font-style: italic;">"Obrigado a todos que apoiam! Vocês são incríveis ❤️"</p>
-        </div>
+<!-- MODAL DOAÇÃO -->
+<div class="modal" id="donateModal">
+  <div class="modal-box">
+    <button class="close-x" id="closeDonateBtn">✕</button>
+    <h2>💝 Apoie o PartyBlox</h2>
+    <div class="sub">Me ajude a manter este site no ar! Sua doação cobre servidor, domínio e melhorias. Qualquer valor faz diferença! ❤️</div>
+    <div class="tiers">
+      <div class="tier" data-amt="5"><div class="amt">R$5</div><div class="lbl">☕ Café</div></div>
+      <div class="tier" data-amt="10"><div class="amt">R$10</div><div class="lbl">🍕 Lanche</div></div>
+      <div class="tier" data-amt="25"><div class="amt">R$25</div><div class="lbl">⭐ Fã</div></div>
+      <div class="tier" data-amt="50"><div class="amt">R$50</div><div class="lbl">💎 VIP</div></div>
     </div>
+    <div class="pix-box">
+      <strong>🔑 CHAVE PIX (COPIE E COLE)</strong>
+      <div class="pix-key" id="pixKey">watchparty@livepix.gg</div>
+      <button class="copy-btn" id="copyPixBtn">📋 COPIAR</button>
+      <div style="margin-top:14px;font-size:13px;color:var(--text2);">📱 OU ESCANEIE O QR CODE<br><span style="font-size:11px;">Aponte a câmera do app do seu banco</span></div>
+      <button class="copy-btn" style="background:#22c55e;" id="livepixBtn">🚀 Abrir LivePix (Doação Rápida)</button>
+    </div>
+    <div class="stats">
+      <div><div class="num">127</div><div class="lbl">Doadores</div></div>
+      <div><div class="num">R$2.340</div><div class="lbl">Arrecadado</div></div>
+    </div>
+    <div style="margin-top:14px;text-align:center;color:var(--text2);font-style:italic;font-size:13px;">"Obrigado a todos que apoiam! Vocês são incríveis ❤️"</div>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-    // ===== LOADING =====
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('welcomeScreen').style.display = 'flex';
-        }, 1500);
-    });
+const $=id=>document.getElementById(id);
+let youtubePlayer=null,ytVideoId=null,isHost=true,mediaActive=false;
+let curSeconds=0,totSeconds=0,isPlaying=false,progTimer=null;
 
-    // ===== WELCOME =====
-    function createRoom() { enterRoom(); }
-    function joinRoom() { enterRoom(); }
-    
-    function enterRoom() {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('topBar').style.display = 'flex';
-        document.getElementById('mainContainer').style.display = 'flex';
+/* ===== NAVEGAÇÃO INICIAL ===== */
+$('loadingScreen').classList.remove('active');
+setTimeout(()=>{ $('loadingScreen').classList.remove('active'); $('landing').classList.add('active'); },800);
+
+$('startBtn').addEventListener('click',()=>{
+  $('landing').classList.remove('active');
+  $('setup').classList.add('active');
+});
+
+$('createBtn').addEventListener('click',enterRoom);
+$('joinBtn').addEventListener('click',enterRoom);
+
+function enterRoom(){
+  const nick=$('nickname').value.trim()||'Convidado';
+  const room=$('roomName').value.trim()||'Sala do '+nick;
+  $('roomLabel').textContent='🏠 — '+room;
+  $('setup').classList.remove('active');
+  $('room').classList.add('active');
+  addSystemMsg('🎉 Sala criada! Você é o host.');
+}
+
+/* ============================================
+   SISTEMA YOUTUBE ESTILO WATCHPARTY.ME
+   ============================================ */
+function extractYTId(url){
+  if(!url)return null;
+  url=url.trim();
+  // ID direto (11 chars)
+  if(/^[a-zA-Z0-9_-]{11}$/.test(url))return url;
+  const patterns=[
+    /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/
+  ];
+  for(const p of patterns){
+    const m=url.match(p);
+    if(m)return m[1];
+  }
+  return null;
+}
+
+// Botão 🔗 YouTube abre/fecha o input inline (igual watchparty.me)
+$('ytBtn').addEventListener('click',()=>{
+  const panel=$('ytInlineInput');
+  panel.classList.toggle('show');
+  if(panel.classList.contains('show')){
+    setTimeout(()=>$('ytUrlInput').focus(),100);
+  }
+});
+
+// Carrega vídeo pelo botão
+$('ytLoadBtn').addEventListener('click',loadYTFromInput);
+
+// Carrega vídeo pelo Enter
+$('ytUrlInput').addEventListener('keypress',e=>{
+  if(e.key==='Enter')loadYTFromInput();
+});
+
+function loadYTFromInput(){
+  const url=$('ytUrlInput').value.trim();
+  if(!url){toast('❌ Cole um link do YouTube');return;}
+  const id=extractYTId(url);
+  if(!id){toast('❌ Link inválido do YouTube');return;}
+  loadYouTube(id,true);
+  $('ytUrlInput').value='';
+  $('ytInlineInput').classList.remove('show');
+  toast('🎬 Vídeo carregado!');
+}
+
+function onYouTubeIframeAPIReady(){
+  youtubePlayer=new YT.Player('youtubePlayer',{
+    playerVars:{autoplay:1,controls:0,rel:0,modestbranding:1,playsinline:1},
+    events:{
+      onReady:()=>{youtubePlayer.setVolume(100);},
+      onStateChange:onYTStateChange
     }
+  });
+}
 
-    function exitRoom() {
-        if (confirm('Deseja sair da sala?')) {
-            document.getElementById('topBar').style.display = 'none';
-            document.getElementById('mainContainer').style.display = 'none';
-            document.getElementById('welcomeScreen').style.display = 'flex';
-        }
+function loadYouTube(id,autoplay){
+  ytVideoId=id;mediaActive=true;
+  $('placeholder').style.display='none';
+  $('youtubeOverlay').style.display='block';
+  $('mediaBadge').style.display='flex';
+  $('mediaTypeIcon').textContent='🎬';
+  $('mediaTypeText').textContent='YouTube';
+
+  const doLoad=()=>{
+    try{
+      if(autoplay)youtubePlayer.loadVideoById(id);
+      else youtubePlayer.cueVideoById(id);
+    }catch(e){}
+  };
+  if(youtubePlayer&&youtubePlayer.loadVideoById)doLoad();
+  else setTimeout(doLoad,800);
+
+  isPlaying=autoplay;
+  $('playBtn').textContent=autoplay?'⏸️':'▶️';
+  startProgressTimer();
+}
+
+function onYTStateChange(e){
+  if(e.data===YT.PlayerState.PLAYING){
+    isPlaying=true;$('playBtn').textContent='⏸️';
+    totSeconds=Math.floor(youtubePlayer.getDuration()||0);
+    $('totTime').textContent=fmtTime(totSeconds);
+  }else if(e.data===YT.PlayerState.PAUSED){
+    isPlaying=false;$('playBtn').textContent='▶️';
+  }else if(e.data===YT.PlayerState.ENDED){
+    isPlaying=false;$('playBtn').textContent='▶️';
+  }
+}
+
+function startProgressTimer(){
+  clearInterval(progTimer);
+  progTimer=setInterval(()=>{
+    if(youtubePlayer&&youtubePlayer.getCurrentTime){
+      curSeconds=Math.floor(youtubePlayer.getCurrentTime()||0);
+      totSeconds=Math.floor(youtubePlayer.getDuration()||0);
+      $('curTime').textContent=fmtTime(curSeconds);
+      $('totTime').textContent=fmtTime(totSeconds);
+      if(totSeconds>0)$('progFill').style.width=(curSeconds/totSeconds*100)+'%';
     }
+  },500);
+}
 
-    // ===== SISTEMA DE LINK DO YOUTUBE (WATCHPARTY.ME STYLE) =====
-    function extractYoutubeId(url) {
-        const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-        const match = url.match(regExp);
-        return match ? match[1] : null;
+function fmtTime(s){
+  if(!s||isNaN(s))return '0:00';
+  const m=Math.floor(s/60),sec=Math.floor(s%60);
+  return m+':'+String(sec).padStart(2,'0');
+}
+
+/* ===== CONTROLES DO PLAYER ===== */
+$('playBtn').addEventListener('click',()=>{
+  if(!youtubePlayer||!mediaActive)return;
+  if(isPlaying){youtubePlayer.pauseVideo();isPlaying=false;$('playBtn').textContent='▶️';}
+  else{youtubePlayer.playVideo();isPlaying=true;$('playBtn').textContent='⏸️';}
+});
+
+$('backBtn').addEventListener('click',()=>{
+  if(youtubePlayer&&mediaActive)youtubePlayer.seekTo(Math.max(0,youtubePlayer.getCurrentTime()-10),true);
+});
+$('fwdBtn').addEventListener('click',()=>{
+  if(youtubePlayer&&mediaActive)youtubePlayer.seekTo(youtubePlayer.getCurrentTime()+10,true);
+});
+
+$('muteBtn').addEventListener('click',()=>{
+  if(!youtubePlayer)return;
+  if(youtubePlayer.isMuted()){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}
+  else{youtubePlayer.mute();$('muteBtn').textContent='🔇';}
+});
+
+$('volSlider').addEventListener('input',e=>{
+  if(youtubePlayer)youtubePlayer.setVolume(e.target.value);
+});
+
+$('progBar').addEventListener('click',e=>{
+  if(!youtubePlayer||!totSeconds)return;
+  const rect=$('progBar').getBoundingClientRect();
+  const pct=(e.clientX-rect.left)/rect.width;
+  youtubePlayer.seekTo(pct*totSeconds,true);
+});
+
+$('closeCtrlBtn').addEventListener('click',clearMedia);
+$('clearBtn').addEventListener('click',clearMedia);
+
+function clearMedia(){
+  if(youtubePlayer&&youtubePlayer.stopVideo)try{youtubePlayer.stopVideo();}catch(e){}
+  mediaActive=false;isPlaying=false;
+  $('placeholder').style.display='flex';
+  $('youtubeOverlay').style.display='none';
+  $('mediaBadge').style.display='none';
+  $('progFill').style.width='0%';
+  $('curTime').textContent='0:00';
+  $('totTime').textContent='0:00';
+  $('playBtn').textContent='▶️';
+  clearInterval(progTimer);
+  toast('🗑️ Mídia removida');
+}
+
+/* ===== CHAT ===== */
+function addSystemMsg(txt){
+  const d=document.createElement('div');
+  d.className='chat-msg system';d.textContent=txt;
+  $('chatBody').appendChild(d);scrollChat();
+}
+function addChatMsg(user,txt,isHost){
+  const d=document.createElement('div');
+  d.className='chat-msg';
+  d.innerHTML=(isHost?'<span class="host-badge">HOST</span>':'')+'<span class="user">'+user+':</span> '+txt;
+  $('chatBody').appendChild(d);scrollChat();
+}
+function scrollChat(){$('chatBody').scrollTop=$('chatBody').scrollHeight;}
+
+$('sendBtn').addEventListener('click',sendChat);
+$('chatText').addEventListener('keypress',e=>{if(e.key==='Enter')sendChat();});
+function sendChat(){
+  const txt=$('chatText').value.trim();
+  if(!txt)return;
+  addChatMsg('Você',txt,isHost);
+  $('chatText').value='';
+}
+
+// Atalho ;
+document.addEventListener('keydown',e=>{
+  if(e.key===';'&&$('room').classList.contains('active')){
+    const active=document.activeElement;
+    if(!active||(active.tagName!=='INPUT'&&active.tagName!=='TEXTAREA')){
+      e.preventDefault();$('chatText').focus();
     }
+  }
+});
 
-    function loadVideo() {
-        const input = document.getElementById('ytLinkInput');
-        const url = input.value.trim();
-        
-        if (!url) {
-            // Se estiver vazio, mostra exemplo
-            input.placeholder = 'Cole uma URL do YouTube válida...';
-            input.focus();
-            return;
-        }
+/* ===== ABAS DO CHAT ===== */
+document.querySelectorAll('.c-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.c-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab=btn.dataset.tab;
+    $('reactionBar').style.display=tab==='reactions'?'flex':'none';
+    if(tab==='host')addSystemMsg('👑 Você é o host desta sala');
+    if(tab==='games')addSystemMsg('🎮 Jogos em breve: Velha, Quiz, Desenho!');
+  });
+});
 
-        const videoId = extractYoutubeId(url);
-        
-        if (videoId) {
-            const player = document.getElementById('ytPlayer');
-            player.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1`;
-            
-            // Mostra o vídeo, esconde status
-            document.getElementById('videoWrapper').classList.add('active');
-            document.getElementById('mediaStatus').classList.add('playing');
-            
-            // Atualiza info
-            document.getElementById('currentVideoTitle').innerText = `youtube.com/watch?v=${videoId}`;
-            document.getElementById('playPauseBtn').innerText = '⏸️';
-            document.getElementById('totalTime').innerText = '3:32';
-            
-            addSystemMessage(`🎬 Novo vídeo carregado!`);
-            input.value = '';
-            
-            // Feedback no botão
-            const btn = document.querySelector('.yt-link-container .load-btn');
-            const originalText = btn.innerText;
-            btn.innerText = '✅ Carregado';
-            btn.style.background = '#22c55e';
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.background = '';
-            }, 2000);
-        } else {
-            alert("⚠️ Link do YouTube inválido!\n\nExemplos válidos:\n• https://youtube.com/watch?v=XXXX\n• https://youtu.be/XXXX\n• https://youtube.com/shorts/XXXX");
-        }
-    }
+/* ===== REAÇÕES ===== */
+document.querySelectorAll('.reaction-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const emoji=btn.textContent;
+    const el=document.createElement('div');
+    el.className='floating-reaction';
+    el.textContent=emoji;
+    el.style.left=(Math.random()*70+15)+'%';
+    el.style.bottom='120px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),3000);
+  });
+});
 
-    document.getElementById('ytLinkInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loadVideo();
-    });
+/* ===== DOAÇÃO ===== */
+$('donateBtn').addEventListener('click',()=>$('donateModal').classList.add('active'));
+$('pixFooter').addEventListener('click',()=>$('donateModal').classList.add('active'));
+$('closeDonateBtn').addEventListener('click',()=>$('donateModal').classList.remove('active'));
+$('donateModal').addEventListener('click',e=>{if(e.target===$('donateModal'))$('donateModal').classList.remove('active');});
+$('copyPixBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText($('pixKey').textContent).then(()=>{
+    $('copyPixBtn').textContent='✅ COPIADO!';
+    setTimeout(()=>$('copyPixBtn').textContent='📋 COPIAR',2000);
+  });
+});
+$('livepixBtn').addEventListener('click',()=>window.open('https://livepix.gg/','_blank'));
+document.querySelectorAll('.tier').forEach(t=>{
+  t.addEventListener('click',()=>toast('💝 Obrigado! Doação de R$'+t.dataset.amt+' selecionada'));
+});
 
-    // Atalho ";" para focar no input
-    document.addEventListener('keydown', (e) => {
-        if (e.key === ';' && document.activeElement.tagName !== 'INPUT') {
-            e.preventDefault();
-            document.getElementById('ytLinkInput').focus();
-        }
-    });
+/* ===== OUTROS BOTÕES ===== */
+$('fileBtn').addEventListener('click',()=>toast('📁 Upload de mídia em breve!'));
+$('scrBtn').addEventListener('click',()=>toast('🖥️ Compartilhamento de tela em breve!'));
+$('inviteBtn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(location.href).then(()=>toast('🔗 Link da sala copiado!'));
+});
+$('exitBtn').addEventListener('click',()=>{
+  if(confirm('Sair da sala?'))location.reload();
+});
+$('chatToggleBtn').addEventListener('click',()=>{
+  const c=$('chatSide');
+  c.style.display=c.style.display==='none'?'flex':'none';
+});
+$('closeChatBtn').addEventListener('click',()=>$('chatSide').style.display='none');
+$('floatBtn').addEventListener('click',()=>toast('🪟 Modo flutuante em breve!'));
+$('pipBtn').addEventListener('click',()=>toast('⧉ PiP em breve!'));
+$('uiBtn').addEventListener('click',()=>toast('👁️ UI ajustada'));
+$('screenBtn').addEventListener('click',()=>toast('📺 Modo tela cheia em breve!'));
+$('emojiBtn').addEventListener('click',()=>toast('😊 Emojis em breve!'));
 
-    // ===== MEDIA CONTROLS =====
-    function clearMedia() {
-        if (confirm('Limpar a mídia atual?')) {
-            document.getElementById('ytPlayer').src = '';
-            document.getElementById('videoWrapper').classList.remove('active');
-            document.getElementById('mediaStatus').classList.remove('playing');
-            document.getElementById('currentVideoTitle').innerText = 'Nenhum vídeo carregado';
-            document.getElementById('progressFill').style.width = '0%';
-            document.getElementById('currentTime').innerText = '0:00';
-            document.getElementById('totalTime').innerText = '0:00';
-            addSystemMessage('🗑️ Mídia removida');
-        }
-    }
-
-    function shareScreen() {
-        addSystemMessage('🖥️ Compartilhamento de tela em breve!');
-    }
-
-    function togglePlay() {
-        const btn = document.getElementById('playPauseBtn');
-        btn.innerText = btn.innerText === '▶️' ? '⏸️' : '▶️';
-    }
-
-    function toggleMute() {
-        addSystemMessage('🔊 Controle de volume');
-    }
-
-    function prevVideo() { addSystemMessage('⏮️ Vídeo anterior'); }
-    function nextVideo() { addSystemMessage('⏭️ Próximo vídeo'); }
-
-    function seekVideo(e) {
-        const bar = e.currentTarget;
-        const percent = (e.offsetX / bar.offsetWidth) * 100;
-        document.getElementById('progressFill').style.width = percent + '%';
-    }
-
-    // ===== CHAT =====
-    function handleChatKey(e) {
-        if (e.key === 'Enter') sendChat();
-    }
-
-    function sendChat() {
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-        
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg';
-        msgDiv.innerHTML = `<span class="user">Você:</span> ${escapeHtml(text)}`;
-        
-        document.getElementById('chatMessages').appendChild(msgDiv);
-        input.value = '';
-        scrollChat();
-    }
-
-    function addSystemMessage(text) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg system';
-        msgDiv.innerText = text;
-        document.getElementById('chatMessages').appendChild(msgDiv);
-        scrollChat();
-    }
-
-    function scrollChat() {
-        const chat = document.getElementById('chatMessages');
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.innerText = text;
-        return div.innerHTML;
-    }
-
-    function switchTab(btn, tab) {
-        document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        
-        if (tab === 'reactions') {
-            document.getElementById('reactionsPanel').style.display = 'flex';
-        } else {
-            document.getElementById('reactionsPanel').style.display = 'none';
-        }
-        
-        if (tab === 'games') {
-            addSystemMessage('🎮 Em breve: Jogo da Velha, Quiz, Desenmais20!');
-        }
-    }
-
-    function toggleReactions() {
-        const panel = document.getElementById('reactionsPanel');
-        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    function sendReaction(emoji) {
-        addSystemMessage(`Você reag: ${emoji}`);
-        
-        // Animação flutuante
-        const reaction = document.createElement('div');
-        reaction.className = 'floating-reaction';
-        reaction.innerText = emoji;
-        reaction.style.left = (Math.random() * 80 + 10) + '%';
-        reaction.style.bottom = '100px';
-        document.body.appendChild(reaction);
-        setTimeout(() => reaction.remove(), 3000);
-    }
-
-    // ===== NAV BUTTONS =====
-    function toggleFloating() {
-        const wrapper = document.getElementById('videoWrapper');
-        if (wrapper.classList.contains('active')) {
-            wrapper.style.position = 'fixed';
-            wrapper.style.bottom = '20px';
-            wrapper.style.right = '20px';
-            wrapper.style.width = '320px';
-            wrapper.style.paddingBottom = '180px';
-            wrapper.style.zIndex = '500';
-            addSystemMessage('🪟 Modo flutuante ativado');
-        } else {
-        '
-    }
-
-    function togglePiP() {
-        const iframe = document.getElementById('ytPlayer');
-        if (iframe.requestPictureInPicture) {
-            iframe.requestPictureInPicture();
-        } else {
-            addSystemMessage('⧉ PiP não suportado neste navegador');
-        }
-    }
-
-    function inviteLink() {
-        const link = 'https://partyblox.com/sala/demo123';
-        navigator.clipboard.writeText(link).then(() => {
-            addSystemMessage('🔗 Link copiado: ' + link);
-            alert('✅ Link da sala copiado!\n\n' + link);
-        });
-    }
-
-    // ===== DONATION MODAL =====
-    function openDonation() {
-        document.getElementById('donationModal').classList.add('active');
-    }
-
-    function closeDonation() {
-        document.getElementById('donationModal').classList.remove('active');
-    }
-
-    function copyPix() {
-        const key = document.getElementById('pixKey').innerText;
-        navigator.clipboard.writeText(key).then(() => {
-            const btn = event.target;
-            btn.innerText = '✅ COPIADO!';
-            setTimeout(() => btn.innerText = '📋 COPIAR', 2000);
-        });
-    }
-
-    // Fechar modal clicando fora
-    document.getElementById('donationModal').addEventListener('click', (e) => {
-        if (e.target.id === 'donationModal') closeDonation();
-    });
-
-    // ===== MOCK PROGRESS =====
-    let mockProgress = 0;
-    setInterval(() => {
-        if (document.getElementById('playPauseBtn').innerText === '⏸️') {
-            mockProgress = (mockProgress + 0.5) % 100;
-            document.getElementById('progressFill').style.width = mockProgress + '%';
-            const seconds = Math.floor((mockProgress / 100) * 212);
-            const min = Math.floor(seconds / 60);
-            const sec = seconds % 60;
-            document.getElementById('currentTime').innerText = `${min}:${sec.toString().padStart(2, '0')}`;
-        }
-    }, 1000);
+/* ===== TOAST ===== */
+let toastTimer=null;
+function toast(msg){
+  $('toast').textContent=msg;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2500);
+}
 </script>
-
 </body>
 </html>
