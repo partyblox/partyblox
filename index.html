@@ -122,7 +122,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .chat-panel.active{overflow:hidden;}
 .react-grid{flex:1;overflow-y:auto;min-height:0;align-content:start;}
 .emote-grid{flex:1;min-height:0;overflow-y:auto;align-content:start;}
-.theme-section{flex-shrink:0;}
+.theme-section{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;}
 #tabHost{overflow-y:auto;}
 #tabGames{overflow:hidden;}
 .chat-panel.active{display:flex;}
@@ -162,7 +162,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .theme-color-preview.blue{background:linear-gradient(135deg,#0a1929,#132f4c);}
 .theme-color-preview.purple{background:linear-gradient(135deg,#2d1b4e,#4a2c6e);}
 .theme-color-preview.green{background:linear-gradient(135deg,#1a2e1a,#213e21);}
-.theme-color-preview.red{background:linear-gradient(135deg,#2e1a1a,#3e2121);}
+.theme-color-preview.red{background:linear-gradient(135deg,#2e1a1a,#3e2121);}.theme-color-preview.pink{background:linear-gradient(135deg,#3b1028,#852052);}.theme-color-preview.orange{background:linear-gradient(135deg,#3a1d0b,#824317);}.theme-color-preview.teal{background:linear-gradient(135deg,#082c2b,#14665f);}.theme-color-preview.cyan{background:linear-gradient(135deg,#062b38,#12657e);}.theme-color-preview.yellow{background:linear-gradient(135deg,#3a3008,#786516);}.theme-color-preview.rose{background:linear-gradient(135deg,#42101c,#882238);}
 .theme-option-label{font-size:11px;font-weight:600;color:var(--text);}
 .host-panel{padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;height:100%;}
 .host-panel-header{padding:10px 12px;background:rgba(253,203,110,.1);border:1px solid rgba(253,203,110,.3);border-radius:10px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#fdcb6e;}
@@ -283,7 +283,12 @@ body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}body.
 body.theme-blue{--bg1:#0a1929;--bg2:#132f4c;--bg3:#173a5e;--bg4:#0d2137;--text:#e3f2fd;--text2:rgba(227,242,253,.7);--text3:rgba(227,242,253,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#173a5e;--chat-head:#0a1929;--input-bg:#132f4c;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-purple{--bg1:#2d1b4e;--bg2:#4a2c6e;--bg3:#5e3a8a;--bg4:#3d2260;--text:#f3e5f5;--text2:rgba(243,229,245,.7);--text3:rgba(243,229,245,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5e3a8a;--chat-head:#2d1b4e;--input-bg:#4a2c6e;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-green{--bg1:#1a2e1a;--bg2:#213e21;--bg3:#2d5a2d;--bg4:#1a3a1a;--text:#e8f5e9;--text2:rgba(232,245,233,.7);--text3:rgba(232,245,233,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#2d5a2d;--chat-head:#1a2e1a;--input-bg:#213e21;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
-body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#ffebee;--text2:rgba(255,235,238,.7);--text3:rgba(255,235,238,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5a2d2d;--chat-head:#2e1a1a;--input-bg:#3e2121;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#ffebee;--text2:rgba(255,235,238,.7);--text3:rgba(255,235,238,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5a2d2d;--chat-head:#2e1a1a;--input-bg:#3e2121;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}body.theme-pink{--bg1:#3b1028;--bg2:#64163f;--bg3:#852052;--bg4:#4d1232;--text:#ffe6f2;--text2:rgba(255,230,242,.7);--text3:rgba(255,230,242,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#852052;--chat-head:#3b1028;--input-bg:#64163f;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-orange{--bg1:#3a1d0b;--bg2:#63310f;--bg3:#824317;--bg4:#4b250c;--text:#fff0df;--text2:rgba(255,240,223,.7);--text3:rgba(255,240,223,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#824317;--chat-head:#3a1d0b;--input-bg:#63310f;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-teal{--bg1:#082c2b;--bg2:#0d4a47;--bg3:#14665f;--bg4:#0b3735;--text:#e0fffb;--text2:rgba(224,255,251,.7);--text3:rgba(224,255,251,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#14665f;--chat-head:#082c2b;--input-bg:#0d4a47;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-cyan{--bg1:#062b38;--bg2:#0b4b60;--bg3:#12657e;--bg4:#083a4b;--text:#e1f9ff;--text2:rgba(225,249,255,.7);--text3:rgba(225,249,255,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#12657e;--chat-head:#062b38;--input-bg:#0b4b60;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-yellow{--bg1:#3a3008;--bg2:#5e4e0d;--bg3:#786516;--bg4:#4b3f0b;--text:#fffde2;--text2:rgba(255,253,226,.7);--text3:rgba(255,253,226,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#786516;--chat-head:#3a3008;--input-bg:#5e4e0d;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#ffe8ed;--text2:rgba(255,232,237,.7);--text3:rgba(255,232,237,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#882238;--chat-head:#42101c;--input-bg:#691827;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 
 @media (max-width: 900px) and (orientation: portrait) {
   .main { flex-direction: column; }.video-side { min-height: 40vh; min-width: 100%; }.chat-side { width: 100% !important; min-width: 100%; flex: 1; max-width: none; }.divider { width: 100%; height: 6px; cursor: row-resize; }.divider::before { width: 40px; height: 4px; }.host-controls { top: 10px; right: 10px; max-width: 60%; }.media-badge { top: 10px; left: 10px; }.topbar { padding: 8px 10px; gap: 6px; }.topbar-right { width: 100%; justify-content: flex-end; margin-top: 4px; }.tiers { grid-template-columns: repeat(2, 1fr); }.vol-slider { width: 50px; }.chat-hint { display: none; }.theme-grid { grid-template-columns: repeat(2, 1fr); }
@@ -308,6 +313,8 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
 .media-interaction-box{padding:16px 20px;background:rgba(0,0,0,.82);border:1px solid rgba(253,203,110,.4);border-radius:14px;text-align:center;box-shadow:0 12px 35px rgba(0,0,0,.5);}
 .media-interaction-box div{font-size:13px;color:#fff;margin-bottom:10px;}
 .media-interaction-box button{padding:9px 18px;border:0;border-radius:9px;background:#fdcb6e;color:#2d3436;font-weight:800;cursor:pointer;}
+.chat-panel#tabEmote{overflow-y:auto;overflow-x:hidden;min-height:0;}
+.chat-panel#tabEmote .theme-grid{padding-bottom:16px;}
 @media(max-width:900px){.video-side.floating-player{left:10px;top:70px;width:min(92vw,520px);height:min(50vh,300px);}}
 </style>
 </head>
@@ -434,7 +441,7 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
       <div class="chat-tabs">
         <button class="c-tab active" data-tab="chat">💬 Chat</button>
         <button class="c-tab" data-tab="react">😂 Reações</button>
-        <button class="c-tab" data-tab="emote">🎭+🎨</button>
+        <button class="c-tab" data-tab="emote">🎨</button>
         <button class="c-tab" data-tab="host">👑 Host</button>
         <button class="c-tab" data-tab="games">🎮 Jogos</button>
       </div>
@@ -474,9 +481,20 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
             <div class="theme-option" data-theme="purple"><div class="theme-color-preview purple"></div><div class="theme-option-label">Roxo</div></div>
             <div class="theme-option" data-theme="green"><div class="theme-color-preview green"></div><div class="theme-option-label">Verde</div></div>
             <div class="theme-option" data-theme="red"><div class="theme-color-preview red"></div><div class="theme-option-label">Vermelho</div></div>
+            <div class="theme-option" data-theme="pink"><div class="theme-color-preview pink"></div><div class="theme-option-label">Rosa</div></div>
+            <div class="theme-option" data-theme="orange"><div class="theme-color-preview orange"></div><div class="theme-option-label">Laranja</div></div>
+            <div class="theme-option" data-theme="teal"><div class="theme-color-preview teal"></div><div class="theme-option-label">Turquesa</div></div>
+            <div class="theme-option" data-theme="cyan"><div class="theme-color-preview cyan"></div><div class="theme-option-label">Ciano</div></div>
+            <div class="theme-option" data-theme="yellow"><div class="theme-color-preview yellow"></div><div class="theme-option-label">Amarelo</div></div>
+            <div class="theme-option" data-theme="rose"><div class="theme-color-preview rose"></div><div class="theme-option-label">Rosa forte</div></div>
+            <div class="theme-option active" data-theme="dark"><div class="theme-color-preview dark"></div><div class="theme-option-label">Escuro</div></div>
+            <div class="theme-option" data-theme="light"><div class="theme-color-preview light"></div><div class="theme-option-label">Claro</div></div>
+            <div class="theme-option" data-theme="blue"><div class="theme-color-preview blue"></div><div class="theme-option-label">Azul</div></div>
+            <div class="theme-option" data-theme="purple"><div class="theme-color-preview purple"></div><div class="theme-option-label">Roxo</div></div>
+            <div class="theme-option" data-theme="green"><div class="theme-color-preview green"></div><div class="theme-option-label">Verde</div></div>
+            <div class="theme-option" data-theme="red"><div class="theme-color-preview red"></div><div class="theme-option-label">Vermelho</div></div>
           </div>
         </div>
-        <div class="emote-grid" id="emoteGrid"></div>
       </div>
 
       <div class="chat-panel" id="tabHost">
@@ -638,10 +656,10 @@ function toggleFloatingPlayer(){
   floatingPlayer=!floatingPlayer;
   if(floatingPlayer){
     if(videoSideHidden){videoSideHidden=false;vs.classList.remove('hidden');$('toggleVideoBtn').innerHTML='📺 Tela';}
-    main.classList.add('floating-active');vs.classList.add('floating-player');$('floatMediaBtn').innerHTML='🪟 Fixa';
+    main.classList.add('floating-active');vs.classList.add('floating-player');$('floatMediaBtn').innerHTML='🪟 Fixa';updatePipButton();
     $('chatSide').classList.add('full');$('divider').classList.add('hidden');toast('🪟 Tela flutuante ativada — arraste e redimensione');
   }else{
-    main.classList.remove('floating-active');vs.classList.remove('floating-player');$('floatMediaBtn').innerHTML='🪟 Flutuante';
+    main.classList.remove('floating-active');vs.classList.remove('floating-player');$('floatMediaBtn').innerHTML='🪟 Flutuante';updatePipButton();
     $('chatSide').classList.remove('full');if(!videoSideHidden)$('divider').classList.remove('hidden');
   }
 }
@@ -1129,15 +1147,12 @@ function sendToIframe(msg){const iframe=$('gameIframe');if(iframe&&iframe.conten
 
 const EMOJIS=['😀','😂','😍','😢','😡','🥳','❤️','🔥','👍','💃','🙌','✨','🌈','🍔','🍻','🏀','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
 const REACTIONS=['😂','❤️','🔥','🎉','👏','👍','🙌','✨','💖','🎊','🎈','🏆','💎','😍','🤯','🥳'];
-const EMOTES=[{id:'wave',label:'👋 Acenar'},{id:'dance',label:'💃 Dançar'},{id:'laugh',label:'😂 Rir'},{id:'clap',label:'👏 Palmas'},{id:'heart',label:'💖 Coração'},{id:'flex',label:'💪 Flex'},{id:'bow',label:'🙇 Saudar'},{id:'robot',label:'🤖 Robô'},{id:'super',label:'🦸 Super'}];
 
 (function(){
   const p=$('emojiPop');
   EMOJIS.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{$('chatText').value+=e;p.classList.remove('active');$('chatText').focus();};p.appendChild(b);});
   const rg=$('reactGrid');
   REACTIONS.forEach(e=>{const b=document.createElement('div');b.className='r-btn';b.textContent=e;b.onclick=()=>{showReaction(e);wsSend({kind:'reaction',playerId:myPlayerId,emoji:e});};rg.appendChild(b);});
-  const eg=$('emoteGrid');
-  EMOTES.forEach(e=>{const b=document.createElement('div');b.className='e-btn';b.textContent=e.label;b.onclick=()=>{addChatMsg(myName,'🎭 '+e.label,false);wsSend({kind:'emote',id:e.id,label:e.label,playerId:myPlayerId});};eg.appendChild(b);});
 })();
 function toggleEmoji(e){if(e)e.stopPropagation();$('emojiPop').classList.toggle('active');}
 function showReaction(e){
