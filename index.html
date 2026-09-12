@@ -55,10 +55,12 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 /* Área do vídeo (iframe/placeholder) */
 .video-wrapper{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;background:#000;}
 
-#ytPlayer,#localVideo,#screenVideo,#imageHolder{width:100%;height:100%;object-fit:contain;display:block;background:#000;}
+#ytPlayer,#youtubePlayer,#localVideo,#screenVideo,#imageHolder{width:100%;height:100%;object-fit:contain;display:block;background:#000;}
 #localVideo,#screenVideo,#imageHolder{display:none;}
-#ytPlayer{pointer-events:auto;}
-#youtubeOverlay{position:absolute;inset:0;pointer-events:auto;display:none;}
+#ytPlayer,#youtubePlayer{pointer-events:auto;}
+#youtubeOverlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;display:none;z-index:2;}
+#youtubePlayer{position:absolute;inset:0;}
+#youtubePlayer iframe{display:block;width:100%!important;height:100%!important;border:0;}
 .video-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;text-align:center;padding:clamp(16px,4vw,40px);}
 .video-placeholder .icon{font-size:clamp(60px,15vw,120px);margin-bottom:20px;opacity:.3;}
 .video-placeholder h3{color:#aaa;margin-bottom:10px;font-size:clamp(16px,4vw,24px);}
@@ -115,7 +117,14 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .c-tab{flex:1;padding:9px 6px;background:transparent;border:none;color:rgba(255,255,255,.5);border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;transition:.2s;white-space:nowrap;min-width:max-content;}
 .c-tab:hover{background:rgba(255,255,255,.05);color:#fff;}
 .c-tab.active{background:rgba(253,203,110,.2);color:#fdcb6e;}
-.chat-panel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;min-height:0;}
+.chat-panel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;min-height:0;min-width:0;}
+.chat-panel > *{min-width:0;}
+.chat-panel.active{overflow:hidden;}
+.react-grid{flex:1;overflow-y:auto;min-height:0;align-content:start;}
+.emote-grid{flex:1;min-height:0;overflow-y:auto;align-content:start;}
+.theme-section{flex-shrink:0;}
+#tabHost{overflow-y:auto;}
+#tabGames{overflow:hidden;}
 .chat-panel.active{display:flex;}
 .chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;background:var(--chat-bg);min-height:0;}
 .cmsg{padding:7px 9px;border-radius:7px;background:transparent;transition:.1s;}
@@ -171,7 +180,10 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .host-give-btn:hover{background:rgba(253,203,110,.3);transform:translateY(-1px);}
 .host-give-btn:disabled{opacity:.5;cursor:not-allowed;}
 .host-empty{padding:20px;text-align:center;color:var(--text3);font-size:12px;}
-.games-panel{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;}
+.games-panel{display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;overflow:hidden;}
+.games-panel .games-list{min-height:0;min-width:0;}
+.game-play-area{min-width:0;width:100%;}
+.game-iframe{display:block;height:100%;min-height:0;min-width:0;}
 .games-panel.active{display:flex;}
 .games-list{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start;}
 .games-list.hidden{display:none;}
@@ -183,7 +195,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .games-empty{grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--text3);font-size:13px;}
 .game-play-area{flex:1;display:none;flex-direction:column;min-height:0;overflow:hidden;}
 .game-play-area.active{display:flex;}
-.game-play-header{height:40px;padding:0 12px;background:var(--bg4);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.game-play-header{height:40px;min-height:40px;padding:0 12px;background:var(--bg4);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .game-play-header h4{font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px;}
 .game-play-close{background:rgba(255,255,255,.08);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;}
 .game-play-close:hover{background:rgba(231,76,60,.3);}
@@ -565,7 +577,7 @@ let hosts=[];
 let founderId=null;
 let serverMultiHost=true;
 let ws=null,wsReady=false,playerCount=1;
-let mediaType=null,youtubePlayer=null,ytReady=false,ytVideoId=null;
+let mediaType=null,youtubePlayer=null,ytReady=false,ytPlayerReady=false,ytVideoId=null;
 let screenStream=null,isScreenSharing=false;
 let rtcPeers=new Map();
 let floatingPlayer=false;
@@ -636,7 +648,7 @@ function toggleFloatingPlayer(){
 
 function showMediaInteraction(text='Clique para reproduzir com som'){mediaNeedsInteraction=true;$('mediaInteractionText').textContent=text;$('mediaInteraction').style.display='flex';}
 function hideMediaInteraction(){mediaNeedsInteraction=false;$('mediaInteraction').style.display='none';}
-function resumeCurrentMedia(){try{if(mediaType==='video'){const v=$('localVideo');v.muted=false;v.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='audio'){const a=$('localAudio');a.muted=false;a.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='youtube'&&youtubePlayer){youtubePlayer.unMute();youtubePlayer.playVideo();hideMediaInteraction();}else hideMediaInteraction();}catch(_){} }
+function resumeCurrentMedia(){try{if(mediaType==='video'){const v=$('localVideo');v.muted=false;v.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='audio'){const a=$('localAudio');a.muted=false;a.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='youtube'&&youtubePlayer){youtubePlayer.unMute();youtubePlayer.setVolume(100);youtubePlayer.playVideo();hideMediaInteraction();}else hideMediaInteraction();}catch(_){} }
 
 function toggleVideoSide(){
   const vs=$('videoSide'),d=$('divider'),cs=$('chatSide');
@@ -884,7 +896,15 @@ function switchTab(t){
   currentTab=t;
   document.querySelectorAll('.c-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.chat-panel').forEach(p=>p.classList.remove('active'));
-  $('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active');
+  const p=$('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+  if(p){
+    p.classList.add('active');
+    setTimeout(()=>{
+      const sc=p.querySelector('.chat-msgs,.react-grid,.emote-grid,.host-panel,.games-list');
+      if(sc&&t!=='chat')sc.scrollTop=0;
+      if(sc&&t==='chat')sc.scrollTop=sc.scrollHeight;
+    },0);
+  }
   if(t==='games')loadGamesList();
   if(t==='host')updateHostPanel();
 }
@@ -1155,7 +1175,15 @@ function createYTPlayer(){
   if(!ytReady||youtubePlayer)return;
   youtubePlayer=new YT.Player('youtubePlayer',{width:'100%',height:'100%',videoId:'',
     playerVars:{autoplay:0,controls:0,rel:0,playsinline:1,enablejsapi:1,origin:location.origin},
-    events:{onStateChange:onYTState,onError:()=>{}}});
+    events:{
+      onReady:()=>{
+        ytPlayerReady=true;
+        try{youtubePlayer.setVolume(100);youtubePlayer.unMute();}catch(_){ }
+        if(ytVideoId)loadYouTube(ytVideoId,true,0);
+      },
+      onStateChange:onYTState,
+      onError:()=>{}
+    }});
 }
 function onYTState(e){
   if(e.data===YT.PlayerState.PLAYING){
@@ -1189,11 +1217,23 @@ function getYTDur(){try{return youtubePlayer?youtubePlayer.getDuration()||0:0;}c
 
 function loadYouTube(id,autoplay=false,start=0){
   if(!id)return;ytVideoId=id;mediaType='youtube';
-  if(!youtubePlayer)createYTPlayer();
-  const doLoad=()=>{try{youtubePlayer.__partybloxVideoId=id;youtubePlayer.loadVideoById({videoId:id,startSeconds:Number(start)||0});if(!autoplay)youtubePlayer.pauseVideo();}catch(e){}};
-  if(youtubePlayer&&youtubePlayer.loadVideoById)doLoad();else setTimeout(doLoad,700);
-  updateMediaBadge('🎬','YouTube');showPlayerCtrl();
   $('placeholder').style.display='none';$('youtubeOverlay').style.display='block';
+  if(!youtubePlayer)createYTPlayer();
+  const doLoad=()=>{try{
+    if(!youtubePlayer||!ytPlayerReady||!youtubePlayer.loadVideoById){setTimeout(doLoad,250);return;}
+    youtubePlayer.__partybloxVideoId='';
+    youtubePlayer.setVolume(100);
+    youtubePlayer.unMute();
+    if(autoplay){
+      youtubePlayer.loadVideoById({videoId:id,startSeconds:Number(start)||0});
+      setTimeout(()=>{try{if(ytVideoId===id){youtubePlayer.unMute();youtubePlayer.setVolume(100);youtubePlayer.playVideo();youtubePlayer.__partybloxVideoId=id;}}catch(_){ }},180);
+    }else{
+      youtubePlayer.cueVideoById({videoId:id,startSeconds:Number(start)||0});
+      setTimeout(()=>{try{if(ytVideoId===id)youtubePlayer.__partybloxVideoId=id;}catch(_){ }},180);
+    }
+  }catch(e){setTimeout(doLoad,300);}}
+  doLoad();
+  updateMediaBadge('🎬','YouTube');showPlayerCtrl();
 }
 
 /* ============================================
@@ -1403,7 +1443,7 @@ function applyMediaState(state){
         }
       }catch(_){}
     }
-    updateMediaBadge('🎬','YouTube');showPlayerCtrl();$('playBtn').textContent=state.paused?'▶️':'⏸️';if(state.paused===false)showMediaInteraction('Clique para ativar o som');
+    updateMediaBadge('🎬','YouTube');showPlayerCtrl();$('playBtn').textContent=state.paused?'▶️':'⏸️';if(state.paused===false&&!isHost)showMediaInteraction('Clique para ativar o som');
   }else if(state.type==='video'){
     $('youtubeOverlay').style.display='none';$('screenVideo').style.display='none';$('imageHolder').style.display='none';const v=$('localVideo');if(state.url&&v.src!==state.url){v.src=state.url;v.load();}v.dataset.name=state.name||'';v.muted=false;v.style.display='block';$('placeholder').style.display='none';mediaType='video';updateMediaBadge('🎬','Vídeo');showPlayerCtrl();const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{v.currentTime=state.time;}catch(_){}};if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});if(state.paused===false||state.paused===undefined)v.play().then(hideMediaInteraction).catch(()=>showMediaInteraction('Clique para reproduzir com som'));else v.pause();$('playBtn').textContent=state.paused?'▶️':'⏸️';
   }else if(state.type==='audio'){
