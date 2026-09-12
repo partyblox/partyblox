@@ -77,6 +77,9 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .cbtn:hover{background:rgba(253,203,110,.4);transform:scale(1.1);}
 .cbtn.play{width:50px;height:50px;background:#fdcb6e;color:#2d3436;font-size:20px;}
 .cbtn.play:hover{background:#ffeaa7;}
+.cbtn.pip{width:auto;min-width:44px;padding:0 13px;border-radius:12px;font-size:14px;font-weight:800;}
+.cbtn.pip.active{background:rgba(253,203,110,.28);border:1px solid rgba(253,203,110,.65);}
+.cbtn.pip:disabled{opacity:.35;cursor:not-allowed;transform:none;}
 .time{font-size:clamp(11px,2.5vw,13px);font-weight:600;color:rgba(255,255,255,.9);min-width:90px;text-align:center;}
 .vol-wrap{display:flex;align-items:center;gap:8px;}
 .vol-slider{width:70px;height:4px;-webkit-appearance:none;background:rgba(255,255,255,.3);border-radius:2px;cursor:pointer;}
@@ -400,7 +403,7 @@ body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#f
                 <button class="cbtn" id="muteBtn">🔊</button>
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="100">
               </div>
-              <button class="cbtn" id="closeCtrlBtn" title="Fechar">✕</button>
+              <button class="cbtn pip" id="pipBtn" title="Abrir em Picture-in-Picture" disabled>⧉ PiP</button><button class="cbtn" id="closeCtrlBtn" title="Fechar">✕</button>
             </div>
           </div>
         </div>
@@ -567,6 +570,39 @@ let screenStream=null,isScreenSharing=false;
 let rtcPeers=new Map();
 let floatingPlayer=false;
 let mediaNeedsInteraction=false;
+let pipElement=null;
+
+function getPipVideoElement(){
+  if(mediaType==='video') return $('localVideo');
+  if(mediaType==='screen') return $('screenVideo');
+  return null;
+}
+function updatePipButton(){
+  const btn=$('pipBtn'); if(!btn)return;
+  const v=getPipVideoElement();
+  const supported=!!(document.pictureInPictureEnabled && v && typeof v.requestPictureInPicture==='function');
+  btn.disabled=!supported;
+  btn.title=supported?'Abrir vídeo em uma janela PiP real, por cima de outras janelas':'PiP disponível apenas para vídeo e compartilhamento de tela neste navegador';
+  btn.classList.toggle('active',!!document.pictureInPictureElement);
+}
+async function togglePictureInPicture(){
+  const v=getPipVideoElement();
+  if(!v || !document.pictureInPictureEnabled || typeof v.requestPictureInPicture!=='function'){
+    return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
+  }
+  try{
+    if(document.pictureInPictureElement){
+      await document.exitPictureInPicture();
+      return;
+    }
+    pipElement=v;
+    await v.requestPictureInPicture();
+  }catch(e){
+    toast('❌ Não foi possível abrir a janela PiP');
+  }finally{
+    updatePipButton();
+  }
+}
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
 let connectedPlayers=[];
@@ -1283,6 +1319,7 @@ async function toggleScreenShare(){
   }else stopScreenShare();
 }
 function stopScreenShare(){
+  if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   closeAllRTCPeers();
   if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;}
   $('screenVideo').srcObject=null;$('screenVideo').style.display='none';
@@ -1293,13 +1330,14 @@ function stopScreenShare(){
 }
 function clearMedia(){
   if(!isHost)return;
+  if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
   ytVideoId=null;$('youtubeOverlay').style.display='none';
   $('localVideo').pause();$('localVideo').removeAttribute('src');$('localVideo').style.display='none';
   $('localAudio').pause();$('localAudio').removeAttribute('src');
   if(isScreenSharing)stopScreenShare();
   mediaType=null;$('placeholder').style.display='flex';
-  $('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';
+  $('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';updatePipButton();
   wsSend({kind:'media',state:{type:'clear'}});
 }
 function applyMediaState(state){
@@ -1323,6 +1361,7 @@ function applyMediaState(state){
     $('youtubeOverlay').style.display='none';$('localVideo').style.display='none';$('localAudio').removeAttribute('src');$('screenVideo').style.display='none';const c=$('imageHolder'),img=new Image();img.onload=()=>{c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;const ctx=c.getContext('2d');const r=Math.min(c.width/img.width,c.height/img.height);const w=img.width*r,h=img.height*r;ctx.fillStyle='#000';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);c.style.display='block';$('placeholder').style.display='none';updateMediaBadge('🖼️','Imagem');};img.onerror=()=>toast('❌ Não foi possível carregar a imagem');img.src=state.url;mediaType='image';showPlayerCtrl();hideMediaInteraction();
   }else if(state.type==='screen'){
     $('youtubeOverlay').style.display='none';$('localVideo').style.display='none';$('localAudio').removeAttribute('src');$('imageHolder').style.display='none';if(state.active){mediaType='screen';$('placeholder').innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>';$('placeholder').style.display='none';updateMediaBadge('🖥️','Tela ao vivo');showPlayerCtrl();requestScreenFromOwner();}}
+  updatePipButton();
   setTimeout(()=>{ytSuppressStateSend=false;},2000);
 }
 
@@ -1331,6 +1370,17 @@ if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSea
 // ===== EVENT LISTENERS =====
 $('toggleVideoBtn').addEventListener('click',toggleVideoSide);
 $('floatMediaBtn').addEventListener('click',toggleFloatingPlayer);
+$('pipBtn').addEventListener('click',togglePictureInPicture);
+if(document.pictureInPictureEnabled){
+  document.addEventListener('enterpictureinpicture',updatePipButton);
+  document.addEventListener('leavepictureinpicture',updatePipButton);
+}
+['localVideo','screenVideo'].forEach(id=>{
+  const v=$(id);
+  v.addEventListener('loadedmetadata',updatePipButton);
+  v.addEventListener('emptied',updatePipButton);
+  v.addEventListener('play',updatePipButton);
+});
 $('toggleCtrlBtn').addEventListener('click',toggleControls);
 $('chatToggleBtn').addEventListener('click',toggleChat);
 $('closeChatBtn').addEventListener('click',toggleChat);
