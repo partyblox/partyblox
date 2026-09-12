@@ -214,7 +214,7 @@ wss.on("connection", ws => {
             } else if (room.state.media.type === "clear" && room.state.screenOwner === ws.pid) {
                 room.state.screenOwner = null;
             }
-            broadcast(room, { kind: "media", state: room.state.media });
+            broadcast(room, { kind: "media", state: room.state.media, screenOwner: room.state.screenOwner }, ws);
             return;
         }
 
