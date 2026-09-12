@@ -487,12 +487,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
             <div class="theme-option" data-theme="cyan"><div class="theme-color-preview cyan"></div><div class="theme-option-label">Ciano</div></div>
             <div class="theme-option" data-theme="yellow"><div class="theme-color-preview yellow"></div><div class="theme-option-label">Amarelo</div></div>
             <div class="theme-option" data-theme="rose"><div class="theme-color-preview rose"></div><div class="theme-option-label">Rosa forte</div></div>
-            <div class="theme-option active" data-theme="dark"><div class="theme-color-preview dark"></div><div class="theme-option-label">Escuro</div></div>
-            <div class="theme-option" data-theme="light"><div class="theme-color-preview light"></div><div class="theme-option-label">Claro</div></div>
-            <div class="theme-option" data-theme="blue"><div class="theme-color-preview blue"></div><div class="theme-option-label">Azul</div></div>
-            <div class="theme-option" data-theme="purple"><div class="theme-color-preview purple"></div><div class="theme-option-label">Roxo</div></div>
-            <div class="theme-option" data-theme="green"><div class="theme-color-preview green"></div><div class="theme-option-label">Verde</div></div>
-            <div class="theme-option" data-theme="red"><div class="theme-color-preview red"></div><div class="theme-option-label">Vermelho</div></div>
           </div>
         </div>
       </div>
@@ -607,31 +601,75 @@ function getPipVideoElement(){
   if(mediaType==='screen') return $('screenVideo');
   return null;
 }
+let youtubePipWindow=null;
+let youtubePipPlaceholder=null;
+async function openYouTubeDocumentPiP(){
+  if(!youtubePlayer) return toast('⚠️ O player do YouTube ainda não está pronto');
+  // Chrome/Edge: Document Picture-in-Picture coloca o iframe do YouTube em uma janela separada.
+  if(!('documentPictureInPicture' in window) || typeof documentPictureInPicture.requestWindow!=='function'){
+    if(!floatingPlayer) toggleFloatingPlayer();
+    toast('🪟 PiP do navegador indisponível: YouTube aberto em janela flutuante');
+    return;
+  }
+  if(youtubePipWindow && !youtubePipWindow.closed){ youtubePipWindow.focus?.(); return; }
+  try{
+    const w=await documentPictureInPicture.requestWindow({width:520,height:300});
+    youtubePipWindow=w;
+    const doc=w.document;
+    doc.documentElement.style.width='100%'; doc.documentElement.style.height='100%';
+    doc.body.style.margin='0'; doc.body.style.width='100%'; doc.body.style.height='100%';
+    doc.body.style.background='#000'; doc.body.style.overflow='hidden';
+    const style=doc.createElement('style');
+    style.textContent='html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;background:#000!important;overflow:hidden!important}#youtubeOverlay{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;background:#000!important}#youtubePlayer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}#youtubePlayer iframe{display:block!important;width:100%!important;height:100%!important;border:0!important}';
+    doc.head.appendChild(style);
+    const overlay=$('youtubeOverlay');
+    youtubePipPlaceholder=overlay.parentNode;
+    doc.body.appendChild(overlay);
+    overlay.style.display='block';
+    // Força o iframe a recalcular o tamanho depois da mudança de janela.
+    setTimeout(()=>{try{window.dispatchEvent(new Event('resize'));}catch(_){ }},50);
+    w.addEventListener('pagehide',()=>{
+      try{
+        if(youtubePipWindow===w){
+          youtubePipPlaceholder?.appendChild(overlay);
+          overlay.style.cssText='';
+          $('youtubeOverlay').style.display=mediaType==='youtube'?'block':'none';
+          youtubePipWindow=null; youtubePipPlaceholder=null; updatePipButton();
+        }
+      }catch(_){ }
+    });
+    updatePipButton();
+  }catch(e){
+    youtubePipWindow=null; youtubePipPlaceholder=null;
+    if(!floatingPlayer) toggleFloatingPlayer();
+    toast('🪟 YouTube aberto em janela flutuante');
+    updatePipButton();
+  }
+}
 function updatePipButton(){
   const btn=$('pipBtn'); if(!btn)return;
   const v=getPipVideoElement();
-  const supported=!!(document.pictureInPictureEnabled && v && typeof v.requestPictureInPicture==='function');
+  const nativeSupported=!!(document.pictureInPictureEnabled && v && typeof v.requestPictureInPicture==='function');
+  const ytSupported=!!(mediaType==='youtube' && youtubePlayer);
+  const supported=nativeSupported||ytSupported;
   btn.disabled=!supported;
-  btn.title=supported?'Abrir vídeo em uma janela PiP real, por cima de outras janelas':'PiP disponível apenas para vídeo e compartilhamento de tela neste navegador';
-  btn.classList.toggle('active',!!document.pictureInPictureElement);
+  btn.title=supported?'Abrir PiP / janela flutuante':'PiP não disponível para esta mídia/navegador';
+  btn.classList.toggle('active',!!document.pictureInPictureElement || !!(youtubePipWindow && !youtubePipWindow.closed) || (mediaType==='youtube'&&floatingPlayer));
 }
 async function togglePictureInPicture(){
+  if(mediaType==='youtube'){
+    if(youtubePipWindow && !youtubePipWindow.closed){ youtubePipWindow.close(); return; }
+    return openYouTubeDocumentPiP();
+  }
   const v=getPipVideoElement();
   if(!v || !document.pictureInPictureEnabled || typeof v.requestPictureInPicture!=='function'){
     return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
   }
   try{
-    if(document.pictureInPictureElement){
-      await document.exitPictureInPicture();
-      return;
-    }
-    pipElement=v;
-    await v.requestPictureInPicture();
-  }catch(e){
-    toast('❌ Não foi possível abrir a janela PiP');
-  }finally{
-    updatePipButton();
-  }
+    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
+    pipElement=v; await v.requestPictureInPicture();
+  }catch(e){ toast('❌ Não foi possível abrir a janela PiP'); }
+  finally{ updatePipButton(); }
 }
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
@@ -649,7 +687,7 @@ function setTheme(t,silent=false){
   document.querySelectorAll('.theme-option').forEach(el=>el.classList.toggle('active',el.dataset.theme===t));
   if(!silent)toast('🎨 Tema aplicado: '+getThemeName(t));
 }
-function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho'}[t]||t;}
+function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
 
 function toggleFloatingPlayer(){
   const vs=$('videoSide'),main=document.querySelector('.main');
@@ -1394,7 +1432,7 @@ async function toggleScreenShare(){
   if(!isScreenSharing){
     try{
       const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true});
-      screenStream=stream;const sv=$('screenVideo');sv.srcObject=stream;sv.muted=false;sv.style.display='block';
+      screenStream=stream;const sv=$('screenVideo');sv.srcObject=stream;sv.muted=true;sv.volume=0;sv.style.display='block';
       await sv.play();isScreenSharing=true;mediaType='screen';
       $('scrBtn').classList.add('live');$('scrBtn').textContent='🛑 Parar';
       $('placeholder').style.display='none';updateMediaBadge('🖥️','Tela');
