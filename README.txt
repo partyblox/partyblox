@@ -1,20 +1,16 @@
-PARTYBLOX - PiP + TELA FLUTUANTE
+PARTYBLOX NATIVE YOUTUBE PiP
 
-Esta versão mantém a janela "Flutuante" dentro da página e adiciona o botão "⧉ PiP".
+Esta extensão é uma tentativa de ativar o PiP NATIVO do Chrome no <video> interno do YouTube que está dentro do iframe do PartyBlox.
 
-PICTURE-IN-PICTURE (PiP):
-- O botão PiP usa o Picture-in-Picture nativo do navegador.
-- Em vídeos enviados e compartilhamento de tela, a janela PiP pode ficar sobre outras janelas.
-- Assim, você pode minimizar o navegador e continuar vendo o vídeo na janela PiP.
-- A janela PiP é controlada pelo próprio navegador/Windows e pode ser reposicionada/redimensionada conforme o navegador permitir.
-- Para YouTube, o vídeo está dentro de um iframe; o botão do PartyBlox não consegue chamar requestPictureInPicture() diretamente no iframe. Use o botão PiP do próprio player do YouTube quando disponível.
-- Imagens e áudio puro não podem usar o PiP nativo como um vídeo sem criar uma composição de vídeo artificial.
+Instalação no Chrome:
+1. Extraia este ZIP.
+2. Abra chrome://extensions
+3. Ative "Modo do desenvolvedor".
+4. Clique em "Carregar sem compactação".
+5. Selecione a pasta partyblox-native-pip-extension.
+6. Abra/recarregue o PartyBlox.
 
-TELA FLUTUANTE:
-- "🪟 Flutuante" continua sendo a janela dentro do site.
-- Pode arrastar e redimensionar.
-- Para ficar visível mesmo com o navegador minimizado, use "⧉ PiP".
-
-EXECUÇÃO:
-npm install
-npm start
+Observação importante:
+- O PiP nativo do Chrome pertence ao vídeo interno do YouTube, não ao iframe externo.
+- O navegador pode exigir gesto de usuário/transient activation. Por isso esta extensão é experimental e depende das regras da versão do Chrome.
+- Se o Chrome bloquear a chamada por falta de ativação, o PartyBlox continua usando o fallback de Document PiP/janela separada.

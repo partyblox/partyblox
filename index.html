@@ -487,7 +487,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
                 <button class="cbtn" id="muteBtn">🔊</button>
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="100">
               </div>
-              <button class="cbtn pip" id="pipBtn" title="Abrir em Picture-in-Picture" disabled>⧉ PiP</button><button class="cbtn" id="closeCtrlBtn" title="Fechar">✕</button>
+              <button class="cbtn pip" id="pipBtn" title="Abrir em Picture-in-Picture" disabled>⧉ PiP</button><button class="cbtn pip" id="exitPipBtn" title="Voltar ao normal" style="display:none">↩ Normal</button><button class="cbtn" id="closeCtrlBtn" title="Fechar">✕</button>
             </div>
           </div>
         </div>
@@ -724,22 +724,32 @@ async function openYouTubeDocumentPiP(){
   }
 }
 function updatePipButton(){
-  const btn=$('pipBtn');if(!btn)return;
+  const btn=$('pipBtn'),back=$('exitPipBtn');if(!btn)return;
   const v=getPipVideoElement();
   const nativeSupported=!!(document.pictureInPictureEnabled&&v&&typeof v.requestPictureInPicture==='function');
   const ytSupported=!!(mediaType==='youtube'&&youtubePlayer);
   const supported=nativeSupported||ytSupported;
+  const active=!!document.pictureInPictureElement||!!(youtubePipWindow&&!youtubePipWindow.closed);
   btn.disabled=!supported;
-  btn.title=supported?'Abrir PiP / janela separada':'PiP não disponível para esta mídia/navegador';
-  btn.classList.toggle('active',!!document.pictureInPictureElement||!!(youtubePipWindow&&!youtubePipWindow.closed));
+  btn.title=supported?'Abrir PiP':'PiP não disponível para esta mídia/navegador';
+  btn.classList.toggle('active',active);
+  if(back)back.style.display=active?'flex':'none';
+}
+async function exitPictureInPicture(){
+  try{
+    if(document.pictureInPictureElement){await document.exitPictureInPicture();}
+  }catch(_){}
+  if(youtubePipWindow&&!youtubePipWindow.closed){try{youtubePipWindow.close();}catch(_){}youtubePipWindow=null;}
+  try{if(youtubePlayer&&mediaType==='youtube'){youtubePlayer.unMute();youtubePlayer.setVolume(100);}}catch(_){}
+  try{window.postMessage({source:'partyblox',action:'exitNativeYouTubePiP'},location.origin);}catch(_){}
+  updatePipButton();
 }
 async function togglePictureInPicture(){
   if(mediaType==='youtube'){
-    if(youtubePipWindow&&!youtubePipWindow.closed){
-      try{youtubePipWindow.close();}catch(_){ }
-      youtubePipWindow=null;try{youtubePlayer.unMute();youtubePlayer.setVolume(100);}catch(_){ }
-      updatePipButton();return;
-    }
+    // Primeiro tenta o modo nativo via extensão PartyBlox (quando instalada).
+    try{window.postMessage({source:'partyblox',action:'openNativeYouTubePiP',videoId:ytVideoId},location.origin);}catch(_){}
+    // Sem a extensão, usa o melhor fallback suportado pelo navegador.
+    if(youtubePipWindow&&!youtubePipWindow.closed){return;}
     return openYouTubeDocumentPiP();
   }
   const v=getPipVideoElement();
@@ -747,6 +757,7 @@ async function togglePictureInPicture(){
   try{if(document.pictureInPictureElement){await document.exitPictureInPicture();return;}pipElement=v;await v.requestPictureInPicture();}catch(e){toast('❌ Não foi possível abrir a janela PiP');}finally{updatePipButton();}
 }
 window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox-youtube-popup')return;if(e.data.event==='closed'){youtubePipWindow=null;try{youtubePlayer.unMute();youtubePlayer.setVolume(100);}catch(_){ }updatePipButton();}});
+document.addEventListener('enterpictureinpicture',updatePipButton);document.addEventListener('leavepictureinpicture',updatePipButton);
 
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
@@ -1591,7 +1602,7 @@ if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSea
 // ===== EVENT LISTENERS =====
 $('toggleVideoBtn').addEventListener('click',toggleVideoSide);
 $('floatMediaBtn').addEventListener('click',toggleFloatingPlayer);
-$('pipBtn').addEventListener('click',togglePictureInPicture);
+$('pipBtn').addEventListener('click',togglePictureInPicture);$('exitPipBtn').addEventListener('click',exitPictureInPicture);
 if(document.pictureInPictureEnabled){
   document.addEventListener('enterpictureinpicture',updatePipButton);
   document.addEventListener('leavepictureinpicture',updatePipButton);
