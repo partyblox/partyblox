@@ -316,6 +316,71 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 .chat-panel#tabEmote{overflow-y:auto;overflow-x:hidden;min-height:0;}
 .chat-panel#tabEmote .theme-grid{padding-bottom:16px;}
 @media(max-width:900px){.video-side.floating-player{left:10px;top:70px;width:min(92vw,520px);height:min(50vh,300px);}}
+
+/* ===== RESPONSIVIDADE TOTAL ===== */
+.topbar,.topbar-left,.topbar-right,.host-controls,.ctrl-row,.ctrl-l,.ctrl-r{min-width:0;}
+.topbar-right{overflow:hidden;}
+.tb-btn,.hc-btn,.cbtn{max-width:100%;}
+.player-controls{padding:clamp(6px,1.2vw,14px) clamp(7px,1.5vw,16px);}
+.progress{margin-bottom:clamp(7px,1.4vw,14px);}
+.ctrl-row{gap:clamp(5px,1vw,12px);}
+.ctrl-l,.ctrl-r{gap:clamp(4px,.8vw,8px);}
+.cbtn{width:clamp(30px,3.2vw,40px);height:clamp(30px,3.2vw,40px);font-size:clamp(12px,1.35vw,16px);}
+.cbtn.play{width:clamp(36px,4vw,50px);height:clamp(36px,4vw,50px);font-size:clamp(15px,1.7vw,20px);}
+.cbtn.pip{min-width:clamp(38px,4vw,44px);padding:0 clamp(7px,1vw,13px);font-size:clamp(10px,1.15vw,14px);}
+.time{min-width:clamp(62px,7vw,90px);font-size:clamp(9px,1.05vw,13px);}
+.vol-wrap{gap:clamp(4px,.8vw,8px);}
+.vol-slider{width:clamp(42px,5vw,70px);}
+.hc-btn{padding:clamp(5px,1vw,8px) clamp(7px,1.4vw,14px);font-size:clamp(9px,1vw,12px);}
+.media-badge{padding:clamp(4px,1vw,6px) clamp(8px,1.4vw,14px);font-size:clamp(9px,1vw,12px);}
+
+@media (max-width:600px){
+  .topbar{padding:5px 7px;gap:4px;min-height:42px;}
+  .topbar-left{gap:5px;max-width:48%;}
+  .topbar-logo{font-size:clamp(12px,4vw,16px);}
+  .room-chip{padding:3px 7px;font-size:clamp(9px,2.6vw,11px);max-width:30vw;overflow:hidden;text-overflow:ellipsis;}
+  .topbar-right{gap:3px;max-width:52%;justify-content:flex-end;}
+  .tb-btn{padding:5px 7px;font-size:clamp(9px,2.6vw,11px);border-radius:7px;}
+  .host-controls{top:6px;right:6px;gap:4px;max-width:72%;}
+  .hc-btn{padding:4px 6px;border-radius:7px;font-size:clamp(8px,2.4vw,10px);}
+  .media-badge{top:6px;left:6px;border-radius:14px;}
+  .player-controls{padding:5px 6px;}
+  .progress{height:4px;margin-bottom:6px;}
+  .progress:hover{height:5px;}
+  .ctrl-row{gap:4px;flex-wrap:nowrap;}
+  .ctrl-l,.ctrl-r{gap:3px;flex-wrap:nowrap;}
+  .cbtn{width:30px;height:30px;font-size:12px;}
+  .cbtn.play{width:36px;height:36px;font-size:15px;}
+  .cbtn.pip{min-width:34px;padding:0 6px;font-size:9px;border-radius:8px;}
+  .time{min-width:52px;font-size:9px;}
+  .vol-wrap{gap:3px;}
+  .vol-slider{width:42px;height:3px;}
+  .vol-slider::-webkit-slider-thumb{width:10px;height:10px;}
+  .yt-inline-input{padding:7px;}
+  .yt-inline-inner{gap:5px;}
+  .yt-icon-box{width:32px;height:32px;border-radius:7px;font-size:15px;}
+  .yt-inline-inner input{padding:8px 9px;font-size:11px;min-width:0;}
+  .yt-load-btn{padding:8px 10px;font-size:10px;border-radius:7px;}
+  .yt-hint{font-size:9px;margin-top:4px;}
+  .media-interaction-box{padding:10px 12px;border-radius:10px;max-width:88vw;}
+  .media-interaction-box div{font-size:11px;margin-bottom:7px;}
+  .media-interaction-box button{padding:7px 12px;font-size:11px;}
+}
+@media (max-width:380px){
+  .topbar-left{max-width:42%;}
+  .topbar-right{max-width:58%;}
+  .topbar-logo{font-size:12px;}
+  .room-chip{display:none;}
+  .tb-btn{padding:4px 5px;font-size:8px;}
+  .host-controls{max-width:80%;}
+  .hc-btn{padding:3px 5px;font-size:8px;}
+  .cbtn{width:27px;height:27px;font-size:11px;}
+  .cbtn.play{width:32px;height:32px;font-size:14px;}
+  .cbtn.pip{min-width:30px;padding:0 4px;font-size:8px;}
+  .time{min-width:44px;font-size:8px;}
+  .vol-slider{width:34px;}
+}
+
 </style>
 </head>
 <body>
@@ -603,22 +668,47 @@ function getPipVideoElement(){
 }
 let youtubePipWindow=null;
 let youtubePipPlaceholder=null;
+function postToYouTubePopup(command,payload={}){
+  try{if(youtubePipWindow&&!youtubePipWindow.closed)youtubePipWindow.postMessage({source:'partyblox',command,...payload},location.origin);}catch(_){ }
+}
+function closeYouTubePopup(){
+  try{if(youtubePipWindow&&!youtubePipWindow.closed)youtubePipWindow.close();}catch(_){ }
+  youtubePipWindow=null;
+  try{if(youtubePlayer){youtubePlayer.setVolume(100);youtubePlayer.unMute();}}catch(_){ }
+  updatePipButton();
+}
+function openYouTubeExternalWindow(){
+  if(!ytVideoId)return toast('⚠️ Nenhum vídeo do YouTube carregado');
+  if(youtubePipWindow&&!youtubePipWindow.closed){youtubePipWindow.focus?.();return;}
+  const w=window.open('', 'partyblox-youtube-pip', 'popup=yes,width=640,height=360,resizable=yes,scrollbars=no');
+  if(!w){toast('⚠️ O Chrome bloqueou a janela. Permita pop-ups para este site.');return;}
+  youtubePipWindow=w;
+  const id=String(ytVideoId).replace(/[^a-zA-Z0-9_-]/g,'');
+  const time=Math.max(0,Number(getYTTime())||0);
+  const paused=!!(youtubePlayer&&youtubePlayer.getPlayerState&&youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED);
+  const origin=location.origin.replace(/'/g,'');
+  w.document.open();
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>PartyBlox — YouTube</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#player{position:fixed;inset:0;width:100%;height:100%}#player iframe{width:100%!important;height:100%!important;border:0}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"><\/script><script>let p=null;let ready=false;let initialPaused=${paused?'true':'false'};let initialTime=${time};function onYouTubeIframeAPIReady(){p=new YT.Player('player',{width:'100%',height:'100%',videoId:'${id}',playerVars:{autoplay:1,controls:1,rel:0,playsinline:1,enablejsapi:1,origin:'${origin}'},events:{onReady:function(){ready=true;try{p.seekTo(initialTime,true);if(initialPaused)p.pauseVideo();}catch(e){}try{p.setVolume(100);p.unMute();}catch(e){}}}})}window.addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox'||!p)return;try{if(e.data.command==='play')p.playVideo();else if(e.data.command==='pause')p.pauseVideo();else if(e.data.command==='seek')p.seekTo(Number(e.data.time)||0,true);else if(e.data.command==='mute')p.mute();else if(e.data.command==='unmute')p.unMute();else if(e.data.command==='volume')p.setVolume(Number(e.data.volume)||0);}catch(err){}});window.addEventListener('beforeunload',function(){try{window.opener&&window.opener.postMessage({source:'partyblox-youtube-popup',event:'closed'},location.origin)}catch(e){}});<\/script></body></html>`);
+  w.document.close();
+  // A separate browser window is the reliable fallback when Document PiP cannot host the cross-origin YouTube iframe.
+  try{youtubePlayer.mute();}catch(_){ }
+  w.focus();
+  updatePipButton();
+}
 async function openYouTubeDocumentPiP(){
   if(!youtubePlayer) return toast('⚠️ O player do YouTube ainda não está pronto');
-  // Chrome/Edge: Document Picture-in-Picture coloca o iframe do YouTube em uma janela separada.
   if(!('documentPictureInPicture' in window) || typeof documentPictureInPicture.requestWindow!=='function'){
-    if(!floatingPlayer) toggleFloatingPlayer();
-    toast('🪟 PiP do navegador indisponível: YouTube aberto em janela flutuante');
+    openYouTubeExternalWindow();
+    toast('🪟 PiP nativo não pode controlar diretamente o iframe do YouTube; abrindo janela separada');
     return;
   }
-  if(youtubePipWindow && !youtubePipWindow.closed){ youtubePipWindow.focus?.(); return; }
+  if(youtubePipWindow && !youtubePipWindow.closed){youtubePipWindow.focus?.();return;}
   try{
     const w=await documentPictureInPicture.requestWindow({width:520,height:300});
     youtubePipWindow=w;
     const doc=w.document;
-    doc.documentElement.style.width='100%'; doc.documentElement.style.height='100%';
-    doc.body.style.margin='0'; doc.body.style.width='100%'; doc.body.style.height='100%';
-    doc.body.style.background='#000'; doc.body.style.overflow='hidden';
+    doc.documentElement.style.cssText='width:100%;height:100%;margin:0;padding:0;background:#000;overflow:hidden';
+    doc.body.style.cssText='margin:0;width:100%;height:100%;background:#000;overflow:hidden';
     const style=doc.createElement('style');
     style.textContent='html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;background:#000!important;overflow:hidden!important}#youtubeOverlay{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;background:#000!important}#youtubePlayer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}#youtubePlayer iframe{display:block!important;width:100%!important;height:100%!important;border:0!important}';
     doc.head.appendChild(style);
@@ -626,51 +716,38 @@ async function openYouTubeDocumentPiP(){
     youtubePipPlaceholder=overlay.parentNode;
     doc.body.appendChild(overlay);
     overlay.style.display='block';
-    // Força o iframe a recalcular o tamanho depois da mudança de janela.
-    setTimeout(()=>{try{window.dispatchEvent(new Event('resize'));}catch(_){ }},50);
-    w.addEventListener('pagehide',()=>{
-      try{
-        if(youtubePipWindow===w){
-          youtubePipPlaceholder?.appendChild(overlay);
-          overlay.style.cssText='';
-          $('youtubeOverlay').style.display=mediaType==='youtube'?'block':'none';
-          youtubePipWindow=null; youtubePipPlaceholder=null; updatePipButton();
-        }
-      }catch(_){ }
-    });
+    w.addEventListener('pagehide',()=>{try{if(youtubePipWindow===w){youtubePipPlaceholder?.appendChild(overlay);overlay.style.cssText='';$('youtubeOverlay').style.display=mediaType==='youtube'?'block':'none';youtubePipWindow=null;youtubePipPlaceholder=null;updatePipButton();}}catch(_){}});
     updatePipButton();
   }catch(e){
-    youtubePipWindow=null; youtubePipPlaceholder=null;
-    if(!floatingPlayer) toggleFloatingPlayer();
-    toast('🪟 YouTube aberto em janela flutuante');
-    updatePipButton();
+    youtubePipWindow=null;youtubePipPlaceholder=null;
+    openYouTubeExternalWindow();
   }
 }
 function updatePipButton(){
-  const btn=$('pipBtn'); if(!btn)return;
+  const btn=$('pipBtn');if(!btn)return;
   const v=getPipVideoElement();
-  const nativeSupported=!!(document.pictureInPictureEnabled && v && typeof v.requestPictureInPicture==='function');
-  const ytSupported=!!(mediaType==='youtube' && youtubePlayer);
+  const nativeSupported=!!(document.pictureInPictureEnabled&&v&&typeof v.requestPictureInPicture==='function');
+  const ytSupported=!!(mediaType==='youtube'&&youtubePlayer);
   const supported=nativeSupported||ytSupported;
   btn.disabled=!supported;
-  btn.title=supported?'Abrir PiP / janela flutuante':'PiP não disponível para esta mídia/navegador';
-  btn.classList.toggle('active',!!document.pictureInPictureElement || !!(youtubePipWindow && !youtubePipWindow.closed) || (mediaType==='youtube'&&floatingPlayer));
+  btn.title=supported?'Abrir PiP / janela separada':'PiP não disponível para esta mídia/navegador';
+  btn.classList.toggle('active',!!document.pictureInPictureElement||!!(youtubePipWindow&&!youtubePipWindow.closed));
 }
 async function togglePictureInPicture(){
   if(mediaType==='youtube'){
-    if(youtubePipWindow && !youtubePipWindow.closed){ youtubePipWindow.close(); return; }
+    if(youtubePipWindow&&!youtubePipWindow.closed){
+      try{youtubePipWindow.close();}catch(_){ }
+      youtubePipWindow=null;try{youtubePlayer.unMute();youtubePlayer.setVolume(100);}catch(_){ }
+      updatePipButton();return;
+    }
     return openYouTubeDocumentPiP();
   }
   const v=getPipVideoElement();
-  if(!v || !document.pictureInPictureEnabled || typeof v.requestPictureInPicture!=='function'){
-    return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
-  }
-  try{
-    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
-    pipElement=v; await v.requestPictureInPicture();
-  }catch(e){ toast('❌ Não foi possível abrir a janela PiP'); }
-  finally{ updatePipButton(); }
+  if(!v||!document.pictureInPictureEnabled||typeof v.requestPictureInPicture!=='function')return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
+  try{if(document.pictureInPictureElement){await document.exitPictureInPicture();return;}pipElement=v;await v.requestPictureInPicture();}catch(e){toast('❌ Não foi possível abrir a janela PiP');}finally{updatePipButton();}
 }
+window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox-youtube-popup')return;if(e.data.event==='closed'){youtubePipWindow=null;try{youtubePlayer.unMute();youtubePlayer.setVolume(100);}catch(_){ }updatePipButton();}});
+
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
 let connectedPlayers=[];
@@ -704,7 +781,7 @@ function toggleFloatingPlayer(){
 
 function showMediaInteraction(text='Clique para reproduzir com som'){mediaNeedsInteraction=true;$('mediaInteractionText').textContent=text;$('mediaInteraction').style.display='flex';}
 function hideMediaInteraction(){mediaNeedsInteraction=false;$('mediaInteraction').style.display='none';}
-function resumeCurrentMedia(){try{if(mediaType==='video'){const v=$('localVideo');v.muted=false;v.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='audio'){const a=$('localAudio');a.muted=false;a.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='youtube'&&youtubePlayer){youtubePlayer.unMute();youtubePlayer.setVolume(100);youtubePlayer.playVideo();hideMediaInteraction();}else hideMediaInteraction();}catch(_){} }
+function resumeCurrentMedia(){try{if(mediaType==='video'){const v=$('localVideo');v.muted=false;v.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='audio'){const a=$('localAudio');a.muted=false;a.play().then(hideMediaInteraction).catch(()=>{});}else if(mediaType==='youtube'&&youtubePlayer){youtubePlayer.unMute();youtubePlayer.setVolume(100);youtubePlayer.playVideo();postToYouTubePopup('unmute');postToYouTubePopup('volume',{volume:100});postToYouTubePopup('play');hideMediaInteraction();}else hideMediaInteraction();}catch(_){} }
 
 function toggleVideoSide(){
   const vs=$('videoSide'),d=$('divider'),cs=$('chatSide');
@@ -1344,7 +1421,7 @@ function skip(s){
   if(mediaType==='youtube'){
     const t=Math.max(0,getYTTime()+s);
     ytSuppressStateSend=true;
-    youtubePlayer.seekTo(t,true);
+    youtubePlayer.seekTo(t,true);postToYouTubePopup('seek',{time:t});
     ytLastStateSent=Date.now();
     wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}});
     setTimeout(()=>{ytSuppressStateSend=false;},700);
@@ -1358,7 +1435,7 @@ function seekTo(e){
   if(mediaType==='youtube'){
     const t=getYTDur()*p;
     ytSuppressStateSend=true;
-    youtubePlayer.seekTo(t,true);
+    youtubePlayer.seekTo(t,true);postToYouTubePopup('seek',{time:t});
     ytLastStateSent=Date.now();
     wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}});
     setTimeout(()=>{ytSuppressStateSend=false;},700);
@@ -1367,13 +1444,13 @@ function seekTo(e){
   else if(mediaType==='audio'){$('localAudio').currentTime=$('localAudio').duration*p;sendLocalState();}
 }
 function toggleMute(){
-  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';}}
+  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();postToYouTubePopup('unmute');$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();postToYouTubePopup('mute');$('muteBtn').textContent='🔇';}}
   else if(mediaType==='video'){const v=$('localVideo');v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇':'🔊';}
   else if(mediaType==='audio'){const a=$('localAudio');a.muted=!a.muted;$('muteBtn').textContent=a.muted?'🔇':'🔊';}
 }
 function setVolume(v){
   const vol=v/100;
-  if(mediaType==='youtube')youtubePlayer.setVolume(v);
+  if(mediaType==='youtube'){youtubePlayer.setVolume(v);postToYouTubePopup('volume',{volume:v});}
   else if(mediaType==='video')$('localVideo').volume=vol;
   else if(mediaType==='audio')$('localAudio').volume=vol;
   $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
