@@ -18,10 +18,3 @@ TELA FLUTUANTE:
 EXECUÇÃO:
 npm install
 npm start
-
-
-PICTURE-IN-PICTURE NATIVO
-- Adicionado o botão ⧉ PiP aos controles do player.
-- Para vídeos enviados e compartilhamento de tela, o botão usa a Picture-in-Picture Web API real do navegador.
-- A janela PiP é independente da página e pode permanecer visível ao trocar de aba ou minimizar o Chrome, conforme suporte do navegador/Windows.
-- YouTube permanece usando seu player/fluxo existente; o botão PiP do PartyBlox não interfere nele.
