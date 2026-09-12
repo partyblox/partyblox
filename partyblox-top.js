@@ -20,6 +20,8 @@
   document.addEventListener('click',e=>{
     const b=e.target&&e.target.closest&&e.target.closest('#pipBtn');
     if(!b)return;
-    setTimeout(()=>relay('open'),0);
+    relay('open');
   },true);
+
+  try{window.postMessage({source:'partyblox-native-pip-status',event:'ready'},location.origin);}catch(_){}
 })();

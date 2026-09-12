@@ -269,7 +269,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .controls-hidden .host-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.7;z-index:5;}
 .chat-hint kbd{padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px;font-family:monospace;font-size:10px;border:1px solid rgba(255,255,255,.2);}
-.upload-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:5000;}
+.upload-overlay{pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:5000;}
 .upload-overlay.active{display:flex;}
 .upload-box{min-width:280px;max-width:90vw;padding:24px 28px;background:#1a1a2e;border:1px solid rgba(253,203,110,.45);border-radius:16px;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,.5);}
 .upload-spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.18);border-top-color:#fdcb6e;border-radius:50%;margin:0 auto 14px;animation:uploadSpin .8s linear infinite;}
@@ -660,6 +660,7 @@ let rtcPeers=new Map();
 let floatingPlayer=false;
 let mediaNeedsInteraction=false;
 let pipElement=null;
+let youtubeNativePipReady=false;
 
 function getPipVideoElement(){
   if(mediaType==='video') return $('localVideo');
@@ -668,68 +669,19 @@ function getPipVideoElement(){
 }
 let youtubePipWindow=null;
 let youtubePipPlaceholder=null;
-function postToYouTubePopup(command,payload={}){
-  try{if(youtubePipWindow&&!youtubePipWindow.closed)youtubePipWindow.postMessage({source:'partyblox',command,...payload},location.origin);}catch(_){ }
-}
-function closeYouTubePopup(){
-  try{if(youtubePipWindow&&!youtubePipWindow.closed)youtubePipWindow.close();}catch(_){ }
-  youtubePipWindow=null;
-  try{if(youtubePlayer){youtubePlayer.setVolume(100);youtubePlayer.unMute();}}catch(_){ }
-  updatePipButton();
-}
-function openYouTubeExternalWindow(){
+function postToYouTubePopup(){}
+function closeYouTubePopup(){}
+async function openYouTubeNativePiP(){
   if(!ytVideoId)return toast('⚠️ Nenhum vídeo do YouTube carregado');
-  if(youtubePipWindow&&!youtubePipWindow.closed){youtubePipWindow.focus?.();return;}
-  const w=window.open('', 'partyblox-youtube-pip', 'popup=yes,width=640,height=360,resizable=yes,scrollbars=no');
-  if(!w){toast('⚠️ O Chrome bloqueou a janela. Permita pop-ups para este site.');return;}
-  youtubePipWindow=w;
-  const id=String(ytVideoId).replace(/[^a-zA-Z0-9_-]/g,'');
-  const time=Math.max(0,Number(getYTTime())||0);
-  const paused=!!(youtubePlayer&&youtubePlayer.getPlayerState&&youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED);
-  const origin=location.origin.replace(/'/g,'');
-  w.document.open();
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>PartyBlox — YouTube</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#player{position:fixed;inset:0;width:100%;height:100%}#player iframe{width:100%!important;height:100%!important;border:0}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"><\/script><script>let p=null;let ready=false;let initialPaused=${paused?'true':'false'};let initialTime=${time};function onYouTubeIframeAPIReady(){p=new YT.Player('player',{width:'100%',height:'100%',videoId:'${id}',playerVars:{autoplay:1,controls:1,rel:0,playsinline:1,enablejsapi:1,origin:'${origin}'},events:{onReady:function(){ready=true;try{p.seekTo(initialTime,true);if(initialPaused)p.pauseVideo();}catch(e){}try{p.setVolume(100);p.unMute();}catch(e){}}}})}window.addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox'||!p)return;try{if(e.data.command==='play')p.playVideo();else if(e.data.command==='pause')p.pauseVideo();else if(e.data.command==='seek')p.seekTo(Number(e.data.time)||0,true);else if(e.data.command==='mute')p.mute();else if(e.data.command==='unmute')p.unMute();else if(e.data.command==='volume')p.setVolume(Number(e.data.volume)||0);}catch(err){}});window.addEventListener('beforeunload',function(){try{window.opener&&window.opener.postMessage({source:'partyblox-youtube-popup',event:'closed'},location.origin)}catch(e){}});<\/script></body></html>`);
-  w.document.close();
-  // A separate browser window is the reliable fallback when Document PiP cannot host the cross-origin YouTube iframe.
-  try{youtubePlayer.mute();}catch(_){ }
-  w.focus();
-  updatePipButton();
-}
-async function openYouTubeDocumentPiP(){
-  if(!youtubePlayer) return toast('⚠️ O player do YouTube ainda não está pronto');
-  if(!('documentPictureInPicture' in window) || typeof documentPictureInPicture.requestWindow!=='function'){
-    openYouTubeExternalWindow();
-    toast('🪟 PiP nativo não pode controlar diretamente o iframe do YouTube; abrindo janela separada');
-    return;
-  }
-  if(youtubePipWindow && !youtubePipWindow.closed){youtubePipWindow.focus?.();return;}
-  try{
-    const w=await documentPictureInPicture.requestWindow({width:520,height:300});
-    youtubePipWindow=w;
-    const doc=w.document;
-    doc.documentElement.style.cssText='width:100%;height:100%;margin:0;padding:0;background:#000;overflow:hidden';
-    doc.body.style.cssText='margin:0;width:100%;height:100%;background:#000;overflow:hidden';
-    const style=doc.createElement('style');
-    style.textContent='html,body{width:100%!important;height:100%!important;margin:0!important;padding:0!important;background:#000!important;overflow:hidden!important}#youtubeOverlay{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;background:#000!important}#youtubePlayer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}#youtubePlayer iframe{display:block!important;width:100%!important;height:100%!important;border:0!important}';
-    doc.head.appendChild(style);
-    const overlay=$('youtubeOverlay');
-    youtubePipPlaceholder=overlay.parentNode;
-    doc.body.appendChild(overlay);
-    overlay.style.display='block';
-    w.addEventListener('pagehide',()=>{try{if(youtubePipWindow===w){youtubePipPlaceholder?.appendChild(overlay);overlay.style.cssText='';$('youtubeOverlay').style.display=mediaType==='youtube'?'block':'none';youtubePipWindow=null;youtubePipPlaceholder=null;updatePipButton();}}catch(_){}});
-    updatePipButton();
-  }catch(e){
-    youtubePipWindow=null;youtubePipPlaceholder=null;
-    openYouTubeExternalWindow();
-  }
+  try{window.postMessage({source:'partyblox',action:'openNativeYouTubePiP',videoId:ytVideoId},location.origin);}catch(_){}
 }
 function updatePipButton(){
   const btn=$('pipBtn'),back=$('exitPipBtn');if(!btn)return;
   const v=getPipVideoElement();
   const nativeSupported=!!(document.pictureInPictureEnabled&&v&&typeof v.requestPictureInPicture==='function');
-  const ytSupported=!!(mediaType==='youtube'&&youtubePlayer);
+  const ytSupported=!!(mediaType==='youtube'&&youtubePlayer&&youtubeNativePipReady);
   const supported=nativeSupported||ytSupported;
-  const active=!!document.pictureInPictureElement||!!(youtubePipWindow&&!youtubePipWindow.closed);
+  const active=!!document.pictureInPictureElement||!!window._partybloxNativeYoutubePip;
   btn.disabled=!supported;
   btn.title=supported?'Abrir PiP':'PiP não disponível para esta mídia/navegador';
   btn.classList.toggle('active',active);
@@ -739,25 +691,21 @@ async function exitPictureInPicture(){
   try{
     if(document.pictureInPictureElement){await document.exitPictureInPicture();}
   }catch(_){}
-  if(youtubePipWindow&&!youtubePipWindow.closed){try{youtubePipWindow.close();}catch(_){}youtubePipWindow=null;}
-  try{if(youtubePlayer&&mediaType==='youtube'){youtubePlayer.unMute();youtubePlayer.setVolume(100);}}catch(_){}
   try{window.postMessage({source:'partyblox',action:'exitNativeYouTubePiP'},location.origin);}catch(_){}
+  window._partybloxNativeYoutubePip=false;
   updatePipButton();
 }
 async function togglePictureInPicture(){
   if(mediaType==='youtube'){
-    // Primeiro tenta o modo nativo via extensão PartyBlox (quando instalada).
-    try{window.postMessage({source:'partyblox',action:'openNativeYouTubePiP',videoId:ytVideoId},location.origin);}catch(_){}
-    // Sem a extensão, usa o melhor fallback suportado pelo navegador.
-    if(youtubePipWindow&&!youtubePipWindow.closed){return;}
-    return openYouTubeDocumentPiP();
+    return openYouTubeNativePiP();
   }
   const v=getPipVideoElement();
   if(!v||!document.pictureInPictureEnabled||typeof v.requestPictureInPicture!=='function')return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
   try{if(document.pictureInPictureElement){await document.exitPictureInPicture();return;}pipElement=v;await v.requestPictureInPicture();}catch(e){toast('❌ Não foi possível abrir a janela PiP');}finally{updatePipButton();}
 }
-window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox-youtube-popup')return;if(e.data.event==='closed'){youtubePipWindow=null;try{youtubePlayer.unMute();youtubePlayer.setVolume(100);}catch(_){ }updatePipButton();}});
+
 document.addEventListener('enterpictureinpicture',updatePipButton);document.addEventListener('leavepictureinpicture',updatePipButton);
+window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox-native-pip-status')return;if(e.data.event==='ready'){youtubeNativePipReady=true;updatePipButton();}if(e.data.event==='entered'){window._partybloxNativeYoutubePip=true;updatePipButton();}if(e.data.event==='left'){window._partybloxNativeYoutubePip=false;updatePipButton();}});
 
 let lastSentChat={text:'',ts:0};
 let selectedTierAmount=10;
