@@ -46,15 +46,8 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 @keyframes pulseBtn{0%,100%{box-shadow:0 0 0 0 rgba(253,121,168,.4);}50%{box-shadow:0 0 0 8px rgba(253,121,168,0);}}
 .main{flex:1;display:flex;overflow:hidden;position:relative;height:100%;min-height:0;}
 .video-side{flex:1;display:flex;flex-direction:column;background:#000;position:relative;min-width:0;min-height:0;}
-
-/* ============================================
-   PLAYER ESTILO WATCHPARTY.ME
-   ============================================ */
 .video-container{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:0;}
-
-/* Área do vídeo (iframe/placeholder) */
 .video-wrapper{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;background:#000;}
-
 #ytPlayer,#youtubePlayer,#localVideo,#screenVideo,#imageHolder{width:100%;height:100%;object-fit:contain;display:block;background:#000;}
 #localVideo,#screenVideo,#imageHolder{display:none;}
 #ytPlayer,#youtubePlayer{pointer-events:auto;}
@@ -65,8 +58,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .video-placeholder .icon{font-size:clamp(60px,15vw,120px);margin-bottom:20px;opacity:.3;}
 .video-placeholder h3{color:#aaa;margin-bottom:10px;font-size:clamp(16px,4vw,24px);}
 .video-placeholder p{color:#777;max-width:400px;font-size:clamp(12px,3vw,14px);}
-
-/* CONTROLES DO PLAYER (EMBAIXO, FIXOS - não sobrepostos) */
 .player-controls{background:var(--bg3);padding:14px 16px;opacity:1;pointer-events:auto;border-top:1px solid var(--border);flex-shrink:0;}
 .progress{width:100%;height:5px;background:rgba(255,255,255,.2);border-radius:3px;cursor:pointer;position:relative;margin-bottom:14px;transition:.2s;}
 .progress:hover{height:8px;}
@@ -86,8 +77,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .vol-wrap{display:flex;align-items:center;gap:8px;}
 .vol-slider{width:70px;height:4px;-webkit-appearance:none;background:rgba(255,255,255,.3);border-radius:2px;cursor:pointer;}
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:#fdcb6e;border-radius:50%;}
-
-/* INPUT INLINE DO YOUTUBE (ESTILO WATCHPARTY.ME) */
 .yt-inline-input{display:none;padding:14px 16px;background:var(--bg3);border-top:1px solid var(--border);flex-shrink:0;}
 .yt-inline-input.show{display:block;}
 .yt-inline-inner{display:flex;gap:10px;align-items:center;max-width:900px;margin:0 auto;}
@@ -98,7 +87,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .yt-load-btn{padding:12px 22px;background:var(--accent);color:#000;border:none;border-radius:10px;font-weight:800;cursor:pointer;white-space:nowrap;font-size:14px;transition:.2s;}
 .yt-load-btn:hover{filter:brightness(1.1);}
 .yt-hint{font-size:11px;color:var(--text3);margin-top:8px;max-width:900px;margin-left:auto;margin-right:auto;}
-
 .media-badge{position:absolute;top:14px;left:14px;padding:6px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:12px;font-weight:700;display:none;z-index:5;}
 .media-badge.active{display:flex;align-items:center;gap:6px;}
 .host-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;z-index:6;}
@@ -429,7 +417,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
   <div class="main">
     <div class="video-side" id="videoSide">
       <div class="video-container" id="videoCont">
-        <!-- ÁREA DO VÍDEO (parte superior) -->
         <div class="video-wrapper">
           <div class="media-interaction" id="mediaInteraction" style="display:none">
             <div class="media-interaction-box">
@@ -460,7 +447,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
           </div>
         </div>
 
-        <!-- INPUT INLINE DO YOUTUBE (ESTILO WATCHPARTY.ME) -->
         <div class="yt-inline-input" id="ytInlineInput">
           <div class="yt-inline-inner">
             <div class="yt-icon-box">▶</div>
@@ -470,7 +456,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
           <div class="yt-hint">Aceita: youtube.com/watch?v=..., youtu.be/..., shorts, lives e embeds</div>
         </div>
 
-        <!-- CONTROLES DO PLAYER (EMBAIXO, FIXOS) -->
         <div class="player-controls" id="playerCtrl" style="display:none">
           <div class="progress" id="progBar">
             <div class="progress-bar" id="progFill"></div>
@@ -628,6 +613,10 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <div id="toast"></div>
 
 <script>
+  window.PARTYBLOX_WS_URL = "wss://laboratories-sierra-shore-wet.trycloudflare.com";
+</script>
+
+<script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
@@ -639,9 +628,10 @@ function setUploadLoading(active,title='Aguarde o carregamento...',sub='Enviando
 
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 
-const BACKEND_URL = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-    ? `${location.protocol}//${location.host}`
-    : 'https://partyblox.onrender.com';
+const BACKEND_URL = (window.PARTYBLOX_WS_URL || '').replace(/^wss:/, 'https:').replace(/^ws:/, 'http:')
+    || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+        ? `${location.protocol}//${location.host}`
+        : 'https://partyblox.onrender.com');
 
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
@@ -778,6 +768,7 @@ setTimeout(()=>{try{$('qrImg').src=DONATE_CONFIG.qrImageUrl;}catch(_){}},500);
 
 function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-').slice(0,30);}
 function wsUrl(){
+  if(window.PARTYBLOX_WS_URL) return window.PARTYBLOX_WS_URL;
   if(location.hostname==='localhost'||location.hostname==='127.0.0.1')return `ws://${location.host}`;
   return 'wss://partyblox.onrender.com';
 }
@@ -1060,6 +1051,7 @@ async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
     const response=await fetch(media.url);const blob=await response.blob();const fd=new FormData();
     fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
+    fd.append('roomId', roomId); // CORRIGIDO: avisa o servidor a qual sala pertence
     const res=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
     const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
     if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
@@ -1277,9 +1269,6 @@ function createYTPlayer(){
 function onYTState(e){
   if(e.data===YT.PlayerState.PLAYING){
     mediaType='youtube';updateMediaBadge('🎬','YouTube');showPlayerCtrl();$('playBtn').textContent='⏸️';
-    // Só o host transforma uma mudança real do player em comando para a sala.
-    // Isso evita que o cliente de um convidado fique reabrindo/reiniciando
-    // anúncios ou o vídeo quando ele interage com o próprio player.
     if(isHost && !ytSuppressStateSend && ytVideoId && Date.now()-ytLastStateSent>350){
       ytLastStateSent=Date.now();
       wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:false,time:getYTTime()}});
@@ -1325,20 +1314,15 @@ function loadYouTube(id,autoplay=false,start=0){
   updateMediaBadge('🎬','YouTube');showPlayerCtrl();
 }
 
-/* ============================================
-   SISTEMA DE LINK DO YOUTUBE (ESTILO WATCHPARTY.ME)
-   ============================================ */
 function showYTInput(){
   if(!isHost)return toast('👑 Só hosts podem usar YouTube');
   const panel=$('ytInlineInput');
-  // Toggle: mostrar/ocultar o painel inline
   panel.classList.toggle('show');
   if(panel.classList.contains('show')){
     setTimeout(()=>$('ytUrlInput').focus(),100);
   }
 }
 
-// Carregar vídeo pelo input inline (botão ou Enter)
 function loadFromInlineInput(){
   const url=$('ytUrlInput').value.trim();
   if(!url){toast('❌ Cole um link do YouTube válido');return;}
@@ -1358,9 +1342,6 @@ function togglePlayPause(){
   if(!isHost)return;
   if(mediaType==='youtube'){
     const playing=youtubePlayer.getPlayerState()===YT.PlayerState.PLAYING;
-    // O estado é enviado somente depois que o YouTube confirma PAUSED/PLAYING.
-    // getPlayerState() imediatamente após pauseVideo()/playVideo() ainda pode
-    // devolver o estado antigo e fazia o convidado voltar a tocar.
     ytSuppressStateSend=false;
     if(playing){
       youtubePlayer.pauseVideo();
@@ -1438,6 +1419,7 @@ async function handleFileUpload(){
   try{
     setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${t.startsWith('image/')?'imagem':t.startsWith('video/')?'vídeo':'áudio'} (${(f.size/1024/1024).toFixed(1)} MB).`);
     const fd=new FormData();fd.append('media',f,f.name);
+    fd.append('roomId', roomId); // CORRIGIDO: avisa o servidor a qual sala pertence
     const res=await fetch(BACKEND_URL+'/upload',{method:'POST',body:fd,cache:'no-store'});
     const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
     if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
@@ -1515,16 +1497,12 @@ function applyMediaState(state){
       if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId;
     }else{
       try{
-        // Para o mesmo vídeo, não fazemos seek automático a cada mensagem.
-        // Isso é importante porque anúncios do YouTube têm tempo próprio e um
-        // seek/reload pode fazer o anúncio começar novamente.
         const targetPaused=state.paused===true;
         const current=youtubePlayer.getPlayerState();
         if(targetPaused){
           if(current!==YT.PlayerState.PAUSED && current!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo();
         }else{
           if(current!==YT.PlayerState.PLAYING) youtubePlayer.playVideo();
-          // Só corrige posição quando o host enviou um seek explícito.
           if(state.forceSeek===true){
             const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-Number(state.time||0));
             if(delta>1.5)youtubePlayer.seekTo(Number(state.time)||0,true);
@@ -1547,7 +1525,6 @@ function applyMediaState(state){
 
 if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSearchParams(location.search).get('room');
 
-// ===== EVENT LISTENERS =====
 $('toggleVideoBtn').addEventListener('click',toggleVideoSide);
 $('floatMediaBtn').addEventListener('click',toggleFloatingPlayer);
 $('pipBtn').addEventListener('click',togglePictureInPicture);$('exitPipBtn').addEventListener('click',exitPictureInPicture);
@@ -1571,7 +1548,6 @@ $('closeDonateBtn').addEventListener('click',closeDonate);
 $('livePixBtn').addEventListener('click',openLivePix);
 $('copyPixBtn').addEventListener('click',copyPix);
 
-// YouTube inline (estilo watchparty.me)
 $('ytBtn').addEventListener('click',showYTInput);
 $('ytLoadBtn').addEventListener('click',loadFromInlineInput);
 $('ytUrlInput').addEventListener('keypress',e=>{if(e.key==='Enter')loadFromInlineInput();});
