@@ -263,7 +263,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .controls-hidden .host-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.7;z-index:5;}
 .chat-hint kbd{padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px;font-family:monospace;font-size:10px;border:1px solid rgba(255,255,255,.2);}
-/* ALTERADO: overlay de upload sem fosco */
 .upload-overlay{pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;align-items:center;justify-content:center;z-index:5000;}
 .upload-overlay.active{display:flex;}
 .upload-box{min-width:280px;max-width:90vw;padding:24px 28px;background:#1a1a2e;border:1px solid rgba(253,203,110,.45);border-radius:16px;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,.5);}
@@ -271,7 +270,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .upload-title{font-size:16px;font-weight:800;color:#fdcb6e;margin-bottom:6px;}
 .upload-sub{font-size:12px;color:rgba(255,255,255,.65);line-height:1.4;}
 @keyframes uploadSpin{to{transform:rotate(360deg);}}
-/* NOVO: aviso de sala dentro do menu */
 .room-notice{display:none;padding:10px 14px;border-radius:10px;background:rgba(253,203,110,.15);border:1px solid rgba(253,203,110,.4);color:#fdcb6e;font-size:13px;font-weight:600;margin-bottom:14px;text-align:center;line-height:1.35;}
 .room-notice.show{display:block;}
 .room-notice.error{background:rgba(231,76,60,.15);border-color:rgba(231,76,60,.5);color:#ff7675;}
@@ -390,7 +388,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
   <div class="tagline">✨ Assista junto com amigos em tempo real ✨</div>
   <div class="panel">
     <h2>🚀 Começar</h2>
-    <!-- NOVO: aviso dentro do menu -->
     <div class="room-notice" id="roomNotice"></div>
     <div class="lbl">👤 Seu apelido</div>
     <input type="text" id="inName" maxlength="16" placeholder="Ex: João" value="">
@@ -641,9 +638,8 @@ const DONATE_CONFIG={
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024; // 3 GB
-// NOVO: percentual para começar a tocar durante o upload
 const READY_PERCENT = 0.08;
-let activeUpload = null; // { id, totalBytes, bytesUploaded, completed }
+let activeUpload = null;
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let roomPassword='';
 let hosts=[];
@@ -652,11 +648,13 @@ let serverMultiHost=true;
 let ws=null,wsReady=false,playerCount=1;
 let reconnectTimer=null;
 let reconnectAttempts=0;
-let intentionalDisconnect=false;
+// === CORREÇÃO PRINCIPAL ===
+// Começa como TRUE para bloquear reconexões automáticas antes do usuário
+// realmente entrar/criar uma sala. Vira false dentro de enterApp().
+let intentionalDisconnect=true;
 let firstRoomJoin=true;
 let lastServerMediaState=null;
 let syncInProgress=false;
-// NOVO: controla se já entramos na tela do app
 let appEntered = false;
 let mediaType=null,youtubePlayer=null,ytReady=false,ytPlayerReady=false,ytVideoId=null;
 let screenStream=null,isScreenSharing=false,screenOwner=null;
@@ -767,7 +765,6 @@ function hidePlaceholder(){
   const p = $('placeholder'); if(!p) return;
   p.style.display = 'none';
 }
-// NOVO: mostra aviso dentro do menu
 function showRoomNotice(msg, isError=false){
   const n = $('roomNotice'); if(!n) return;
   n.textContent = msg;
@@ -870,7 +867,6 @@ function joinFromLink(){
   roomPassword=($('inPass').value||'').trim();
   enterApp(false);
 }
-// ALTERADO: não troca de tela. Só conecta e espera o servidor confirmar.
 function enterApp(asHost){
   intentionalDisconnect=false;
   firstRoomJoin=true;
@@ -887,6 +883,8 @@ function enterApp(asHost){
 }
 function scheduleReconnect(){
   if(intentionalDisconnect)return;
+  // === CORREÇÃO: nunca reconectar antes do usuário ter entrado numa sala ===
+  if(!appEntered && !ws)return;
   if(reconnectTimer)return;
   const delay=Math.min(15000,Math.max(1500,2000*Math.pow(1.5,reconnectAttempts++)));
   reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectRoom(false);},delay);
@@ -920,7 +918,6 @@ function connectRoom(creator){
       let m;try{m=JSON.parse(e.data)}catch(_){return}
       if(m.kind==='roomExists'||m.kind==='roomError'||m.kind==='joinRejected'){
         const msg=m.message||m.error||(m.kind==='roomExists'?'Essa sala já existe. Use ENTRAR para entrar nela.':'Não foi possível entrar na sala.');
-        // ALTERADO: não sai do menu — só mostra aviso no painel
         showRoomNotice(msg, m.kind==='roomExists');
         toast('⚠️ '+msg);
         intentionalDisconnect=true;
@@ -943,7 +940,6 @@ function connectRoom(creator){
         return;
       }
       if(m.kind==='roomState'){
-        // ALTERADO: só troca de tela quando o servidor confirma a entrada
         if(!appEntered){
           appEntered = true;
           const n = $('roomNotice'); if(n) n.className='room-notice';
@@ -1523,7 +1519,6 @@ function sendLocalState(){
   if(!el)return;
   const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state});
 }
-// ALTERADO: upload com stream progressivo via XHR
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
@@ -1531,7 +1526,6 @@ async function handleFileUpload(){
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
   if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
 
-  // ID único para o nome do arquivo (cliente sabe a URL antes de terminar)
   const fileId = 'u' + Date.now() + Math.random().toString(36).slice(2,8);
   const safeName = (f.name||'media').replace(/[^\w.\-]/g,'_').slice(-60);
   const expectedUrl = BACKEND_URL + '/uploads/' + fileId + '-' + safeName;
@@ -1551,7 +1545,6 @@ async function handleFileUpload(){
       const pct = e.loaded / e.total;
       if(!readySent && pct >= READY_PERCENT){
         readySent = true;
-        // Começa a tocar já com o que tem
         const state = {type:ty, url:expectedUrl, name:f.name, mime:t, updatedAt:Date.now()};
         lastServerMediaState = JSON.parse(JSON.stringify(state));
         applyMediaState(state);
@@ -1568,13 +1561,11 @@ async function handleFileUpload(){
       if(!ok && !readySent){
         toast('❌ ' + (data && data.error || 'Upload falhou'));
       } else if(!readySent && data && data.url){
-        // Arquivo muito pequeno, não chegou em 8%
         const state = {type:ty, url:data.url, name:f.name, mime:t, updatedAt:Date.now()};
         lastServerMediaState = JSON.parse(JSON.stringify(state));
         applyMediaState(state);
         wsSend({kind:'media', state:state});
       }
-      // Se o player estava tocando o parcial, recarrega pra pegar o tamanho total
       if(readySent && mediaType === 'video'){
         const v = $('localVideo');
         try{
@@ -1607,8 +1598,6 @@ async function handleFileUpload(){
     xhr.send(fd);
   });
 }
-// NOVO: quando o <video> disparar `ended` mas o upload ainda está em progresso,
-// recarrega pra pegar o novo tamanho do arquivo (stream progressivo)
 $('localVideo').addEventListener('ended', () => {
   if(activeUpload && !activeUpload.completed && mediaType === 'video'){
     const v = $('localVideo');
