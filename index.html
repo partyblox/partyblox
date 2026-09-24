@@ -827,9 +827,40 @@ function wsUrl(){
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
 function createRoom(){
-  myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
-  roomName=$('inRoom').value.trim()||('Sala-'+Math.floor(Math.random()*999));
-  roomPassword=($('inPass').value||'').trim();
+  const name=$('inName').value.trim();
+  const room=$('inRoom').value.trim();
+  const pass=($('inPass').value||'').trim();
+
+  showRoomNotice('',false);
+
+  if(!name){
+    showRoomNotice('⚠️ Digite seu apelido antes de criar a sala.',true);
+    $('inName').focus();
+    return;
+  }
+
+  if(!room){
+    showRoomNotice('⚠️ Digite o nome da sala antes de criar.',true);
+    $('inRoom').focus();
+    return;
+  }
+
+  if(name.length<2){
+    showRoomNotice('⚠️ Seu apelido precisa ter pelo menos 2 caracteres.',true);
+    $('inName').focus();
+    return;
+  }
+
+  if(room.length<2){
+    showRoomNotice('⚠️ O nome da sala precisa ter pelo menos 2 caracteres.',true);
+    $('inRoom').focus();
+    return;
+  }
+
+  myName=name;
+  roomName=room;
+  roomPassword=pass;
+
   enterApp(true);
 }
 function joinFromLink(){
