@@ -355,6 +355,84 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
   .time{min-width:44px;font-size:8px;}
   .vol-slider{width:34px;}
 }
+
+/* ===== FIX MENU INICIAL (LANDING) — sempre cabe na tela ===== */
+#landing{
+  justify-content:flex-start;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:max(16px, env(safe-area-inset-top)) clamp(12px, 3vw, 24px) max(16px, env(safe-area-inset-bottom));
+  gap:clamp(6px, 1.2vh, 16px);
+  -webkit-overflow-scrolling:touch;
+}
+#landing::before,
+#landing::after{
+  content:'';
+  flex:1 1 auto;
+  min-height:0;
+}
+#landing > *{flex-shrink:0;}
+#landing .logo{
+  font-size:clamp(32px, 8.5vw, 64px);
+  line-height:1;
+  text-align:center;
+  word-break:break-word;
+}
+#landing .tagline{
+  font-size:clamp(12px, 2.8vw, 18px);
+  margin:0;
+  padding:0 8px;
+  line-height:1.35;
+  text-align:center;
+}
+#landing .panel{
+  width:min(460px, 100%);
+  padding:clamp(14px, 3.5vw, 32px);
+}
+#landing .panel h2{
+  font-size:clamp(16px, 4vw, 20px);
+  margin-bottom:clamp(8px, 1.5vh, 16px);
+}
+#landing .lbl{
+  font-size:clamp(11px, 2.6vw, 12px);
+  margin:clamp(4px, .8vh, 8px) 0 clamp(3px, .6vh, 6px);
+}
+#landing .panel input[type=text],
+#landing .panel input[type=password]{
+  padding:clamp(9px, 2.2vw, 13px) clamp(11px, 2.8vw, 16px);
+  font-size:clamp(13px, 3vw, 15px);
+  margin-bottom:clamp(6px, 1.2vh, 12px);
+}
+#landing .btn{
+  padding:clamp(9px, 2.2vw, 13px);
+  font-size:clamp(13px, 3vw, 15px);
+  margin-top:0;
+}
+#landing .row{gap:clamp(8px, 2vw, 10px);}
+#landing .row > *{min-width:0;}
+@media (max-height:650px){
+  #landing .logo{font-size:clamp(24px, 5.5vw, 36px);}
+  #landing .tagline{font-size:clamp(10px, 2.2vw, 13px);}
+  #landing .panel{padding:clamp(12px, 3vw, 18px);}
+  #landing .panel h2{display:none;}
+  #landing .lbl{margin:3px 0 2px;}
+  #landing .panel input[type=text],
+  #landing .panel input[type=password]{padding:7px 10px;margin-bottom:5px;}
+  #landing .btn{padding:8px 10px;}
+}
+@media (max-width:380px){
+  #landing .logo{font-size:clamp(28px, 10vw, 40px);letter-spacing:-1px;}
+  #landing .tagline{padding:0 4px;}
+  #landing .panel{padding:12px 12px 16px;border-radius:18px;}
+  #landing .lbl{font-size:11px;}
+  #landing .row{flex-direction:column;}
+  #landing .row > *{width:100%;}
+}
+@media (min-height:1000px){
+  #landing .logo{font-size:72px;}
+  #landing .tagline{font-size:20px;}
+}
+/* ===== FIM FIX MENU INICIAL ===== */
 </style>
 </head>
 <body>
@@ -374,7 +452,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
     <input type="text" id="inName" maxlength="16" placeholder="Ex: João" value="">
     <div class="lbl">🏠 Nome da sala</div>
     <input type="text" id="inRoom" maxlength="30" placeholder="Ex: Cinema-Sexta" value="">
-    <!-- SENHA: campo de senha opcional -->
     <div class="lbl">🔒 Senha da sala <span style="opacity:.6;font-weight:500">(opcional — só o criador define)</span></div>
     <input type="text" id="inPass" maxlength="40" placeholder="Deixe vazio para não usar senha" value="" autocomplete="off">
     <div class="row" style="margin-top:20px;">
@@ -586,7 +663,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 <script>
-  window.PARTYBLOX_WS_URL = "https://lenses-supplier-satisfied-champagne.trycloudflare.com";
+  window.PARTYBLOX_WS_URL = "lenses-supplier-satisfied-champagne.trycloudflare.com";
 </script>
 <script>
 const $=id=>document.getElementById(id);
@@ -820,7 +897,6 @@ function wsUrl(){
   return 'wss://partyblox.onrender.com';
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
-// SENHA: lê a senha do campo
 function createRoom(){
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
   roomName=$('inRoom').value.trim()||('Sala-'+Math.floor(Math.random()*999));
@@ -839,13 +915,11 @@ function enterApp(asHost){
   firstRoomJoin=true;
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
-  // SENHA: limpa o chat na entrada (chat é efêmero)
   const chatBox = $('chatMsgs');
   if(chatBox) chatBox.innerHTML = '';
   $('landing').classList.remove('active');
   $('app').classList.add('active');
   roomId=getRoomId();
-  // SENHA: mostra cadeado no chip se tiver senha
   $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '');
   myPlayerId='p'+Date.now()+Math.random().toString(36).substr(2,6);
   window.myPlayerId=myPlayerId;
@@ -871,7 +945,6 @@ function connectRoom(creator){
       if(ws!==socket){try{socket.close();}catch(_){}return;}
       wsReady=true;reconnectAttempts=0;
       console.log('[WS] conectado ✅');
-      // SENHA: manda a senha junto com o join
       socket.send(JSON.stringify({
         kind:'join',
         room:roomId,
@@ -899,7 +972,6 @@ function connectRoom(creator){
         setTimeout(()=>{ try{ $('inPass').focus(); }catch(_){} }, 150);
         return;
       }
-      // SENHA: senha errada
       if(m.kind==='wrongPassword'){
         toast('🔒 Senha incorreta. Tente de novo.');
         intentionalDisconnect=true;
@@ -1766,7 +1838,6 @@ document.addEventListener('keydown',e=>{
     if(!isInput){e.preventDefault();focusChat();}
   }
 });
-// SENHA: enviar com Enter do campo de senha também tenta entrar
 try{
   $('inPass').addEventListener('keypress',e=>{ if(e.key==='Enter'){ e.preventDefault(); joinFromLink(); } });
   $('inRoom').addEventListener('keypress',e=>{ if(e.key==='Enter'){ e.preventDefault(); joinFromLink(); } });
