@@ -24,8 +24,8 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .tagline{font-size:clamp(14px,3vw,22px);margin:10px 0 36px;opacity:.9;text-align:center;padding:0 16px;}
 .panel{background:var(--panel-bg);backdrop-filter:blur(20px);padding:clamp(16px,4vw,38px);border-radius:24px;border:1px solid var(--panel-border);width:min(460px,92%);}
 .panel h2{color:var(--text);margin-bottom:18px;font-size:clamp(18px,4vw,22px);}
-.panel input[type=text]{width:100%;padding:clamp(10px,2.5vw,14px) clamp(12px,3vw,18px);border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:clamp(13px,3vw,15px);margin-bottom:14px;outline:none;transition:.2s;}
-.panel input[type=text]:focus{border-color:#fdcb6e;background:rgba(255,255,255,.15);}
+.panel input[type=text],.panel input[type=password]{width:100%;padding:clamp(10px,2.5vw,14px) clamp(12px,3vw,18px);border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:clamp(13px,3vw,15px);margin-bottom:14px;outline:none;transition:.2s;}
+.panel input[type=text]:focus,.panel input[type=password]:focus{border-color:#fdcb6e;background:rgba(255,255,255,.15);}
 .btn{width:100%;padding:clamp(10px,2.5vw,14px);background:linear-gradient(90deg,#fd79a8,#fdcb6e);border:none;border-radius:12px;color:#fff;font-size:clamp(13px,3vw,16px);font-weight:700;cursor:pointer;margin-top:8px;transition:.2s;}
 .btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.3);}
 .btn.green{background:linear-gradient(90deg,#00b894,#55efc4);color:#2d3436;}
@@ -271,7 +271,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .upload-sub{font-size:12px;color:rgba(255,255,255,.65);line-height:1.4;}
 @keyframes uploadSpin{to{transform:rotate(360deg);}}
 body.theme-light{--bg1:#f0f0f5;--bg2:#e8e8f0;--bg3:#ffffff;--bg4:#f5f5fa;--text:#2d3436;--text2:rgba(0,0,0,.7);--text3:rgba(0,0,0,.5);--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--chat-bg:#ffffff;--chat-head:#f0f0f5;--input-bg:#f5f5fa;--panel-bg:rgba(0,0,0,.05);--panel-border:rgba(0,0,0,.1);}
-body.theme-light .cmsg .text{color:#2d3436;}body.theme-light .video-placeholder{color:#666;}body.theme-light .video-placeholder h3{color:#444;}body.theme-light .video-placeholder p{color:#666;}body.theme-light .panel input[type=text]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
+body.theme-light .cmsg .text{color:#2d3436;}body.theme-light .video-placeholder{color:#666;}body.theme-light .video-placeholder h3{color:#444;}body.theme-light .video-placeholder p{color:#666;}body.theme-light .panel input[type=text],body.theme-light .panel input[type=password]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
 body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}body.theme-light .game-play-close:hover{background:rgba(231,76,60,.2);}
 body.theme-blue{--bg1:#0a1929;--bg2:#132f4c;--bg3:#173a5e;--bg4:#0d2137;--text:#e3f2fd;--text2:rgba(227,242,253,.7);--text3:rgba(227,242,253,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#173a5e;--chat-head:#0a1929;--input-bg:#132f4c;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-purple{--bg1:#2d1b4e;--bg2:#4a2c6e;--bg3:#5e3a8a;--bg4:#3d2260;--text:#f3e5f5;--text2:rgba(243,229,245,.7);--text3:rgba(243,229,245,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5e3a8a;--chat-head:#2d1b4e;--input-bg:#4a2c6e;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
@@ -374,6 +374,9 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
     <input type="text" id="inName" maxlength="16" placeholder="Ex: João" value="">
     <div class="lbl">🏠 Nome da sala</div>
     <input type="text" id="inRoom" maxlength="30" placeholder="Ex: Cinema-Sexta" value="">
+    <!-- SENHA: campo de senha opcional -->
+    <div class="lbl">🔒 Senha da sala <span style="opacity:.6;font-weight:500">(opcional — só o criador define)</span></div>
+    <input type="text" id="inPass" maxlength="40" placeholder="Deixe vazio para não usar senha" value="" autocomplete="off">
     <div class="row" style="margin-top:20px;">
       <button class="btn blue" onclick="createRoom()">➕ Criar Sala</button>
       <button class="btn green" onclick="joinFromLink()">🔗 Entrar em Sala</button>
@@ -448,7 +451,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
             <div class="ctrl-r">
               <div class="vol-wrap">
                 <button class="cbtn" id="muteBtn">🔊</button>
-              <button class="cbtn pip sync-btn" id="syncBtn" title="Sincronizar com o host">🔄 SYNC</button>
+                <button class="cbtn pip sync-btn" id="syncBtn" title="Sincronizar com o host">🔄 SYNC</button>
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="100">
               </div>
               <button class="cbtn pip" id="pipBtn" title="Abrir em Picture-in-Picture" disabled>⧉ PiP</button>
@@ -583,7 +586,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 <script>
-  window.PARTYBLOX_WS_URL = "https://rca-filling-nickname-employer.trycloudflare.com";
+  window.PARTYBLOX_WS_URL = "https://lenses-supplier-satisfied-champagne.trycloudflare.com";
 </script>
 <script>
 const $=id=>document.getElementById(id);
@@ -616,9 +619,9 @@ const DONATE_CONFIG={
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
-// CORRIGIDO: limite máximo de upload = 3 GB
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024; // 3 GB
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
+let roomPassword=''; // SENHA: senha da sala
 let hosts=[];
 let founderId=null;
 let serverMultiHost=true;
@@ -635,7 +638,7 @@ let rtcPeers=new Map();
 let mediaNeedsInteraction=false;
 let pipElement=null;
 let youtubeNativePipReady=false;
-let docPipWindow = null; // CORRIGIDO: janela Document PiP
+let docPipWindow = null;
 function getPipVideoElement(){
   if(mediaType==='video') return $('localVideo');
   if(mediaType==='screen') return $('screenVideo');
@@ -662,17 +665,14 @@ async function exitPictureInPicture(){
   }catch(_){}
   try{ if(docPipWindow) docPipWindow.close(); }catch(_){}
   try{window.postMessage({source:'partyblox',action:'exitNativeYouTubePiP'},location.origin);}catch(_){}
-  window._partybloxNativeYoutubePiP=false;
+  window._partybloxNativeYoutubePip=false;
   docPipWindow=null;
   updatePipButton();
 }
-// CORRIGIDO: alterna PiP nativo (video local) ou Document PiP (YouTube / video local)
 async function togglePictureInPicture(){
-  // Se é YouTube, usa Document PiP
   if(mediaType==='youtube'){
     return toggleDocumentPip();
   }
-  // Vídeo local / tela: usa PiP nativo
   const v=getPipVideoElement();
   if(!v||!document.pictureInPictureEnabled||typeof v.requestPictureInPicture!=='function'){
     return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
@@ -690,7 +690,6 @@ async function togglePictureInPicture(){
     updatePipButton();
   }
 }
-// CORRIGIDO: Document Picture-in-Picture (janela flutuante com iframe HTML)
 async function toggleDocumentPip(){
   if(docPipWindow){
     try{ docPipWindow.close(); }catch(_){}
@@ -702,22 +701,15 @@ async function toggleDocumentPip(){
     return toast('❌ Seu navegador não suporta Document PiP. Atualize o Chrome/Edge.');
   }
   try{
-    const pipWin = await documentPictureInPicture.requestWindow({
-      width: 720,
-      height: 420
-    });
+    const pipWin = await documentPictureInPicture.requestWindow({ width: 720, height: 420 });
     docPipWindow = pipWin;
-    // Copia os estilos da página principal
     document.querySelectorAll('style').forEach(s=>{
       try{ pipWin.document.head.appendChild(s.cloneNode(true)); }catch(_){}
     });
-    // Configura o body da janela PiP
     pipWin.document.body.style.cssText = 'margin:0;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;';
-    // Cria o container
     const container = pipWin.document.createElement('div');
     container.style.cssText = 'width:100vw;height:100vh;background:#000;position:relative;overflow:hidden;';
     pipWin.document.body.appendChild(container);
-    // Move o overlay do YouTube (que contém o iframe) pra dentro do PiP
     const overlay = $('youtubeOverlay');
     const originalParent = overlay.parentNode;
     const originalNext = overlay.nextSibling;
@@ -725,13 +717,8 @@ async function toggleDocumentPip(){
     overlay._origNext = originalNext;
     overlay.style.cssText = 'position:relative;width:100%;height:100%;display:block;inset:auto;';
     container.appendChild(overlay);
-    // Ajusta o iframe pra preencher
     const iframe = overlay.querySelector('iframe');
-    if(iframe){
-      iframe.style.width='100%';
-      iframe.style.height='100%';
-    }
-    // Quando o PiP fechar, devolve o overlay pro lugar original
+    if(iframe){ iframe.style.width='100%'; iframe.style.height='100%'; }
     pipWin.addEventListener('pagehide', () => {
       try{
         if(overlay._origParent){
@@ -741,7 +728,7 @@ async function toggleDocumentPip(){
             overlay._origParent.appendChild(overlay);
           }
         }
-        overlay.style.cssText = ''; // volta ao CSS original
+        overlay.style.cssText = '';
       }catch(e){ console.warn('Erro ao devolver overlay:', e); }
       docPipWindow = null;
       updatePipButton();
@@ -753,7 +740,6 @@ async function toggleDocumentPip(){
     toast('❌ Não foi possível abrir a janela PiP');
   }
 }
-// CORRIGIDO: preserva o estado do vídeo ao entrar/sair do PiP nativo
 document.addEventListener('enterpictureinpicture', () => {
   const v = getPipVideoElement();
   if(v){ v.dataset.wasPlaying = v.paused ? '0' : '1'; }
@@ -834,24 +820,33 @@ function wsUrl(){
   return 'wss://partyblox.onrender.com';
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
+// SENHA: lê a senha do campo
 function createRoom(){
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
   roomName=$('inRoom').value.trim()||('Sala-'+Math.floor(Math.random()*999));
+  roomPassword=($('inPass').value||'').trim();
   enterApp(true);
 }
 function joinFromLink(){
   const p=new URLSearchParams(location.search);
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
   roomName=p.get('room')||$('inRoom').value.trim()||'Sala-Publica';
+  roomPassword=($('inPass').value||'').trim();
   enterApp(false);
 }
 function enterApp(asHost){
   intentionalDisconnect=false;
   firstRoomJoin=true;
+  try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
+  ws=null; wsReady=false;
+  // SENHA: limpa o chat na entrada (chat é efêmero)
+  const chatBox = $('chatMsgs');
+  if(chatBox) chatBox.innerHTML = '';
   $('landing').classList.remove('active');
   $('app').classList.add('active');
   roomId=getRoomId();
-  $('roomChip').textContent='🏠 '+roomName;
+  // SENHA: mostra cadeado no chip se tiver senha
+  $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '');
   myPlayerId='p'+Date.now()+Math.random().toString(36).substr(2,6);
   window.myPlayerId=myPlayerId;
   connectRoom(asHost);
@@ -876,7 +871,16 @@ function connectRoom(creator){
       if(ws!==socket){try{socket.close();}catch(_){}return;}
       wsReady=true;reconnectAttempts=0;
       console.log('[WS] conectado ✅');
-      socket.send(JSON.stringify({kind:'join',room:roomId,name:myName,playerId:myPlayerId,creator:!!creator&&firstRoomJoin,timestamp:Date.now()}));
+      // SENHA: manda a senha junto com o join
+      socket.send(JSON.stringify({
+        kind:'join',
+        room:roomId,
+        name:myName,
+        playerId:myPlayerId,
+        creator:!!creator&&firstRoomJoin,
+        password:roomPassword,
+        timestamp:Date.now()
+      }));
       firstRoomJoin=false;
       if(lastServerMediaState&&!isHost)setTimeout(()=>syncToHost(true),250);
     };
@@ -885,7 +889,27 @@ function connectRoom(creator){
       if(m.kind==='roomExists'||m.kind==='roomError'||m.kind==='joinRejected'){
         const msg=m.message||m.error||(m.kind==='roomExists'?'Essa sala já existe. Use ENTRAR para entrar nela.':'Não foi possível entrar na sala.');
         toast('⚠️ '+msg);
-        if(m.kind!=='roomExists'){$('app').classList.remove('active');$('landing').classList.add('active');}
+        intentionalDisconnect=true;
+        try{ if(ws){ ws.onclose=null; ws.close(1000,'roomRejected'); } }catch(_){}
+        ws=null; wsReady=false;
+        firstRoomJoin=true;
+        $('app').classList.remove('active');
+        $('landing').classList.add('active');
+        if(m.roomId) $('inRoom').value=m.roomId;
+        setTimeout(()=>{ try{ $('inPass').focus(); }catch(_){} }, 150);
+        return;
+      }
+      // SENHA: senha errada
+      if(m.kind==='wrongPassword'){
+        toast('🔒 Senha incorreta. Tente de novo.');
+        intentionalDisconnect=true;
+        try{ if(ws){ ws.onclose=null; ws.close(1000,'wrongPass'); } }catch(_){}
+        ws=null; wsReady=false;
+        firstRoomJoin=true;
+        $('app').classList.remove('active');
+        $('landing').classList.add('active');
+        if(m.roomId) $('inRoom').value=m.roomId;
+        try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
       if(m.kind==='roomState'){
@@ -1489,7 +1513,6 @@ async function handleFileUpload(){
   const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
-  // CORRIGIDO: limite elevado para 3 GB
   if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
   try{
     setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${t.startsWith('image/')?'imagem':t.startsWith('video/')?'vídeo':'áudio'} (${(f.size/1024/1024/1024).toFixed(2)} GB).`);
@@ -1587,7 +1610,6 @@ function applyMediaState(state){
     if(!youtubePlayer)createYTPlayer();
     const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId);
     if(!sameVideo){
-      // CORRIGIDO: usa o time real vindo do servidor (late join correto)
       loadYouTube(state.videoId, state.paused===false, Number(state.time)||0);
       if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId;
     }else{
@@ -1598,7 +1620,6 @@ function applyMediaState(state){
           if(current!==YT.PlayerState.PAUSED && current!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo();
         }else{
           if(current!==YT.PlayerState.PLAYING) youtubePlayer.playVideo();
-          // CORRIGIDO: sempre que tiver time do servidor, tenta alinhar (não só quando forceSeek)
           const targetTime = Number(state.time)||0;
           if(targetTime > 0){
             const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-targetTime);
@@ -1745,7 +1766,11 @@ document.addEventListener('keydown',e=>{
     if(!isInput){e.preventDefault();focusChat();}
   }
 });
-// Troca de aba, minimização e uploads NÃO significam sair da sala e NÃO pausam a mídia global.
+// SENHA: enviar com Enter do campo de senha também tenta entrar
+try{
+  $('inPass').addEventListener('keypress',e=>{ if(e.key==='Enter'){ e.preventDefault(); joinFromLink(); } });
+  $('inRoom').addEventListener('keypress',e=>{ if(e.key==='Enter'){ e.preventDefault(); joinFromLink(); } });
+}catch(_){}
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   if(!intentionalDisconnect&&(!ws||ws.readyState!==WebSocket.OPEN))scheduleReconnect();
@@ -1753,9 +1778,7 @@ document.addEventListener('visibilitychange',()=>{
 window.addEventListener('pageshow',()=>{
   if(!intentionalDisconnect&&(!ws||ws.readyState!==WebSocket.OPEN))scheduleReconnect();
 });
-window.addEventListener('pagehide',()=>{
-  // Não chamar leaveRoom(), pause(), resetPlayerUI() ou ws.close() aqui.
-});
+window.addEventListener('pagehide',()=>{ });
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress();
 loadTheme();
