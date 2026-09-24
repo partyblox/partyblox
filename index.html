@@ -1274,8 +1274,8 @@ function sendPlayersToIframe(){
   sendToIframe({type:'players',players});
 }
 function sendToIframe(msg){const iframe=$('gameIframe');if(iframe&&iframe.contentWindow)iframe.contentWindow.postMessage({__game:true,game:currentGame.id,...msg},'*');}
-const EMOJIS=['😀','😂','😍','😢','😡','🥳','❤️','🔥','👍','💃','🙌','✨','🌈','🍔','🍻','🏀','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
-const REACTIONS=['😂','❤️','🔥','🎉','👏','👍','🙌','✨','💖','🎊','🎈','🏆','💎','😍','🤯','🥳'];
+const EMOJIS=['😀','😂','😍','😭','😢','😡','🥳','❤️','🔥','👍','💃','🙌','🥱','😒','🙄','👌','🤟','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
+const REACTIONS=['😂','❤️','😭','😡','🙄','🥱','🤟','🔥','🎉','👏','👍','🙌','✨','💖','🎊','🎈','🏆','💎','😍','🤯','🥳'];
 (function(){
   const p=$('emojiPop');
   EMOJIS.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{$('chatText').value+=e;p.classList.remove('active');$('chatText').focus();};p.appendChild(b);});
