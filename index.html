@@ -263,13 +263,18 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .controls-hidden .host-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.7;z-index:5;}
 .chat-hint kbd{padding:2px 6px;background:rgba(255,255,255,.15);border-radius:4px;font-family:monospace;font-size:10px;border:1px solid rgba(255,255,255,.2);}
-.upload-overlay{pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:5000;}
+/* ALTERADO: overlay de upload sem fosco */
+.upload-overlay{pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;align-items:center;justify-content:center;z-index:5000;}
 .upload-overlay.active{display:flex;}
 .upload-box{min-width:280px;max-width:90vw;padding:24px 28px;background:#1a1a2e;border:1px solid rgba(253,203,110,.45);border-radius:16px;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,.5);}
 .upload-spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.18);border-top-color:#fdcb6e;border-radius:50%;margin:0 auto 14px;animation:uploadSpin .8s linear infinite;}
 .upload-title{font-size:16px;font-weight:800;color:#fdcb6e;margin-bottom:6px;}
 .upload-sub{font-size:12px;color:rgba(255,255,255,.65);line-height:1.4;}
 @keyframes uploadSpin{to{transform:rotate(360deg);}}
+/* NOVO: aviso de sala dentro do menu */
+.room-notice{display:none;padding:10px 14px;border-radius:10px;background:rgba(253,203,110,.15);border:1px solid rgba(253,203,110,.4);color:#fdcb6e;font-size:13px;font-weight:600;margin-bottom:14px;text-align:center;line-height:1.35;}
+.room-notice.show{display:block;}
+.room-notice.error{background:rgba(231,76,60,.15);border-color:rgba(231,76,60,.5);color:#ff7675;}
 body.theme-light{--bg1:#f0f0f5;--bg2:#e8e8f0;--bg3:#ffffff;--bg4:#f5f5fa;--text:#2d3436;--text2:rgba(0,0,0,.7);--text3:rgba(0,0,0,.5);--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--chat-bg:#ffffff;--chat-head:#f0f0f5;--input-bg:#f5f5fa;--panel-bg:rgba(0,0,0,.05);--panel-border:rgba(0,0,0,.1);}
 body.theme-light .cmsg .text{color:#2d3436;}body.theme-light .video-placeholder{color:#666;}body.theme-light .video-placeholder h3{color:#444;}body.theme-light .video-placeholder p{color:#666;}body.theme-light .panel input[type=text],body.theme-light .panel input[type=password]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
 body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}body.theme-light .game-play-close:hover{background:rgba(231,76,60,.2);}
@@ -355,84 +360,21 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
   .time{min-width:44px;font-size:8px;}
   .vol-slider{width:34px;}
 }
-
-/* ===== FIX MENU INICIAL (LANDING) — sempre cabe na tela ===== */
-#landing{
-  justify-content:flex-start;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:max(16px, env(safe-area-inset-top)) clamp(12px, 3vw, 24px) max(16px, env(safe-area-inset-bottom));
-  gap:clamp(6px, 1.2vh, 16px);
-  -webkit-overflow-scrolling:touch;
-}
-#landing::before,
-#landing::after{
-  content:'';
-  flex:1 1 auto;
-  min-height:0;
-}
+#landing{justify-content:flex-start;overflow-y:auto;overflow-x:hidden;padding:max(16px, env(safe-area-inset-top)) clamp(12px, 3vw, 24px) max(16px, env(safe-area-inset-bottom));gap:clamp(6px, 1.2vh, 16px);-webkit-overflow-scrolling:touch;}
+#landing::before,#landing::after{content:'';flex:1 1 auto;min-height:0;}
 #landing > *{flex-shrink:0;}
-#landing .logo{
-  font-size:clamp(32px, 8.5vw, 64px);
-  line-height:1;
-  text-align:center;
-  word-break:break-word;
-}
-#landing .tagline{
-  font-size:clamp(12px, 2.8vw, 18px);
-  margin:0;
-  padding:0 8px;
-  line-height:1.35;
-  text-align:center;
-}
-#landing .panel{
-  width:min(460px, 100%);
-  padding:clamp(14px, 3.5vw, 32px);
-}
-#landing .panel h2{
-  font-size:clamp(16px, 4vw, 20px);
-  margin-bottom:clamp(8px, 1.5vh, 16px);
-}
-#landing .lbl{
-  font-size:clamp(11px, 2.6vw, 12px);
-  margin:clamp(4px, .8vh, 8px) 0 clamp(3px, .6vh, 6px);
-}
-#landing .panel input[type=text],
-#landing .panel input[type=password]{
-  padding:clamp(9px, 2.2vw, 13px) clamp(11px, 2.8vw, 16px);
-  font-size:clamp(13px, 3vw, 15px);
-  margin-bottom:clamp(6px, 1.2vh, 12px);
-}
-#landing .btn{
-  padding:clamp(9px, 2.2vw, 13px);
-  font-size:clamp(13px, 3vw, 15px);
-  margin-top:0;
-}
+#landing .logo{font-size:clamp(32px, 8.5vw, 64px);line-height:1;text-align:center;word-break:break-word;}
+#landing .tagline{font-size:clamp(12px, 2.8vw, 18px);margin:0;padding:0 8px;line-height:1.35;text-align:center;}
+#landing .panel{width:min(460px, 100%);padding:clamp(14px, 3.5vw, 32px);}
+#landing .panel h2{font-size:clamp(16px, 4vw, 20px);margin-bottom:clamp(8px, 1.5vh, 16px);}
+#landing .lbl{font-size:clamp(11px, 2.6vw, 12px);margin:clamp(4px, .8vh, 8px) 0 clamp(3px, .6vh, 6px);}
+#landing .panel input[type=text],#landing .panel input[type=password]{padding:clamp(9px, 2.2vw, 13px) clamp(11px, 2.8vw, 16px);font-size:clamp(13px, 3vw, 15px);margin-bottom:clamp(6px, 1.2vh, 12px);}
+#landing .btn{padding:clamp(9px, 2.2vw, 13px);font-size:clamp(13px, 3vw, 15px);margin-top:0;}
 #landing .row{gap:clamp(8px, 2vw, 10px);}
 #landing .row > *{min-width:0;}
-@media (max-height:650px){
-  #landing .logo{font-size:clamp(24px, 5.5vw, 36px);}
-  #landing .tagline{font-size:clamp(10px, 2.2vw, 13px);}
-  #landing .panel{padding:clamp(12px, 3vw, 18px);}
-  #landing .panel h2{display:none;}
-  #landing .lbl{margin:3px 0 2px;}
-  #landing .panel input[type=text],
-  #landing .panel input[type=password]{padding:7px 10px;margin-bottom:5px;}
-  #landing .btn{padding:8px 10px;}
-}
-@media (max-width:380px){
-  #landing .logo{font-size:clamp(28px, 10vw, 40px);letter-spacing:-1px;}
-  #landing .tagline{padding:0 4px;}
-  #landing .panel{padding:12px 12px 16px;border-radius:18px;}
-  #landing .lbl{font-size:11px;}
-  #landing .row{flex-direction:column;}
-  #landing .row > *{width:100%;}
-}
-@media (min-height:1000px){
-  #landing .logo{font-size:72px;}
-  #landing .tagline{font-size:20px;}
-}
-/* ===== FIM FIX MENU INICIAL ===== */
+@media (max-height:650px){#landing .logo{font-size:clamp(24px, 5.5vw, 36px);}#landing .tagline{font-size:clamp(10px, 2.2vw, 13px);}#landing .panel{padding:clamp(12px, 3vw, 18px);}#landing .panel h2{display:none;}#landing .lbl{margin:3px 0 2px;}#landing .panel input[type=text],#landing .panel input[type=password]{padding:7px 10px;margin-bottom:5px;}#landing .btn{padding:8px 10px;}}
+@media (max-width:380px){#landing .logo{font-size:clamp(28px, 10vw, 40px);letter-spacing:-1px;}#landing .tagline{padding:0 4px;}#landing .panel{padding:12px 12px 16px;border-radius:18px;}#landing .lbl{font-size:11px;}#landing .row{flex-direction:column;}#landing .row > *{width:100%;}}
+@media (min-height:1000px){#landing .logo{font-size:72px;}#landing .tagline{font-size:20px;}}
 </style>
 </head>
 <body>
@@ -448,6 +390,8 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
   <div class="tagline">✨ Assista junto com amigos em tempo real ✨</div>
   <div class="panel">
     <h2>🚀 Começar</h2>
+    <!-- NOVO: aviso dentro do menu -->
+    <div class="room-notice" id="roomNotice"></div>
     <div class="lbl">👤 Seu apelido</div>
     <input type="text" id="inName" maxlength="16" placeholder="Ex: João" value="">
     <div class="lbl">🏠 Nome da sala</div>
@@ -697,8 +641,11 @@ const DONATE_CONFIG={
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024; // 3 GB
+// NOVO: percentual para começar a tocar durante o upload
+const READY_PERCENT = 0.08;
+let activeUpload = null; // { id, totalBytes, bytesUploaded, completed }
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
-let roomPassword=''; // SENHA: senha da sala
+let roomPassword='';
 let hosts=[];
 let founderId=null;
 let serverMultiHost=true;
@@ -709,6 +656,8 @@ let intentionalDisconnect=false;
 let firstRoomJoin=true;
 let lastServerMediaState=null;
 let syncInProgress=false;
+// NOVO: controla se já entramos na tela do app
+let appEntered = false;
 let mediaType=null,youtubePlayer=null,ytReady=false,ytPlayerReady=false,ytVideoId=null;
 let screenStream=null,isScreenSharing=false,screenOwner=null;
 let rtcPeers=new Map();
@@ -723,7 +672,7 @@ function getPipVideoElement(){
 }
 function postToYouTubePopup(){}
 function closeYouTubePopup(){}
-async function openYouTubeNativePiP(){ /* descontinuado, agora usa Document PiP */ }
+async function openYouTubeNativePiP(){}
 function updatePipButton(){
   const btn=$('pipBtn'),back=$('exitPipBtn');if(!btn)return;
   const v=getPipVideoElement();
@@ -737,9 +686,7 @@ function updatePipButton(){
   if(back)back.style.display=active?'flex':'none';
 }
 async function exitPictureInPicture(){
-  try{
-    if(document.pictureInPictureElement){await document.exitPictureInPicture();}
-  }catch(_){}
+  try{ if(document.pictureInPictureElement){await document.exitPictureInPicture();} }catch(_){}
   try{ if(docPipWindow) docPipWindow.close(); }catch(_){}
   try{window.postMessage({source:'partyblox',action:'exitNativeYouTubePiP'},location.origin);}catch(_){}
   window._partybloxNativeYoutubePip=false;
@@ -747,42 +694,25 @@ async function exitPictureInPicture(){
   updatePipButton();
 }
 async function togglePictureInPicture(){
-  if(mediaType==='youtube'){
-    return toggleDocumentPip();
-  }
+  if(mediaType==='youtube'){ return toggleDocumentPip(); }
   const v=getPipVideoElement();
   if(!v||!document.pictureInPictureEnabled||typeof v.requestPictureInPicture!=='function'){
     return toast('⚠️ PiP nativo não está disponível para esta mídia/navegador');
   }
   try{
-    if(document.pictureInPictureElement){
-      await document.exitPictureInPicture();
-      return;
-    }
+    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
     pipElement=v;
     await v.requestPictureInPicture();
-  }catch(e){
-    toast('❌ Não foi possível abrir a janela PiP');
-  }finally{
-    updatePipButton();
-  }
+  }catch(e){ toast('❌ Não foi possível abrir a janela PiP'); }
+  finally{ updatePipButton(); }
 }
 async function toggleDocumentPip(){
-  if(docPipWindow){
-    try{ docPipWindow.close(); }catch(_){}
-    docPipWindow = null;
-    updatePipButton();
-    return;
-  }
-  if(!('documentPictureInPicture' in window)){
-    return toast('❌ Seu navegador não suporta Document PiP. Atualize o Chrome/Edge.');
-  }
+  if(docPipWindow){ try{ docPipWindow.close(); }catch(_){} docPipWindow = null; updatePipButton(); return; }
+  if(!('documentPictureInPicture' in window)){ return toast('❌ Seu navegador não suporta Document PiP. Atualize o Chrome/Edge.'); }
   try{
     const pipWin = await documentPictureInPicture.requestWindow({ width: 720, height: 420 });
     docPipWindow = pipWin;
-    document.querySelectorAll('style').forEach(s=>{
-      try{ pipWin.document.head.appendChild(s.cloneNode(true)); }catch(_){}
-    });
+    document.querySelectorAll('style').forEach(s=>{ try{ pipWin.document.head.appendChild(s.cloneNode(true)); }catch(_){} });
     pipWin.document.body.style.cssText = 'margin:0;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;';
     const container = pipWin.document.createElement('div');
     container.style.cssText = 'width:100vw;height:100vh;background:#000;position:relative;overflow:hidden;';
@@ -799,11 +729,8 @@ async function toggleDocumentPip(){
     pipWin.addEventListener('pagehide', () => {
       try{
         if(overlay._origParent){
-          if(overlay._origNext && overlay._origNext.parentNode === overlay._origParent){
-            overlay._origParent.insertBefore(overlay, overlay._origNext);
-          }else{
-            overlay._origParent.appendChild(overlay);
-          }
+          if(overlay._origNext && overlay._origNext.parentNode === overlay._origParent){ overlay._origParent.insertBefore(overlay, overlay._origNext); }
+          else{ overlay._origParent.appendChild(overlay); }
         }
         overlay.style.cssText = '';
       }catch(e){ console.warn('Erro ao devolver overlay:', e); }
@@ -811,11 +738,7 @@ async function toggleDocumentPip(){
       updatePipButton();
     });
     updatePipButton();
-  }catch(e){
-    console.error('Document PiP falhou:', e);
-    docPipWindow = null;
-    toast('❌ Não foi possível abrir a janela PiP');
-  }
+  }catch(e){ console.error('Document PiP falhou:', e); docPipWindow = null; toast('❌ Não foi possível abrir a janela PiP'); }
 }
 document.addEventListener('enterpictureinpicture', () => {
   const v = getPipVideoElement();
@@ -824,9 +747,7 @@ document.addEventListener('enterpictureinpicture', () => {
 });
 document.addEventListener('leavepictureinpicture', () => {
   const v = getPipVideoElement();
-  if(v && v.dataset.wasPlaying === '1' && v.paused){
-    v.play().catch(()=>{});
-  }
+  if(v && v.dataset.wasPlaying === '1' && v.paused){ v.play().catch(()=>{}); }
   updatePipButton();
 });
 window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||e.data.source!=='partyblox-native-pip-status')return;if(e.data.event==='ready'){youtubeNativePipReady=true;updatePipButton();}if(e.data.event==='entered'){window._partybloxNativeYoutubePip=true;updatePipButton();}if(e.data.event==='left'){window._partybloxNativeYoutubePip=false;updatePipButton();}});
@@ -845,6 +766,14 @@ function restorePlaceholder(){
 function hidePlaceholder(){
   const p = $('placeholder'); if(!p) return;
   p.style.display = 'none';
+}
+// NOVO: mostra aviso dentro do menu
+function showRoomNotice(msg, isError=false){
+  const n = $('roomNotice'); if(!n) return;
+  n.textContent = msg;
+  n.className = 'room-notice show' + (isError ? ' error' : '');
+  clearTimeout(n._x);
+  n._x = setTimeout(()=>{ n.className = 'room-notice'; }, 6000);
 }
 let currentTheme='dark';
 function loadTheme(){const saved=localStorage.getItem('partyblox-theme');if(saved)setTheme(saved,true);}
@@ -910,17 +839,16 @@ function joinFromLink(){
   roomPassword=($('inPass').value||'').trim();
   enterApp(false);
 }
+// ALTERADO: não troca de tela. Só conecta e espera o servidor confirmar.
 function enterApp(asHost){
   intentionalDisconnect=false;
   firstRoomJoin=true;
+  appEntered = false;
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
   const chatBox = $('chatMsgs');
   if(chatBox) chatBox.innerHTML = '';
-  $('landing').classList.remove('active');
-  $('app').classList.add('active');
   roomId=getRoomId();
-  $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '');
   myPlayerId='p'+Date.now()+Math.random().toString(36).substr(2,6);
   window.myPlayerId=myPlayerId;
   connectRoom(asHost);
@@ -961,30 +889,37 @@ function connectRoom(creator){
       let m;try{m=JSON.parse(e.data)}catch(_){return}
       if(m.kind==='roomExists'||m.kind==='roomError'||m.kind==='joinRejected'){
         const msg=m.message||m.error||(m.kind==='roomExists'?'Essa sala já existe. Use ENTRAR para entrar nela.':'Não foi possível entrar na sala.');
+        // ALTERADO: não sai do menu — só mostra aviso no painel
+        showRoomNotice(msg, m.kind==='roomExists');
         toast('⚠️ '+msg);
         intentionalDisconnect=true;
         try{ if(ws){ ws.onclose=null; ws.close(1000,'roomRejected'); } }catch(_){}
         ws=null; wsReady=false;
         firstRoomJoin=true;
-        $('app').classList.remove('active');
-        $('landing').classList.add('active');
         if(m.roomId) $('inRoom').value=m.roomId;
         setTimeout(()=>{ try{ $('inPass').focus(); }catch(_){} }, 150);
         return;
       }
       if(m.kind==='wrongPassword'){
+        showRoomNotice('🔒 Senha incorreta para essa sala.', true);
         toast('🔒 Senha incorreta. Tente de novo.');
         intentionalDisconnect=true;
         try{ if(ws){ ws.onclose=null; ws.close(1000,'wrongPass'); } }catch(_){}
         ws=null; wsReady=false;
         firstRoomJoin=true;
-        $('app').classList.remove('active');
-        $('landing').classList.add('active');
         if(m.roomId) $('inRoom').value=m.roomId;
         try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
       if(m.kind==='roomState'){
+        // ALTERADO: só troca de tela quando o servidor confirma a entrada
+        if(!appEntered){
+          appEntered = true;
+          const n = $('roomNotice'); if(n) n.className='room-notice';
+          $('landing').classList.remove('active');
+          $('app').classList.add('active');
+          $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '');
+        }
         if(Array.isArray(m.hosts)){
           serverMultiHost=true;hosts=m.hosts;founderId=m.founder||null;isHost=hosts.includes(myPlayerId);
         }else{
@@ -1063,11 +998,8 @@ function updateHostPanel(){
     let html=`<div class="host-player-info"><div class="host-player-avatar">${escapeHtml(initial)}</div><div class="host-player-name">${escapeHtml(p.name)}${p.isSelf?'<small>(você)</small>':''}</div></div>`;
     if(isPlayerHost)html+=`<span class="host-badge">HOST</span>`;
     if(isHost && serverMultiHost){
-      if(!isPlayerHost){
-        html+=`<button class="host-give-btn" data-pid="${pid}" data-action="give">Dar Host</button>`;
-      }else if(!p.isSelf && pid!==founderId){
-        html+=`<button class="host-give-btn" data-pid="${pid}" data-action="remove" style="background:rgba(231,76,60,.15);border-color:#e74c3c;color:#ff7675;">Retirar Host</button>`;
-      }
+      if(!isPlayerHost){ html+=`<button class="host-give-btn" data-pid="${pid}" data-action="give">Dar Host</button>`; }
+      else if(!p.isSelf && pid!==founderId){ html+=`<button class="host-give-btn" data-pid="${pid}" data-action="remove" style="background:rgba(231,76,60,.15);border-color:#e74c3c;color:#ff7675;">Retirar Host</button>`; }
     }
     item.innerHTML=html;
     item.querySelectorAll('.host-give-btn').forEach(btn=>{
@@ -1381,18 +1313,8 @@ function onYouTubeIframeAPIReady(){ytReady=true;createYTPlayer();}
 function createYTPlayer(){
   if(!ytReady||youtubePlayer)return;
   youtubePlayer=new YT.Player('youtubePlayer',{
-    width:'100%',
-    height:'100%',
-    videoId:'',
-    playerVars:{
-      autoplay:0,
-      controls:0,
-      rel:0,
-      playsinline:1,
-      enablejsapi:1,
-      origin:location.origin,
-      widget_referrer: location.origin
-    },
+    width:'100%', height:'100%', videoId:'',
+    playerVars:{ autoplay:0, controls:0, rel:0, playsinline:1, enablejsapi:1, origin:location.origin, widget_referrer: location.origin },
     events:{
       onReady:()=>{
         ytPlayerReady=true;
@@ -1409,10 +1331,7 @@ function fixYouTubeIframe(){
   const container = $('youtubePlayer');
   if(!container) return;
   const iframe = container.querySelector('iframe');
-  if(!iframe){
-    setTimeout(fixYouTubeIframe, 300);
-    return;
-  }
+  if(!iframe){ setTimeout(fixYouTubeIframe, 300); return; }
   try{
     iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
     iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
@@ -1469,9 +1388,7 @@ function showYTInput(){
   if(!isHost)return toast('👑 Só hosts podem usar YouTube');
   const panel=$('ytInlineInput');
   panel.classList.toggle('show');
-  if(panel.classList.contains('show')){
-    setTimeout(()=>$('ytUrlInput').focus(),100);
-  }
+  if(panel.classList.contains('show')){ setTimeout(()=>$('ytUrlInput').focus(),100); }
 }
 function loadFromInlineInput(){
   const url=$('ytUrlInput').value.trim();
@@ -1491,13 +1408,8 @@ function togglePlayPause(){
   if(mediaType==='youtube'){
     const playing=youtubePlayer.getPlayerState()===YT.PlayerState.PLAYING;
     ytSuppressStateSend=false;
-    if(playing){
-      youtubePlayer.pauseVideo();
-      $('playBtn').textContent='▶️';
-    }else{
-      youtubePlayer.playVideo();
-      $('playBtn').textContent='⏸️';
-    }
+    if(playing){ youtubePlayer.pauseVideo(); $('playBtn').textContent='▶️'; }
+    else{ youtubePlayer.playVideo(); $('playBtn').textContent='⏸️'; }
   }else if(mediaType==='video'){
     const v=$('localVideo');if(v.paused){v.play();$('playBtn').textContent='⏸️';}else{v.pause();$('playBtn').textContent='▶️';}sendLocalState();
   }else if(mediaType==='audio'){
@@ -1580,27 +1492,110 @@ function sendLocalState(){
   if(!el)return;
   const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state});
 }
+// ALTERADO: upload com stream progressivo via XHR
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
   if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
-  try{
-    setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${t.startsWith('image/')?'imagem':t.startsWith('video/')?'vídeo':'áudio'} (${(f.size/1024/1024/1024).toFixed(2)} GB).`);
-    const fd=new FormData();fd.append('media',f,f.name);
+
+  // ID único para o nome do arquivo (cliente sabe a URL antes de terminar)
+  const fileId = 'u' + Date.now() + Math.random().toString(36).slice(2,8);
+  const safeName = (f.name||'media').replace(/[^\w.\-]/g,'_').slice(-60);
+  const expectedUrl = BACKEND_URL + '/uploads/' + fileId + '-' + safeName;
+  const ty = t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
+
+  activeUpload = { id: fileId, totalBytes: f.size, bytesUploaded: 0, completed: false };
+  let readySent = false;
+
+  setUploadLoading(true, 'Enviando mídia...', 'Já vai começar a tocar — aguarde só mais um pouco.');
+
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', BACKEND_URL + '/upload?fileId=' + encodeURIComponent(fileId));
+    xhr.upload.onprogress = (e) => {
+      if(!e.lengthComputable) return;
+      activeUpload.bytesUploaded = e.loaded;
+      const pct = e.loaded / e.total;
+      if(!readySent && pct >= READY_PERCENT){
+        readySent = true;
+        // Começa a tocar já com o que tem
+        const state = {type:ty, url:expectedUrl, name:f.name, mime:t, updatedAt:Date.now()};
+        lastServerMediaState = JSON.parse(JSON.stringify(state));
+        applyMediaState(state);
+        wsSend({kind:'media', state:state});
+        setUploadLoading(false);
+        toast('▶️ Já está tocando — enviando o restante em segundo plano...');
+      }
+    };
+    xhr.onload = () => {
+      activeUpload.completed = true;
+      let data = null;
+      try { data = JSON.parse(xhr.responseText || '{}'); } catch(_){}
+      const ok = xhr.status >= 200 && xhr.status < 300;
+      if(!ok && !readySent){
+        toast('❌ ' + (data && data.error || 'Upload falhou'));
+      } else if(!readySent && data && data.url){
+        // Arquivo muito pequeno, não chegou em 8%
+        const state = {type:ty, url:data.url, name:f.name, mime:t, updatedAt:Date.now()};
+        lastServerMediaState = JSON.parse(JSON.stringify(state));
+        applyMediaState(state);
+        wsSend({kind:'media', state:state});
+      }
+      // Se o player estava tocando o parcial, recarrega pra pegar o tamanho total
+      if(readySent && mediaType === 'video'){
+        const v = $('localVideo');
+        try{
+          const t0 = v.currentTime;
+          const wasPaused = v.paused;
+          v.load();
+          v.addEventListener('loadedmetadata', () => {
+            try { v.currentTime = t0; } catch(_){}
+            if(!wasPaused) v.play().catch(()=>{});
+          }, { once: true });
+        }catch(_){}
+      }
+      setUploadLoading(false);
+      $('fileInput').value='';
+      activeUpload = null;
+      resolve();
+    };
+    xhr.onerror = () => {
+      activeUpload.completed = true;
+      if(!readySent) toast('❌ Falha no upload');
+      else toast('⚠️ Upload interrompido, mas o que já foi enviado está tocando.');
+      setUploadLoading(false);
+      $('fileInput').value='';
+      activeUpload = null;
+      resolve();
+    };
+    const fd = new FormData();
+    fd.append('media', f, f.name);
     fd.append('roomId', roomId);
-    const res=await fetch(BACKEND_URL+'/upload',{method:'POST',body:fd,cache:'no-store'});
-    const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
-    if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
-    else{await res.text();throw new Error('Backend respondeu HTML');}
-    if(!res.ok||!data||!data.url)throw new Error((data&&data.error)||'Upload falhou');
-    const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-    const state={type:ty,url:data.url,name:f.name,mime:t,updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));
-    applyMediaState(state);wsSend({kind:'media',state:state});$('fileInput').value='';
-  }catch(e){toast('❌ '+e.message);$('fileInput').value='';}
-  finally{setUploadLoading(false);}
+    xhr.send(fd);
+  });
 }
+// NOVO: quando o <video> disparar `ended` mas o upload ainda está em progresso,
+// recarrega pra pegar o novo tamanho do arquivo (stream progressivo)
+$('localVideo').addEventListener('ended', () => {
+  if(activeUpload && !activeUpload.completed && mediaType === 'video'){
+    const v = $('localVideo');
+    const t0 = v.currentTime;
+    const wasPaused = v.paused;
+    setTimeout(() => {
+      if(activeUpload && !activeUpload.completed){
+        try{
+          v.load();
+          v.addEventListener('loadedmetadata', () => {
+            try { v.currentTime = t0; } catch(_){}
+            if(!wasPaused) v.play().catch(()=>{});
+          }, { once: true });
+        }catch(_){}
+      }
+    }, 800);
+  }
+});
 function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
 function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
 function closeAllRTCPeers(){[...rtcPeers.keys()].forEach(closeRTCPeer);}
@@ -1665,10 +1660,7 @@ function clearMedia(){
 function applyMediaState(state){
   if(!state)return;
   if(state.type!=='clear')lastServerMediaState=JSON.parse(JSON.stringify(state));
-  if(state.type==='clear'){
-    resetPlayerUI();
-    return;
-  }
+  if(state.type==='clear'){ resetPlayerUI(); return; }
   ytSuppressStateSend=true;
   if(state.type==='youtube'){
     $('localVideo').style.display='none';
@@ -1711,11 +1703,7 @@ function applyMediaState(state){
     v.dataset.name=state.name||'';v.muted=false;v.style.display='block';
     hidePlaceholder();
     mediaType='video';updateMediaBadge('🎬','Vídeo');showPlayerCtrl();
-    const seek=()=>{
-      if(typeof state.time==='number'&&isFinite(state.time)){
-        try{ v.currentTime=state.time; }catch(_){}
-      }
-    };
+    const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } };
     if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});
     if(state.paused===false||state.paused===undefined)v.play().then(hideMediaInteraction).catch(()=>showMediaInteraction('Clique para reproduzir com som'));
     else v.pause();
