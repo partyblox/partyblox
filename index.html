@@ -765,7 +765,7 @@ function setTheme(t,silent=false){
 }
 function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
 
-/* ===== AUTOPLAY COM SOM (sem overlay) ===== */
+/* ===== AUTOPLAY ===== */
 function showMediaInteraction(){ /* overlay removido */ }
 function hideMediaInteraction(){ mediaNeedsInteraction=false; }
 async function safePlay(el){
@@ -779,6 +779,7 @@ function resumeCurrentMedia(){
     else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=false; a.volume=1; safePlay(a); }
     else if(mediaType==='youtube'&&youtubePlayer){
       youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo();
+      postToYouTubePopup('unmute'); postToYouTubePopup('volume',{volume:100}); postToYouTubePopup('play');
     }
   }catch(_){}
 }
@@ -1442,13 +1443,13 @@ function seekTo(e){
   else if(mediaType==='audio'){$('localAudio').currentTime=$('localAudio').duration*p;sendLocalState();}
 }
 function toggleMute(){
-  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';}}
+  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();postToYouTubePopup('unmute');$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();postToYouTubePopup('mute');$('muteBtn').textContent='🔇';}}
   else if(mediaType==='video'){const v=$('localVideo');v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇':'🔊';}
   else if(mediaType==='audio'){const a=$('localAudio');a.muted=!a.muted;$('muteBtn').textContent=a.muted?'🔇':'🔊';}
 }
 function setVolume(v){
   const vol=v/100;
-  if(mediaType==='youtube'){youtubePlayer.setVolume(v);}
+  if(mediaType==='youtube'){youtubePlayer.setVolume(v);postToYouTubePopup('volume',{volume:v});}
   else if(mediaType==='video')$('localVideo').volume=vol;
   else if(mediaType==='audio')$('localAudio').volume=vol;
   $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
