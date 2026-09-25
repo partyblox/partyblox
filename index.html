@@ -591,7 +591,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 <script>
-  window.PARTYBLOX_WS_URL = "https://big-penn-vocal-stationery.trycloudflare.com";
+  window.PARTYBLOX_WS_URL = "https://amino-vegetation-nominations-channels.trycloudflare.com";
 </script>
 <script>
 const $=id=>document.getElementById(id);
@@ -636,6 +636,7 @@ let reconnectAttempts=0;
 let intentionalDisconnect=true;
 let firstRoomJoin=true;
 let lastServerMediaState=null;
+let mediaHeartbeatTimer=null;
 let syncInProgress=false;
 let appEntered = false;
 let mediaType=null,youtubePlayer=null,ytReady=false,ytPlayerReady=false,ytVideoId=null;
@@ -821,6 +822,20 @@ function wsUrl(){
   return 'wss://partyblox.onrender.com';
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
+function startMediaHeartbeat(){
+  if(mediaHeartbeatTimer)clearInterval(mediaHeartbeatTimer);
+  mediaHeartbeatTimer=setInterval(()=>{
+    if(!isHost||!wsReady||intentionalDisconnect)return;
+    const state=getCurrentMediaState();
+    if(!state)return;
+    lastServerMediaState=JSON.parse(JSON.stringify(state));
+    wsSend({kind:'mediaHeartbeat',state:state});
+  },1500);
+}
+function stopMediaHeartbeat(){
+  if(mediaHeartbeatTimer){clearInterval(mediaHeartbeatTimer);mediaHeartbeatTimer=null;}
+}
+
 function createRoom(){
   const name=$('inName').value.trim();
   const room=$('inRoom').value.trim();
@@ -927,9 +942,15 @@ function connectRoom(creator){
         playerCount=Number(m.playerCount||1);$('vcNum').textContent=playerCount;
         if(m.players)connectedPlayers=m.players;
         updateHostUI();updateHostPanel();refreshHostChatBadges();
+        if(isHost)startMediaHeartbeat();else stopMediaHeartbeat();
         if(m.state){screenOwner=m.state.screenOwner||null;if(m.state.media){lastServerMediaState=JSON.parse(JSON.stringify(m.state.media));applyMediaState(m.state.media);}}
       }else if(m.kind==='hostsChanged'){
-        if(Array.isArray(m.hosts)){hosts=m.hosts;founderId=m.founder||founderId;isHost=hosts.includes(myPlayerId);updateHostUI();updateHostPanel();refreshHostChatBadges();}
+        if(Array.isArray(m.hosts)){
+          const wasHost=isHost;
+          hosts=m.hosts;founderId=m.founder||founderId;isHost=hosts.includes(myPlayerId);
+          updateHostUI();updateHostPanel();refreshHostChatBadges();
+          if(isHost)startMediaHeartbeat();else if(wasHost)stopMediaHeartbeat();
+        }
       }else if(m.kind==='hostChanged'){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;}
         else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
@@ -939,6 +960,10 @@ function connectRoom(creator){
         if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null;
         const state=m.state||m.media;
         if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));applyMediaState(state);}
+      }else if(m.kind==='mediaHeartbeat'){
+        // Heartbeat is persisted on the server but intentionally not broadcast,
+        // so a temporary connection hiccup does not make everyone restart the player.
+        if(m.state){lastServerMediaState=JSON.parse(JSON.stringify(m.state));}
       }else if(m.kind==='syncRequest'){
         if(isHost){
           const state=getCurrentMediaState();
@@ -970,6 +995,7 @@ function connectRoom(creator){
     socket.onclose=e=>{
       if(ws!==socket)return;
       wsReady=false;
+      stopMediaHeartbeat();
       console.warn('[WS] fechado',e.code,e.reason);
       if(!intentionalDisconnect)scheduleReconnect();
     };
@@ -1044,7 +1070,16 @@ function copyRoomLink(){
   const url=new URL(location.href);url.searchParams.set('room',roomId);
   navigator.clipboard.writeText(url.toString()).then(()=>toast('🔗 Link copiado')).catch(()=>toast('❌ Falha ao copiar'));
 }
-function leaveRoom(){if(confirm('Sair da sala?')){intentionalDisconnect=true;clearTimeout(reconnectTimer);reconnectTimer=null;try{if(ws)ws.close(1000,'leave');}catch(_){}location.reload();}}
+function leaveRoom(){
+  if(confirm('Sair da sala?')){
+    intentionalDisconnect=true;
+    stopMediaHeartbeat();
+    clearTimeout(reconnectTimer);reconnectTimer=null;
+    try{if(ws&&ws.readyState===WebSocket.OPEN)wsSend({kind:'leave',reason:'user'});}catch(_){}
+    try{if(ws)ws.close(1000,'leave');}catch(_){}
+    location.reload();
+  }
+}
 let currentTab='chat';
 function switchTab(t){
   currentTab=t;
