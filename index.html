@@ -625,8 +625,6 @@ const DONATE_CONFIG={
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024;
-const READY_PERCENT = 0.08;
-let activeUpload = null;
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let roomPassword='';
 let hosts=[];
@@ -767,24 +765,20 @@ function setTheme(t,silent=false){
 }
 function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
 
-/* ===== AUTOPLAY ===== */
+/* ===== AUTOPLAY COM SOM (sem overlay) ===== */
 function showMediaInteraction(){ /* overlay removido */ }
 function hideMediaInteraction(){ mediaNeedsInteraction=false; }
-
-// Autoplay robusto: tenta com som; se o navegador bloquear, toca mudo e desmuta em seguida.
 async function safePlay(el){
   if(!el) return;
   try { el.muted=false; el.volume=1; await el.play(); return; } catch(_){}
   try { el.muted=true; await el.play(); el.muted=false; el.volume=1; } catch(_){}
 }
-
 function resumeCurrentMedia(){
   try{
     if(mediaType==='video'){ const v=$('localVideo'); v.muted=false; v.volume=1; safePlay(v); }
     else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=false; a.volume=1; safePlay(a); }
     else if(mediaType==='youtube'&&youtubePlayer){
       youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo();
-      postToYouTubePopup('unmute'); postToYouTubePopup('volume',{volume:100}); postToYouTubePopup('play');
     }
   }catch(_){}
 }
@@ -830,18 +824,12 @@ function createRoom(){
   const name=$('inName').value.trim();
   const room=$('inRoom').value.trim();
   const pass=($('inPass').value||'').trim();
-
   showRoomNotice('',false);
-
   if(!name){ showRoomNotice('⚠️ Digite seu apelido antes de criar a sala.',true); $('inName').focus(); return; }
   if(!room){ showRoomNotice('⚠️ Digite o nome da sala antes de criar.',true); $('inRoom').focus(); return; }
   if(name.length<2){ showRoomNotice('⚠️ Seu apelido precisa ter pelo menos 2 caracteres.',true); $('inName').focus(); return; }
   if(room.length<2){ showRoomNotice('⚠️ O nome da sala precisa ter pelo menos 2 caracteres.',true); $('inRoom').focus(); return; }
-
-  myName=name;
-  roomName=room;
-  roomPassword=pass;
-
+  myName=name; roomName=room; roomPassword=pass;
   enterApp(true);
 }
 function joinFromLink(){
@@ -1454,13 +1442,13 @@ function seekTo(e){
   else if(mediaType==='audio'){$('localAudio').currentTime=$('localAudio').duration*p;sendLocalState();}
 }
 function toggleMute(){
-  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();postToYouTubePopup('unmute');$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();postToYouTubePopup('mute');$('muteBtn').textContent='🔇';}}
+  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';}}
   else if(mediaType==='video'){const v=$('localVideo');v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇':'🔊';}
   else if(mediaType==='audio'){const a=$('localAudio');a.muted=!a.muted;$('muteBtn').textContent=a.muted?'🔇':'🔊';}
 }
 function setVolume(v){
   const vol=v/100;
-  if(mediaType==='youtube'){youtubePlayer.setVolume(v);postToYouTubePopup('volume',{volume:v});}
+  if(mediaType==='youtube'){youtubePlayer.setVolume(v);}
   else if(mediaType==='video')$('localVideo').volume=vol;
   else if(mediaType==='audio')$('localAudio').volume=vol;
   $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
@@ -1502,6 +1490,8 @@ function sendLocalState(){
   if(!el)return;
   const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state});
 }
+
+/* ===== UPLOAD: SOBE 100% E DEPOIS AVISA TODO MUNDO ===== */
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
@@ -1509,72 +1499,39 @@ async function handleFileUpload(){
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
   if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
 
-  // === NOME DO ARQUIVO IGUAL AO SERVIDOR: fileId + extensão ===
-  const fileId = 'u' + Date.now() + Math.random().toString(36).slice(2,8);
-  const extMatch = String(f.name||'').match(/\.[A-Za-z0-9]+$/);
-  const ext = extMatch ? extMatch[0].toLowerCase() : '';
-  const expectedUrl = BACKEND_URL + '/uploads/' + fileId + ext;
   const ty = t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-
-  activeUpload = { id: fileId, totalBytes: f.size, bytesUploaded: 0, completed: false };
-  let readySent = false;
-
-  setUploadLoading(true, 'Enviando mídia...', 'Já vai começar a tocar — aguarde só mais um pouco.');
+  setUploadLoading(true, 'Enviando mídia...', '0% — só começa a tocar quando o upload terminar.');
 
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', BACKEND_URL + '/upload?fileId=' + encodeURIComponent(fileId));
+    xhr.open('POST', BACKEND_URL + '/upload');
     xhr.upload.onprogress = (e) => {
       if(!e.lengthComputable) return;
-      activeUpload.bytesUploaded = e.loaded;
-      const pct = e.loaded / e.total;
-      if(!readySent && pct >= READY_PERCENT){
-        readySent = true;
-        const state = {type:ty, url:expectedUrl, name:f.name, mime:t, updatedAt:Date.now()};
-        lastServerMediaState = JSON.parse(JSON.stringify(state));
-        applyMediaState(state);
-        wsSend({kind:'media', state:state});
-        setUploadLoading(false);
-        toast('▶️ Já está tocando — enviando o restante em segundo plano...');
-      }
+      const pct = Math.round((e.loaded / e.total) * 100);
+      setUploadLoading(true, 'Enviando mídia...', pct + '% — não feche esta página.');
     };
     xhr.onload = () => {
-      activeUpload.completed = true;
       let data = null;
       try { data = JSON.parse(xhr.responseText || '{}'); } catch(_){}
       const ok = xhr.status >= 200 && xhr.status < 300;
-      if(!ok && !readySent){
-        toast('❌ ' + (data && data.error || 'Upload falhou'));
-      } else if(!readySent && data && data.url){
-        const state = {type:ty, url:data.url, name:f.name, mime:t, updatedAt:Date.now()};
+      if(!ok || !data || !data.url){
+        toast('❌ ' + ((data && data.error) || 'Upload falhou'));
+      } else {
+        // Só agora o vídeo começa a tocar em todo mundo — o arquivo está 100% no servidor.
+        const state = { type: ty, url: data.url, name: f.name, mime: t, paused: false, time: 0, updatedAt: Date.now() };
         lastServerMediaState = JSON.parse(JSON.stringify(state));
         applyMediaState(state);
-        wsSend({kind:'media', state:state});
-      }
-      if(readySent && mediaType === 'video'){
-        const v = $('localVideo');
-        try{
-          const t0 = v.currentTime;
-          const wasPaused = v.paused;
-          v.load();
-          v.addEventListener('loadedmetadata', () => {
-            try { v.currentTime = t0; } catch(_){}
-            if(!wasPaused) v.play().catch(()=>{});
-          }, { once: true });
-        }catch(_){}
+        wsSend({ kind: 'media', state });
+        toast('▶️ Vídeo carregado! Já está tocando pra todo mundo.');
       }
       setUploadLoading(false);
-      $('fileInput').value='';
-      activeUpload = null;
+      $('fileInput').value = '';
       resolve();
     };
     xhr.onerror = () => {
-      activeUpload.completed = true;
-      if(!readySent) toast('❌ Falha no upload');
-      else toast('⚠️ Upload interrompido, mas o que já foi enviado está tocando.');
+      toast('❌ Falha no upload');
       setUploadLoading(false);
-      $('fileInput').value='';
-      activeUpload = null;
+      $('fileInput').value = '';
       resolve();
     };
     const fd = new FormData();
@@ -1583,24 +1540,7 @@ async function handleFileUpload(){
     xhr.send(fd);
   });
 }
-$('localVideo').addEventListener('ended', () => {
-  if(activeUpload && !activeUpload.completed && mediaType === 'video'){
-    const v = $('localVideo');
-    const t0 = v.currentTime;
-    const wasPaused = v.paused;
-    setTimeout(() => {
-      if(activeUpload && !activeUpload.completed){
-        try{
-          v.load();
-          v.addEventListener('loadedmetadata', () => {
-            try { v.currentTime = t0; } catch(_){}
-            if(!wasPaused) v.play().catch(()=>{});
-          }, { once: true });
-        }catch(_){}
-      }
-    }, 800);
-  }
-});
+
 function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
 function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
 function closeAllRTCPeers(){[...rtcPeers.keys()].forEach(closeRTCPeer);}
