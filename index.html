@@ -1527,8 +1527,9 @@ async function handleFileUpload(){
   if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
 
   const fileId = 'u' + Date.now() + Math.random().toString(36).slice(2,8);
-  const safeName = (f.name||'media').replace(/[^\w.\-]/g,'_').slice(-60);
-  const expectedUrl = BACKEND_URL + '/uploads/' + fileId + '-' + safeName;
+const baseName = String(f.name||'media').split(/[\\/]/).pop() || 'media';
+const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, '');
+const expectedUrl = BACKEND_URL + '/uploads/' + fileId + '-' + safeName;
   const ty = t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
 
   activeUpload = { id: fileId, totalBytes: f.size, bytesUploaded: 0, completed: false };
