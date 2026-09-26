@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>PartyBlox</title>
+<!-- PartyBlox: index raiz compatível com /, ?room= e /room/NOME -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <style>
 :root{
@@ -848,11 +849,30 @@ function createRoom(){
   myName=name; roomName=room; roomPassword=pass;
   enterApp(true);
 }
-function joinFromLink(){
+function getRoomFromCurrentUrl(){
   const p=new URLSearchParams(location.search);
+  let room=p.get('room')||'';
+
+  // Também aceita links bonitos:
+  // /room/NOME-DA-SALA
+  // /watch/NOME-DA-SALA
+  if(!room){
+    const parts=location.pathname.split('/').filter(Boolean);
+    if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){
+      try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); }
+    }
+  }
+
+  // Limpa caracteres que não devem entrar no ID da sala.
+  return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30);
+}
+
+function joinFromLink(){
+  const roomFromUrl=getRoomFromCurrentUrl();
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
-  roomName=p.get('room')||$('inRoom').value.trim()||'Sala-Publica';
+  roomName=roomFromUrl||$('inRoom').value.trim()||'Sala-Publica';
   roomPassword=($('inPass').value||'').trim();
+  $('inRoom').value=roomName;
   enterApp(false);
 }
 function enterApp(asHost){
@@ -1760,7 +1780,12 @@ function applyMediaState(state){
   updatePipButton();
   setTimeout(()=>{ytSuppressStateSend=false;},2000);
 }
-if(new URLSearchParams(location.search).get('room'))$('inRoom').value=new URLSearchParams(location.search).get('room');
+// Inicialização compatível com a raiz "/" e também com /room/NOME ou /watch/NOME.
+try{
+  const initialRoom=getRoomFromCurrentUrl();
+  if(initialRoom) $('inRoom').value=initialRoom;
+}catch(_){}
+
 $('toggleVideoBtn').addEventListener('click',toggleVideoSide);
 $('pipBtn').addEventListener('click',togglePictureInPicture);$('exitPipBtn').addEventListener('click',exitPictureInPicture);
 if(document.pictureInPictureEnabled){
