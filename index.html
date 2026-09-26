@@ -1548,54 +1548,198 @@ function sendLocalState(){
 }
 
 /* ===== UPLOAD: SOBE 100% E DEPOIS AVISA TODO MUNDO ===== */
+/* ===== UPLOAD GRANDE VIA CHUNKS =====
+   Evita o limite de ~100 MB por requisição do Cloudflare Tunnel.
+   Arquivos pequenos continuam usando /upload normalmente.
+*/
+const CHUNK_UPLOAD_SIZE = 20 * 1024 * 1024; // 20 MB por requisição
+const LARGE_UPLOAD_THRESHOLD = 80 * 1024 * 1024;
+
+async function uploadLargeFileInChunks(file, roomId, onProgress){
+  const total = file.size;
+  const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
+    Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
+  const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
+
+  for(let index=0; index<totalChunks; index++){
+    const start = index * CHUNK_UPLOAD_SIZE;
+    const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
+    const blob = file.slice(start, end);
+
+    let response;
+    let lastError;
+    for(let attempt=1; attempt<=3; attempt++){
+      try{
+        response = await fetch(BACKEND_URL + '/upload-chunk', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/octet-stream',
+            'X-Upload-Id':uploadId,
+            'X-Chunk-Index':String(index),
+            'X-Total-Chunks':String(totalChunks),
+            'X-Original-Name':encodeURIComponent(file.name),
+            'X-Mime-Type':file.type || 'application/octet-stream',
+            'X-Room-Id':String(roomId || '').slice(0,40)
+          },
+          body:blob
+        });
+        if(response.ok) break;
+        const txt = await response.text().catch(()=> '');
+        throw new Error(txt || ('HTTP ' + response.status));
+      }catch(e){
+        lastError=e;
+        if(attempt<3) await new Promise(r=>setTimeout(r, 1000*attempt));
+      }
+    }
+    if(!response || !response.ok){
+      throw lastError || new Error('Falha ao enviar o bloco ' + (index+1));
+    }
+
+    const pct = Math.min(99, Math.round((end / total) * 100));
+    if(onProgress) onProgress(pct, index+1, totalChunks);
+  }
+
+  const complete = await fetch(BACKEND_URL + '/upload-complete', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      uploadId,
+      roomId:String(roomId || '').slice(0,40),
+      name:file.name,
+      type:file.type || 'application/octet-stream',
+      size:file.size
+    })
+  });
+
+  const data = await complete.json().catch(()=>({}));
+  if(!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
+  if(onProgress) onProgress(100,totalChunks,totalChunks);
+  return data;
+}
+
+async function uploadSmallFileNormal(file, roomId, onProgress){
+  const form = new FormData();
+  form.append('media', file);
+  form.append('roomId', roomId || '');
+
+  const xhr = new XMLHttpRequest();
+  const promise = new Promise((resolve,reject)=>{
+    xhr.open('POST', BACKEND_URL + '/upload', true);
+    xhr.upload.onprogress = e=>{
+      if(e.lengthComputable && onProgress)
+        onProgress(Math.round((e.loaded/e.total)*100),1,1);
+    };
+    xhr.onload = ()=>{
+      let data={};
+      try{data=JSON.parse(xhr.responseText||'{}')}catch(_){}
+      if(xhr.status>=200 && xhr.status<300 && data.url) resolve(data);
+      else reject(new Error(data.error || ('Falha no upload (HTTP '+xhr.status+').')));
+    };
+    xhr.onerror=()=>reject(new Error('Falha de rede durante o upload.'));
+    xhr.ontimeout=()=>reject(new Error('Tempo esgotado durante o upload.'));
+    xhr.timeout=0;
+    xhr.send(form);
+  });
+  return promise;
+}
+
 async function handleFileUpload(){
   if(!isHost)return;
-  const f=$('fileInput').files&&$('fileInput').files[0];if(!f)return;
+  const f=$('fileInput').files&&$('fileInput').files[0];
+  if(!f)return;
+
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
-  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
+  if(f.size>MAX_UPLOAD_BYTES){
+    toast('❌ Máx 3 GB');
+    $('fileInput').value='';
+    return;
+  }
 
-  const ty = t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-  setUploadLoading(true, 'Enviando mídia...', '0% — só começa a tocar quando o upload terminar.');
+  const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
+  const large=f.size>LARGE_UPLOAD_THRESHOLD;
 
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', BACKEND_URL + '/upload');
-    xhr.upload.onprogress = (e) => {
-      if(!e.lengthComputable) return;
-      const pct = Math.round((e.loaded / e.total) * 100);
-      setUploadLoading(true, 'Enviando mídia...', pct + '% — não feche esta página.');
+  setUploadLoading(
+    true,
+    large ? 'Enviando mídia grande...' : 'Enviando mídia...',
+    large ? '0% — enviando em partes para evitar falha no Cloudflare.' : '0% — só começa a tocar quando o upload terminar.'
+  );
+
+  try{
+    const onProgress=(pct)=>{
+      $('uploadSub').textContent =
+        `${pct}% — ${large ? 'enviando em partes' : 'enviando'}, aguarde...`;
     };
-    xhr.onload = () => {
-      let data = null;
-      try { data = JSON.parse(xhr.responseText || '{}'); } catch(_){}
-      const ok = xhr.status >= 200 && xhr.status < 300;
-      if(!ok || !data || !data.url){
-        toast('❌ ' + ((data && data.error) || 'Upload falhou'));
-      } else {
-        // Só agora o vídeo começa a tocar em todo mundo — o arquivo está 100% no servidor.
-        const state = { type: ty, url: data.url, name: f.name, mime: t, paused: false, time: 0, updatedAt: Date.now() };
-        lastServerMediaState = JSON.parse(JSON.stringify(state));
-        applyMediaState(state);
-        wsSend({ kind: 'media', state });
-        toast('▶️ Vídeo carregado! Já está tocando pra todo mundo.');
+
+    const data=large
+      ? await uploadLargeFileInChunks(f,roomId,onProgress)
+      : await uploadSmallFileNormal(f,roomId,onProgress);
+
+    setUploadLoading(false);
+
+    if(data && data.url){
+      if(ty==='video'){
+        mediaType='video';
+        const v=$('localVideo');
+        v.src=data.url;
+        v.dataset.name=data.name||f.name;
+        v.style.display='block';
+        $('placeholder').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        updateMediaBadge('🎬','Vídeo');
+        v.currentTime=0;
+        try{await v.play()}catch(_){}
+        sendLocalState();
+      }else if(ty==='audio'){
+        mediaType='audio';
+        const a=$('localAudio');
+        a.src=data.url;
+        a.dataset.name=data.name||f.name;
+        a.style.display='none';
+        $('placeholder').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        updateMediaBadge('🎵','Áudio');
+        a.currentTime=0;
+        try{await a.play()}catch(_){}
+        sendLocalState();
+      }else{
+        mediaType='image';
+        lastServerMediaState={
+          type:'image',
+          url:data.url,
+          name:data.name||f.name,
+          updatedAt:Date.now()
+        };
+        $('localVideo').style.display='none';
+        $('screenVideo').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        $('placeholder').style.display='none';
+        const holder=$('imageHolder');
+        holder.style.display='block';
+        const ctx=holder.getContext('2d');
+        const img=new Image();
+        img.onload=()=>{
+          holder.width=img.naturalWidth||1920;
+          holder.height=img.naturalHeight||1080;
+          ctx.clearRect(0,0,holder.width,holder.height);
+          ctx.drawImage(img,0,0);
+        };
+        img.src=data.url;
+        updateMediaBadge('🖼️','Imagem');
+        wsSend({kind:'media',state:lastServerMediaState});
       }
-      setUploadLoading(false);
-      $('fileInput').value = '';
-      resolve();
-    };
-    xhr.onerror = () => {
-      toast('❌ Falha no upload');
-      setUploadLoading(false);
-      $('fileInput').value = '';
-      resolve();
-    };
-    const fd = new FormData();
-    fd.append('media', f, f.name);
-    fd.append('roomId', roomId);
-    xhr.send(fd);
-  });
+
+      toast('✅ Upload concluído!');
+    }
+  }catch(err){
+    setUploadLoading(false);
+    console.error('[upload]',err);
+    toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
+  }finally{
+    $('fileInput').value='';
+  }
 }
+
 
 function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
 function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
