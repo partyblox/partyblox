@@ -1569,6 +1569,8 @@ async function uploadLargeFileInChunks(file, roomId, onProgress){
     let response;
     let lastError;
     for(let attempt=1; attempt<=3; attempt++){
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s por chunk
       try{
         response = await fetch(BACKEND_URL + '/upload-chunk', {
           method:'POST',
@@ -1581,18 +1583,30 @@ async function uploadLargeFileInChunks(file, roomId, onProgress){
             'X-Mime-Type':file.type || 'application/octet-stream',
             'X-Room-Id':String(roomId || '').slice(0,40)
           },
-          body:blob
+          body:blob,
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'omit'
         });
+        clearTimeout(timeoutId);
         if(response.ok) break;
         const txt = await response.text().catch(()=> '');
-        throw new Error(txt || ('HTTP ' + response.status));
+        throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
       }catch(e){
-        lastError=e;
-        if(attempt<3) await new Promise(r=>setTimeout(r, 1000*attempt));
+        clearTimeout(timeoutId);
+        lastError = e;
+        console.warn(`[chunk ${index+1}/${totalChunks}] tentativa ${attempt} falhou:`, e.message);
+        if(attempt<3) await new Promise(r=>setTimeout(r, 1200*attempt));
       }
     }
+
     if(!response || !response.ok){
-      throw lastError || new Error('Falha ao enviar o bloco ' + (index+1));
+      // Fallback: tenta upload normal (sem chunks) se for pequeno o suficiente
+      if(file.size <= 80 * 1024 * 1024){
+        console.warn('[upload] chunks falharam, tentando upload normal...');
+        return uploadSmallFileNormal(file, roomId, onProgress);
+      }
+      throw lastError || new Error('Falha ao enviar o bloco ' + (index+1) + '/' + totalChunks);
     }
 
     const pct = Math.min(99, Math.round((end / total) * 100));
@@ -1608,7 +1622,9 @@ async function uploadLargeFileInChunks(file, roomId, onProgress){
       name:file.name,
       type:file.type || 'application/octet-stream',
       size:file.size
-    })
+    }),
+    mode: 'cors',
+    credentials: 'omit'
   });
 
   const data = await complete.json().catch(()=>({}));
