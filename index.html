@@ -596,7 +596,9 @@ fetch('tunnel.json?t=' + Date.now())
   .then(r => r.json())
   .then(data => {
     window.PARTYBLOX_WS_URL = data.url;
-  });
+    if(typeof updateBackendUrl === 'function') updateBackendUrl();
+  })
+  .catch(() => console.warn('[BACKEND] tunnel.json não encontrado; usando a origem atual.'));
 </script>
 <script>
 const $=id=>document.getElementById(id);
@@ -616,13 +618,13 @@ function buildWsUrl(rawInput){
   if(!raw) return '';
   return 'wss://' + raw;
 }
-const BACKEND_URL = (() => {
+let BACKEND_URL = `${location.protocol}//${location.host}`;
+function updateBackendUrl(){
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
-  // Se o tunnel.json estiver ausente/antigo, o frontend usa o mesmo host
-  // que serviu a página. Isso evita voltar para um backend antigo no Render.
-  if(ws) return ws.replace(/^wss:\/\//i, 'https://');
-  return location.origin;
-})();
+  BACKEND_URL = ws ? ws.replace(/^wss:\/\//i, 'https://') : `${location.protocol}//${location.host}`;
+  console.log('[BACKEND] usando', BACKEND_URL);
+}
+updateBackendUrl();
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
@@ -822,8 +824,7 @@ function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-'
 function wsUrl(){
   const built = buildWsUrl(window.PARTYBLOX_WS_URL);
   if(built) return built;
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return proto + '//' + location.host;
+  return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`;
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
 function startMediaHeartbeat(){
