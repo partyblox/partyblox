@@ -618,11 +618,10 @@ function buildWsUrl(rawInput){
 }
 const BACKEND_URL = (() => {
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
+  // Se o tunnel.json estiver ausente/antigo, o frontend usa o mesmo host
+  // que serviu a página. Isso evita voltar para um backend antigo no Render.
   if(ws) return ws.replace(/^wss:\/\//i, 'https://');
-  if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
-    return `${location.protocol}//${location.host}`;
-  }
-  return 'https://partyblox.onrender.com';
+  return location.origin;
 })();
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
@@ -823,8 +822,8 @@ function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-'
 function wsUrl(){
   const built = buildWsUrl(window.PARTYBLOX_WS_URL);
   if(built) return built;
-  if(location.hostname==='localhost'||location.hostname==='127.0.0.1')return `ws://${location.host}`;
-  return 'wss://partyblox.onrender.com';
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return proto + '//' + location.host;
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
 function startMediaHeartbeat(){
@@ -1185,11 +1184,10 @@ async function uploadChatMedia(media){
     const response=await fetch(media.url);const blob=await response.blob();const fd=new FormData();
     fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
     fd.append('roomId', roomId);
-    const res=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
-    const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
-    if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
-    else{await res.text();throw new Error('Backend respondeu HTML');}
-    if(!res.ok||!data||!data.url)throw new Error((data&&data.error)||'Upload falhou');
+    const filename='chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm');
+    const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
+    const data=await uploadLargeFileInChunks(file,roomId,()=>{},null);
+    if(!data||!data.url)throw new Error('Upload falhou');
     return{type:media.type,url:data.url,duration:media.duration};
   }
   return media;
@@ -1543,47 +1541,58 @@ function sendLocalState(){
   const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state});
 }
 
-/* ===== UPLOAD EM CHUNKS DE 10 MB (com retry, timeout e fallback) ===== */
-const CHUNK_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB por requisição
-const LARGE_UPLOAD_THRESHOLD = 50 * 1024 * 1024; // acima de 50 MB usa chunks
+/* ===== UPLOAD EM CHUNKS — compatível com Cloudflare + reprodução progressiva ===== */
+const CHUNK_UPLOAD_SIZE = 10 * 1024 * 1024;
+const PROGRESSIVE_START_PERCENT = 12;
+const PROGRESSIVE_MIN_BYTES = 20 * 1024 * 1024;
+const LARGE_UPLOAD_THRESHOLD = 0; // todos os uploads passam pelo fluxo resistente a tunnel
 
-async function uploadLargeFileInChunks(file, roomId, onProgress){
+async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
   const total = file.size;
   const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
+  let readySent = false;
+  let progressiveData = null;
 
-  console.log(`[upload] ${file.name} — ${total} bytes em ${totalChunks} chunks de ${CHUNK_UPLOAD_SIZE} bytes`);
+  const notifyProgressive = async (info={})=>{
+    if(readySent || !info.progressiveReady || !info.url) return;
+    readySent = true;
+    progressiveData = {
+      url: info.url,
+      type: info.type || file.type,
+      name: info.name || file.name,
+      uploading: true,
+      uploadedBytes: Number(info.uploadedBytes||0),
+      totalBytes: total,
+      uploadPercent: Number(info.uploadPercent||0)
+    };
+    if(onReady) await onReady(progressiveData);
+  };
 
   for(let index=0; index<totalChunks; index++){
     const start = index * CHUNK_UPLOAD_SIZE;
     const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
     const blob = file.slice(start, end);
-
-    console.log(`[chunk ${index+1}/${totalChunks}] enviando ${blob.size} bytes`);
-
     let response = null;
     let lastError = null;
-    for(let attempt=1; attempt<=3; attempt++){
+
+    for(let attempt=1; attempt<=4; attempt++){
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
       try{
         response = await fetch(BACKEND_URL + '/upload-chunk', {
-          method:'POST',
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'no-store',
+          method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
           headers:{
             'Content-Type':'application/octet-stream',
             'X-Upload-Id':uploadId,
             'X-Chunk-Index':String(index),
             'X-Total-Chunks':String(totalChunks),
-            'X-Original-Name':encodeURIComponent(file.name),
+            'X-Original-Name':encodeURIComponent(file.name || 'media'),
             'X-Mime-Type':file.type || 'application/octet-stream',
             'X-Room-Id':String(roomId || '').slice(0,40)
           },
-          body:blob,
-          signal: controller.signal
+          body:blob, signal:controller.signal
         });
         clearTimeout(timeoutId);
         if(response.ok) break;
@@ -1591,202 +1600,109 @@ async function uploadLargeFileInChunks(file, roomId, onProgress){
         throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
       }catch(e){
         clearTimeout(timeoutId);
-        lastError = e;
-        console.warn(`[chunk ${index+1}/${totalChunks}] tentativa ${attempt} falhou:`, e.message || e.name);
-        if(attempt<3) await new Promise(r=>setTimeout(r, 1200*attempt));
+        lastError=e;
+        if(attempt<4) await new Promise(r=>setTimeout(r,1000*attempt));
       }
     }
 
     if(!response || !response.ok){
-      // Fallback: se o arquivo inteiro for <= 80MB, tenta upload normal
-      if(file.size <= 80 * 1024 * 1024){
-        console.warn('[upload] chunks falharam, tentando upload normal...');
-        return uploadSmallFileNormal(file, roomId, onProgress);
-      }
-      throw lastError || new Error('Falha ao enviar o bloco ' + (index+1) + '/' + totalChunks);
+      throw lastError || new Error('Falha ao enviar o bloco '+(index+1)+'/'+totalChunks);
     }
 
-    const pct = Math.min(99, Math.round((end / total) * 100));
-    if(onProgress) onProgress(pct, index+1, totalChunks);
+    const info = await response.json().catch(()=>({}));
+    const pct = Math.min(99, Math.round((end/total)*100));
+    if(onProgress) onProgress(pct,index+1,totalChunks,info);
+    await notifyProgressive(info);
   }
 
-  const complete = await fetch(BACKEND_URL + '/upload-complete', {
-    method:'POST',
-    mode: 'cors',
-    credentials: 'omit',
-    cache: 'no-store',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      uploadId,
-      roomId:String(roomId || '').slice(0,40),
-      name:file.name,
-      type:file.type || 'application/octet-stream',
-      size:file.size
-    })
-  });
-
-  const data = await complete.json().catch(()=>({}));
-  if(!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
-  if(onProgress) onProgress(100,totalChunks,totalChunks);
-  return data;
+  let complete;
+  for(let attempt=1; attempt<=4; attempt++){
+    try{
+      complete = await fetch(BACKEND_URL + '/upload-complete', {
+        method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({uploadId,roomId:String(roomId||'').slice(0,40),name:file.name,type:file.type||'application/octet-stream',size:file.size})
+      });
+      if(complete.ok) break;
+      const txt=await complete.text().catch(()=> '');
+      if(complete.status===409 && attempt<4){await new Promise(r=>setTimeout(r,500*attempt));continue;}
+      throw new Error('HTTP '+complete.status+' — '+(txt||'falha ao finalizar'));
+    }catch(e){
+      if(attempt===4) throw e;
+      await new Promise(r=>setTimeout(r,1000*attempt));
+    }
+  }
+  const data=await complete.json().catch(()=>({}));
+  if(!complete.ok || !data.url) throw new Error(data.error||'Falha ao finalizar o upload.');
+  if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100});
+  return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100,progressiveData};
 }
 
 async function uploadSmallFileNormal(file, roomId, onProgress){
-  const form = new FormData();
-  form.append('media', file);
-  form.append('roomId', roomId || '');
+  return uploadLargeFileInChunks(file,roomId,onProgress,null);
+}
 
-  const xhr = new XMLHttpRequest();
-  const promise = new Promise((resolve,reject)=>{
-    xhr.open('POST', BACKEND_URL + '/upload', true);
-    xhr.upload.onprogress = e=>{
-      if(e.lengthComputable && onProgress)
-        onProgress(Math.round((e.loaded/e.total)*100),1,1);
-    };
-    xhr.onload = ()=>{
-      let data={};
-      try{data=JSON.parse(xhr.responseText||'{}')}catch(_){}
-      if(xhr.status>=200 && xhr.status<300 && data.url) resolve(data);
-      else reject(new Error(data.error || ('Falha no upload (HTTP '+xhr.status+').')));
-    };
-    xhr.onerror=()=>reject(new Error('Falha de rede durante o upload.'));
-    xhr.ontimeout=()=>reject(new Error('Tempo esgotado durante o upload.'));
-    xhr.timeout=0;
-    xhr.send(form);
-  });
-  return promise;
+function updateUploadOverlayProgress(pct, large=true, ready=false){
+  const suffix=ready?' — ▶️ reprodução liberada':'';
+  $('uploadSub').textContent=`${pct}% — ${large?'enviando em blocos de 10 MB':'enviando'}${suffix}. Você pode continuar usando a sala.`;
 }
 
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0];
   if(!f)return;
-
   const t=f.type||'';
-  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
-  if(f.size>MAX_UPLOAD_BYTES){
-    toast('❌ Máx 3 GB');
-    $('fileInput').value='';
-    return;
-  }
+  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/'))){$('fileInput').value='';return;}
+  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-  const large=f.size>LARGE_UPLOAD_THRESHOLD;
+  let progressiveStarted=false;
+  const onReady=async data=>{
+    progressiveStarted=true;
+    setUploadLoading(true,'▶️ Mídia tocando enquanto envia...',`${data.uploadPercent||0}% — host e participantes já podem assistir/ouvir. O envio continua em segundo plano.`);
+    if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
+    // Imagens não têm reprodução parcial confiável; só são exibidas após 100%.
+  };
 
-  setUploadLoading(
-    true,
-    large ? 'Enviando mídia grande...' : 'Enviando mídia...',
-    large ? '0% — enviando em partes de 10 MB para evitar falha no Cloudflare.' : '0% — só começa a tocar quando o upload terminar.'
-  );
+  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 10 MB. A reprodução começa assim que houver dados suficientes.');
 
   try{
-    const onProgress=(pct)=>{
-      $('uploadSub').textContent =
-        `${pct}% — ${large ? 'enviando em partes de 10 MB' : 'enviando'}, aguarde...`;
+    const onProgress=(pct,_index,_total,info)=>{
+      const ready=!!(info&&info.progressiveReady);
+      if(!progressiveStarted) updateUploadOverlayProgress(pct,true,ready);
+      else updateUploadOverlayProgress(pct,true,true);
     };
-
-    const data=large
-      ? await uploadLargeFileInChunks(f,roomId,onProgress)
-      : await uploadSmallFileNormal(f,roomId,onProgress);
+    const data=await uploadLargeFileInChunks(f,roomId,onProgress,onReady);
 
     setUploadLoading(false);
+    if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
 
-    if(data && data.url){
-      if(ty==='video'){
-        mediaType='video';
-        const v=$('localVideo');
-        v.src=data.url;
-        v.dataset.name=data.name||f.name;
-        v.style.display='block';
-        $('placeholder').style.display='none';
-        $('youtubeOverlay').style.display='none';
-        updateMediaBadge('🎬','Vídeo');
-        showPlayerCtrl();
-        $('playBtn').textContent='⏸️';
-        v.currentTime=0;
-        try{await v.play()}catch(_){}
-        sendLocalState();
-      }else if(ty==='audio'){
-        mediaType='audio';
-        const a=$('localAudio');
-        a.src=data.url;
-        a.dataset.name=data.name||f.name;
-        a.style.display='none';
-        $('placeholder').style.display='none';
-        $('youtubeOverlay').style.display='none';
-        updateMediaBadge('🎵','Áudio');
-        showPlayerCtrl();
-        $('playBtn').textContent='⏸️';
-        a.currentTime=0;
-        try{await a.play()}catch(_){}
-        sendLocalState();
-      }else{
-        mediaType='image';
-        lastServerMediaState={
-          type:'image',
-          url:data.url,
-          name:data.name||f.name,
-          updatedAt:Date.now()
-        };
-        $('localVideo').style.display='none';
-        $('screenVideo').style.display='none';
-        $('youtubeOverlay').style.display='none';
-        $('placeholder').style.display='none';
-        const holder=$('imageHolder');
-        holder.style.display='block';
-        const ctx=holder.getContext('2d');
-        const img=new Image();
-        img.onload=()=>{
-          holder.width=img.naturalWidth||1920;
-          holder.height=img.naturalHeight||1080;
-          ctx.clearRect(0,0,holder.width,holder.height);
-          ctx.drawImage(img,0,0);
-        };
-        img.src=data.url;
-        updateMediaBadge('🖼️','Imagem');
-        showPlayerCtrl();
-        wsSend({kind:'media',state:lastServerMediaState});
-      }
-
-      toast('✅ Upload concluído!');
+    if(ty==='video'||ty==='audio'){
+      // Mantém o mesmo URL progressivo para não reiniciar a reprodução.
+      const el=ty==='video'?$('localVideo'):$('localAudio');
+      mediaType=ty;el.src=data.url;el.dataset.name=data.name||f.name;el.style.display=ty==='video'?'block':'none';
+      $('placeholder').style.display=ty==='video'?'none':'flex';
+      $('youtubeOverlay').style.display='none';
+      updateMediaBadge(ty==='video'?'🎬':'🎵',ty==='video'?'Vídeo':'Áudio');showPlayerCtrl();
+      if(ty==='audio'){$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(data.name||f.name)+'</h3><p>Tocando agora...</p>';}
+      try{await el.play();}catch(_){}
+      sendLocalState();
+    }else{
+      mediaType='image';
+      lastServerMediaState={type:'image',url:data.url,name:data.name||f.name,uploading:false,uploadPercent:100,updatedAt:Date.now()};
+      $('localVideo').style.display='none';$('screenVideo').style.display='none';$('youtubeOverlay').style.display='none';$('placeholder').style.display='none';
+      const holder=$('imageHolder');holder.style.display='block';
+      const ctx=holder.getContext('2d');const img=new Image();
+      img.onload=()=>{holder.width=img.naturalWidth||1920;holder.height=img.naturalHeight||1080;ctx.clearRect(0,0,holder.width,holder.height);ctx.drawImage(img,0,0);};
+      img.onerror=()=>toast('❌ Upload terminou, mas a imagem não pôde ser lida pelo navegador.');
+      img.src=data.url;updateMediaBadge('🖼️','Imagem');showPlayerCtrl();wsSend({kind:'media',state:lastServerMediaState});
     }
+    toast('✅ Upload concluído!');
   }catch(err){
-    setUploadLoading(false);
-    console.error('[upload]',err);
-    toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
-  }finally{
-    $('fileInput').value='';
-  }
+    setUploadLoading(false);console.error('[upload]',err);toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
+  }finally{$('fileInput').value='';}
 }
 
-
-function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
-function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
-function closeAllRTCPeers(){[...rtcPeers.keys()].forEach(closeRTCPeer);}
-function createPeer(pid){
-  closeRTCPeer(pid);
-  const pc=new RTCPeerConnection(rtcConfig());
-  rtcPeers.set(pid,pc);
-  pc.onicecandidate=e=>{if(e.candidate)wsSend({kind:'rtc',action:'candidate',to:pid,candidate:e.candidate});};
-  pc.ontrack=e=>{
-    const sv=$('screenVideo');
-    if(e.streams&&e.streams[0])sv.srcObject=e.streams[0];
-    sv.muted=false; sv.volume=1; sv.style.display='block'; sv.playsInline=true;
-    hidePlaceholder();
-    mediaType='screen';
-    safePlay(sv);
-  };
-  if(screenStream)screenStream.getTracks().forEach(t=>pc.addTrack(t,screenStream));
-  return pc;
-}
-function requestScreenFromOwner(){if(!wsReady||isScreenSharing||!screenOwner)return;wsSend({kind:'rtc',action:'screenRequest',to:screenOwner});}
-async function handleRTCMessage(m){
-  if(m.action==='screenRequest'){if(!isScreenSharing||!screenStream||!m.from)return;try{const pc=createPeer(m.from);const offer=await pc.createOffer();await pc.setLocalDescription(offer);wsSend({kind:'rtc',action:'offer',to:m.from,offer:pc.localDescription});}catch(_){ }return;}
-  if(m.action==='offer'&&m.from&&m.offer){try{const pc=createPeer(m.from);await pc.setRemoteDescription(new RTCSessionDescription(m.offer));const answer=await pc.createAnswer();await pc.setLocalDescription(answer);wsSend({kind:'rtc',action:'answer',to:m.from,answer:pc.localDescription});}catch(_){ }return;}
-  if(m.action==='answer'&&m.from&&m.answer){const pc=rtcPeers.get(m.from);if(pc)try{await pc.setRemoteDescription(new RTCSessionDescription(m.answer));}catch(_){ }return;}
-  if(m.action==='candidate'&&m.from&&m.candidate){const pc=rtcPeers.get(m.from);if(pc)try{await pc.addIceCandidate(new RTCIceCandidate(m.candidate));}catch(_){ }return;}
-  if(m.action==='screenStopped'){closeRTCPeer(m.from);if(!isScreenSharing){$('screenVideo').srcObject=null;$('screenVideo').style.display='none';}}
-}
 async function toggleScreenShare(){
   if(!isHost)return;
   if(!isScreenSharing){
@@ -1883,7 +1799,7 @@ function applyMediaState(state){
     if(state.url&&v.src!==state.url){v.src=state.url;v.load();}
     v.dataset.name=state.name||'';v.muted=false;v.volume=1;v.style.display='block';
     hidePlaceholder();
-    mediaType='video';updateMediaBadge('🎬','Vídeo');showPlayerCtrl();
+    mediaType='video';updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo');showPlayerCtrl();
     const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } };
     if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});
     if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); }
@@ -1900,7 +1816,7 @@ function applyMediaState(state){
     const p=$('placeholder');
     p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>';
     p.style.display='flex';
-    mediaType='audio';updateMediaBadge('🎵','Áudio');showPlayerCtrl();
+    mediaType='audio';updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio');showPlayerCtrl();
     const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}};
     if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true});
     if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); }
@@ -1958,6 +1874,16 @@ if(document.pictureInPictureEnabled){
 ['localVideo','screenVideo'].forEach(id=>{
   const v=$(id);
   v.addEventListener('loadedmetadata',updatePipButton);
+  if(id==='localVideo') v.addEventListener('error',()=>{
+    if(lastServerMediaState&&lastServerMediaState.uploading&&lastServerMediaState.url){
+      clearTimeout(v._progressiveRetry);
+      v._progressiveRetry=setTimeout(()=>{
+        const t=v.currentTime||0;
+        try{v.load();if(t>0)v.currentTime=t;v.play().catch(()=>{});}catch(_){}
+      },1200);
+    }
+  });
+  if(id==='screenVideo'){}
   v.addEventListener('emptied',updatePipButton);
   v.addEventListener('play',updatePipButton);
 });
