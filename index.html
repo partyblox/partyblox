@@ -592,7 +592,11 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 <script>
-  window.PARTYBLOX_WS_URL = "https://decade-brush-customs-constant.trycloudflare.com";
+fetch('tunnel.json?t=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    window.PARTYBLOX_WS_URL = data.url;
+  });
 </script>
 <script>
 const $=id=>document.getElementById(id);
