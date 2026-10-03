@@ -179,6 +179,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .games-panel .games-list{min-height:0;min-width:0;}
 .game-play-area{min-width:0;width:100%;}
 .game-iframe{display:block;height:100%;min-height:0;min-width:0;}
+.game-card.snes-card{border-color:rgba(162,155,254,.35);} .game-card.snes-card:hover{border-color:#a29bfe;}
 .games-panel.active{display:flex;}
 .games-list{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start;}
 .games-list.hidden{display:none;}
@@ -1254,7 +1255,8 @@ function closeMediaViewer(){
 const BUILTIN_GAMES=[
   {id:'tictactoe',name:'Jogo da Velha',icon:'⭕',desc:'Clássico 2 jogadores',file:'games/tictactoe.html'},
   {id:'chess',name:'Xadrez Online',icon:'♟️',desc:'Xadrez completo com validação',file:'games/chess.html'},
-  {id:'checkers',name:'Damas',icon:'🔴',desc:'Damas brasileiras · captura obrigatória',file:'games/checkers.html'}
+  {id:'checkers',name:'Damas',icon:'🔴',desc:'Damas brasileiras · captura obrigatória',file:'games/checkers.html'},
+  {id:'snes',name:'Super Nintendo',icon:'🎮',desc:'Emulador SNES · ROMs da pasta games/roms',file:'games/snes.html'}
 ];
 let gamesList=null;
 async function loadGamesList(){
@@ -1747,11 +1749,16 @@ function resetPlayerUI(){
   updatePipButton();
 }
 function clearMedia(){
-  if(!isHost)return;
+  if(!isHost){
+    toast('👑 Somente o host pode limpar o telão.');
+    return;
+  }
   if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   if(docPipWindow)try{docPipWindow.close();}catch(_){}
   resetPlayerUI();
-  lastServerMediaState={type:'clear',updatedAt:Date.now()};wsSend({kind:'media',state:lastServerMediaState});
+  lastServerMediaState={type:'clear',updatedAt:Date.now()};
+  wsSend({kind:'media',state:lastServerMediaState});
+  toast('🗑️ Telão limpo para todos.');
 }
 function applyMediaState(state){
   if(!state)return;

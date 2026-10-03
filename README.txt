@@ -1,16 +1,34 @@
-PARTYBLOX NATIVE YOUTUBE PiP
+PARTYBLOX — BUILD COMPLETA
 
-Esta extensão é uma tentativa de ativar o PiP NATIVO do Chrome no <video> interno do YouTube que está dentro do iframe do PartyBlox.
+Arquivos principais:
+- index.html
+- server.js
+- package.json
+- games/tictactoe.html
+- games/chess.html
+- games/checkers.html
+- games/snes.html
+- games/games.json
+- games/roms/
 
-Instalação no Chrome:
-1. Extraia este ZIP.
-2. Abra chrome://extensions
-3. Ative "Modo do desenvolvedor".
-4. Clique em "Carregar sem compactação".
-5. Selecione a pasta partyblox-native-pip-extension.
-6. Abra/recarregue o PartyBlox.
+Correções desta build:
+1. Botão LIMPAR: somente o host pode limpar; o estado "clear" é enviado para todos e o servidor zera o dono da tela.
+2. Upload principal continua em chunks de 10 MB, compatível com o server atual.
+3. Upload principal: limite do servidor de 3 GB.
+4. Chat: limite de 300 MB.
+5. Super Nintendo adicionado na aba Jogos.
+6. O servidor cria/lista automaticamente games/roms e aceita .sfc/.smc.
+7. O emulador usa EmulatorJS no navegador. A ROM não é enviada pelo WebSocket e não interfere no telão.
+8. Para usar ROMs, coloque arquivos que você possui/autorizou em games/roms/.
 
-Observação importante:
-- O PiP nativo do Chrome pertence ao vídeo interno do YouTube, não ao iframe externo.
-- O navegador pode exigir gesto de usuário/transient activation. Por isso esta extensão é experimental e depende das regras da versão do Chrome.
-- Se o Chrome bloquear a chamada por falta de ativação, o PartyBlox continua usando o fallback de Document PiP/janela separada.
+Instalação:
+npm install
+npm start
+
+Abra:
+http://localhost:3000
+
+IMPORTANTE:
+O emulador SNES depende do carregamento do EmulatorJS via CDN.
+Cada jogador pode jogar localmente enquanto continua assistindo ao telão.
+O estado dos jogos existentes (xadrez/damas/velha) continua sendo sincronizado pelo WebSocket.
