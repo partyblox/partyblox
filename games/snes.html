@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Super Nintendo — PartyBlox</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#111;color:#fff;font-family:Segoe UI,system-ui,sans-serif;overflow:hidden}
+#top{height:52px;display:flex;align-items:center;gap:8px;padding:8px 10px;background:#1b1b24;border-bottom:1px solid #333}
+select,button{border:1px solid #444;background:#292936;color:#fff;border-radius:8px;padding:8px 10px}
+select{flex:1;min-width:0}button{cursor:pointer;font-weight:700}
+#status{font-size:11px;opacity:.75;white-space:nowrap}
+#game{position:absolute;left:0;right:0;top:52px;bottom:0;background:#000}
+#game canvas{max-width:100%!important;max-height:100%!important}
+.empty{position:absolute;inset:52px 0 0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#bbb}
+</style>
+</head>
+<body>
+<div id="top">
+  <select id="romSelect"><option value="">🎮 Carregando ROMs...</option></select>
+  <button id="reloadBtn">↻</button>
+  <span id="status">SNES</span>
+</div>
+<div id="game"></div>
+<div id="empty" class="empty" style="display:none">
+  <div>🎮 <b>Nenhuma ROM SNES encontrada.</b><br><br>
+  Coloque arquivos <b>.sfc</b> ou <b>.smc</b> dentro de<br>
+  <code>games/roms/</code> no servidor e clique em ↻.</div>
+</div>
+<script>
+const select=document.getElementById('romSelect');
+const status=document.getElementById('status');
+const empty=document.getElementById('empty');
+let loadedRom='';
+function basePath(){
+  return location.pathname.includes('/games/') ? location.pathname.split('/games/')[0] : '';
+}
+async function loadRoms(){
+  try{
+    status.textContent='Carregando...';
+    const r=await fetch(basePath()+'/games/roms-list?t='+Date.now(),{cache:'no-store'});
+    const data=await r.json();
+    select.innerHTML='';
+    (data.roms||[]).forEach(name=>{
+      const o=document.createElement('option');o.value=name;o.textContent='🎮 '+name;select.appendChild(o);
+    });
+    if(!data.roms||!data.roms.length){
+      empty.style.display='flex';status.textContent='0 ROMs';return;
+    }
+    empty.style.display='none';status.textContent=data.roms.length+' ROM(s)';
+    if(loadedRom && data.roms.includes(loadedRom)) select.value=loadedRom;
+  }catch(e){
+    select.innerHTML='<option>Erro ao listar ROMs</option>';
+    status.textContent='Erro';empty.style.display='flex';
+  }
+}
+function startRom(name){
+  if(!name)return;
+  loadedRom=name;
+  document.getElementById('game').innerHTML='';
+  const cfg=document.createElement('script');
+  cfg.textContent=`
+    var EJS_player = '#game';
+    var EJS_core = 'snes';
+    var EJS_gameUrl = ${JSON.stringify(basePath()+'/games/roms/') } + ${JSON.stringify(name)};
+    var EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+    var EJS_startOnLoaded = true;
+  `;
+  document.body.appendChild(cfg);
+  const loader=document.createElement('script');
+  loader.src='https://cdn.emulatorjs.org/stable/data/loader.js';
+  loader.onload=()=>status.textContent='▶ '+name;
+  loader.onerror=()=>status.textContent='Falha ao carregar emulador';
+  document.body.appendChild(loader);
+}
+select.addEventListener('change',()=>startRom(select.value));
+document.getElementById('reloadBtn').onclick=loadRoms;
+loadRoms();
+</script>
+</body>
+</html>
