@@ -803,6 +803,8 @@ function toggleControls(){
   else{vc.classList.remove('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ UI';}
 }
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
+let activeUploadId=null;
+let activeUploadController=null;
 const MAX_AUDIO_DURATION=30;
 function openDonate(){$('donateModal').classList.add('active');}
 function closeDonate(){$('donateModal').classList.remove('active');}
@@ -1555,6 +1557,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
   const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
+  activeUploadId=uploadId;
   let readySent = false;
   let progressiveData = null;
 
@@ -1582,6 +1585,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
 
     for(let attempt=1; attempt<=4; attempt++){
       const controller = new AbortController();
+      activeUploadController=controller;
       const timeoutId = setTimeout(() => controller.abort(), 120000);
       try{
         response = await fetch(BACKEND_URL + '/upload-chunk', {
@@ -1598,11 +1602,13 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
           body:blob, signal:controller.signal
         });
         clearTimeout(timeoutId);
+        if(activeUploadController===controller) activeUploadController=null;
         if(response.ok) break;
         const txt = await response.text().catch(()=> '');
         throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
       }catch(e){
         clearTimeout(timeoutId);
+        if(activeUploadController===controller) activeUploadController=null;
         lastError=e;
         if(attempt<4) await new Promise(r=>setTimeout(r,1000*attempt));
       }
@@ -1638,6 +1644,8 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
   const data=await complete.json().catch(()=>({}));
   if(!complete.ok || !data.url) throw new Error(data.error||'Falha ao finalizar o upload.');
   if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100});
+  if(activeUploadId===uploadId) activeUploadId=null;
+  activeUploadController=null;
   return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100,progressiveData};
 }
 
@@ -1662,7 +1670,8 @@ async function handleFileUpload(){
   let progressiveStarted=false;
   const onReady=async data=>{
     progressiveStarted=true;
-    setUploadLoading(true,'▶️ Mídia tocando enquanto envia...',`${data.uploadPercent||0}% — host e participantes já podem assistir/ouvir. O envio continua em segundo plano.`);
+    // A reprodução já está liberada; não mantenha o modal bloqueando a tela enquanto o upload continua.
+    setUploadLoading(false);
     if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
     // Imagens não têm reprodução parcial confiável; só são exibidas após 100%.
   };
@@ -1702,7 +1711,10 @@ async function handleFileUpload(){
     }
     toast('✅ Upload concluído!');
   }catch(err){
-    setUploadLoading(false);console.error('[upload]',err);toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
+    setUploadLoading(false);
+    if(err && err.name==='AbortError') return;
+    if(err && /Upload cancelado/i.test(err.message||'')) return;
+    console.error('[upload]',err);toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
   }finally{$('fileInput').value='';}
 }
 
@@ -1752,6 +1764,12 @@ function clearMedia(){
   if(!isHost){
     toast('👑 Somente o host pode limpar o telão.');
     return;
+  }
+  if(activeUploadController){try{activeUploadController.abort();}catch(_){} activeUploadController=null;}
+  if(activeUploadId){
+    const cancelId=activeUploadId;
+    activeUploadId=null;
+    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
   }
   if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   if(docPipWindow)try{docPipWindow.close();}catch(_){}
