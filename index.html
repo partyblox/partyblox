@@ -1185,14 +1185,16 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
 }
 async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
-    const response=await fetch(media.url);const blob=await response.blob();const fd=new FormData();
-    fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
-    fd.append('roomId', roomId);
-    const filename='chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm');
+    const response=await fetch(media.url);
+    const blob=await response.blob();
+    const ext=media.type==='image'?'jpg':media.type==='video'?'mp4':'webm';
+    const filename='chat_media_'+Date.now()+'.'+ext;
     const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
-    const data=await uploadLargeFileInChunks(file,roomId,()=>{},null);
-    if(!data||!data.url)throw new Error('Upload falhou');
-    return{type:media.type,url:data.url,duration:media.duration};
+    const fd=new FormData();fd.append('media',file,filename);fd.append('roomId','');
+    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
+    const data=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||!data.url)throw new Error(data.error||'Falha ao enviar mídia do chat.');
+    return {type:media.type,url:data.url,duration:media.duration};
   }
   return media;
 }
@@ -1258,7 +1260,7 @@ const BUILTIN_GAMES=[
   {id:'tictactoe',name:'Jogo da Velha',icon:'⭕',desc:'Clássico 2 jogadores',file:'games/tictactoe.html'},
   {id:'chess',name:'Xadrez Online',icon:'♟️',desc:'Xadrez completo com validação',file:'games/chess.html'},
   {id:'checkers',name:'Damas',icon:'🔴',desc:'Damas brasileiras · captura obrigatória',file:'games/checkers.html'},
-  {id:'snes',name:'Super Nintendo',icon:'🎮',desc:'Emulador SNES · ROMs da pasta games/roms',file:'games/snes.html'}
+  {id:'snes',name:'Filmes baixados',icon:'🎬',desc:'Escolha um filme da biblioteca do servidor para assistir com a sala',file:'__movies__'}
 ];
 let gamesList=null;
 async function loadGamesList(){
@@ -1287,17 +1289,27 @@ function renderGamesList(list){
 }
 let gameSessions={};
 function openGame(game){
-  currentGame=game;$('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name;
+  currentGame=game;
+  $('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name;
+  const oldCatalog=$('movieCatalog');if(oldCatalog)oldCatalog.remove();
+  $('gameIframe').style.display='block';
+  if(game.id==='snes'){
+    $('gameIframe').src='about:blank';
+    $('gamesList').classList.add('hidden');$('gamePlayArea').classList.add('active');
+    loadMovieCatalog();
+    return;
+  }
   const iframe=$('gameIframe');iframe.src=game.file;
   iframe.onload=()=>{iframe.contentWindow.postMessage({__game:true,game:game.id,type:'hello',myId:myPlayerId,myName:myName},'*');};
   gameSessions[game.id]={players:[],pendingStart:null};
   $('gamesList').classList.add('hidden');$('gamePlayArea').classList.add('active');
-  wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()});
+  wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()});
 }
 function closeGame(){
-  if(currentGame)wsSend({kind:'game_event',game:currentGame.id,type:'player_left',player:myPlayerId});
+  if(currentGame&&currentGame.id!=='snes')wsSend({kind:'game_event',game:currentGame.id,type:'player_left',player:myPlayerId});
   currentGame=null;$('gamePlayArea').classList.remove('active');$('gamesList').classList.remove('hidden');
-  $('gameIframe').src='about:blank';gameSessions={};
+  $('gameIframe').src='about:blank';$('gameIframe').style.display='block';gameSessions={};
+  const catalog=$('movieCatalog');if(catalog)catalog.remove();
 }
 window.addEventListener('message',e=>{
   const m=e.data;if(!m||!m.__game||!currentGame||m.game!==currentGame.id)return;handleGameMsg(m);
