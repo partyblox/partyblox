@@ -1307,7 +1307,7 @@ async function loadMoviesCatalog(){
     const data=await response.json();
     if(!data||data.ok===false||!Array.isArray(data.movies))throw new Error(data&&data.error||'Resposta inválida do servidor.');
     if(!data.movies.length){
-      status.textContent='Nenhum filme compatível foi encontrado. Coloque arquivos MP4, WebM, MOV, M4V, OGV, MKV ou AVI em /mnt/pendrive/movies e toque em Atualizar.';
+      status.textContent='Nenhum filme compatível foi encontrado na pasta '+(data.directory||'movies')+'. Coloque MP4, WebM, MOV, M4V, OGV, MKV ou AVI nessa pasta e toque em Atualizar.';
       return;
     }
     status.textContent=data.movies.length+' filme(s) disponível(is). Toque em um filme para todos assistirem juntos.';
@@ -1759,14 +1759,18 @@ async function handleFileUpload(){
     if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
 
     if(ty==='video'||ty==='audio'){
-      // Mantém o mesmo URL progressivo para não reiniciar a reprodução.
+      // Usa URL nova após concluir para o navegador buscar o arquivo completo,
+      // sem reutilizar resposta parcial/cacheada do upload progressivo.
       const el=ty==='video'?$('localVideo'):$('localAudio');
-      mediaType=ty;el.src=data.url;el.dataset.name=data.name||f.name;el.style.display=ty==='video'?'block':'none';
+      const finalUrl=data.url+(data.url.includes('?')?'&':'?')+'pbfinal='+Date.now();
+      mediaType=ty;el.pause();el.src=finalUrl;el.load();el.dataset.name=data.name||f.name;el.style.display=ty==='video'?'block':'none';
       $('placeholder').style.display=ty==='video'?'none':'flex';
       $('youtubeOverlay').style.display='none';
+      $('screenVideo').style.display='none';$('imageHolder').style.display='none';
       updateMediaBadge(ty==='video'?'🎬':'🎵',ty==='video'?'Vídeo':'Áudio');showPlayerCtrl();
       if(ty==='audio'){$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(data.name||f.name)+'</h3><p>Tocando agora...</p>';}
-      try{await el.play();}catch(_){}
+      el.addEventListener('loadedmetadata',()=>{if(mediaType===ty)safePlay(el);},{once:true});
+      try{await safePlay(el);}catch(_){}
       sendLocalState();
     }else{
       mediaType='image';
@@ -1844,6 +1848,14 @@ function resetPlayerUI(){
 function clearMedia(){
   if(!isHost){
     toast('👑 Somente o host pode limpar o telão.');
+    return;
+  }
+  if(!ws || ws.readyState!==WebSocket.OPEN){
+    if(activeUploadController){try{activeUploadController.abort();}catch(_){} activeUploadController=null;}
+    activeUploadId=null;
+    lastServerMediaState={type:'clear',updatedAt:Date.now()};
+    resetPlayerUI();
+    toast('🗑️ Telão limpo neste dispositivo. A conexão com a sala está indisponível.');
     return;
   }
   if(activeUploadController){try{activeUploadController.abort();}catch(_){} activeUploadController=null;}
