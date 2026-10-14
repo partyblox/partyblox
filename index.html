@@ -1029,7 +1029,8 @@ function connectRoom(creator){
         try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
-      if(m.kind==='uploadToken'){ roomUploadToken=String(m.uploadToken||''); return; }\n      if(m.kind==='roomState'){
+      if(m.kind==='uploadToken'){ roomUploadToken=String(m.uploadToken||''); return; }
+      if(m.kind==='roomState'){
         roomUploadToken=String(m.uploadToken||'');
         if(!appEntered){
           appEntered = true;
