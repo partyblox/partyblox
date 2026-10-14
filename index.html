@@ -616,15 +616,36 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="fileInput" class="file-input" accept="image/*,video/*,audio/*">
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
+
+<!-- ✅ CORREÇÃO: carrega tunnel.json ANTES do resto, de forma bloqueante -->
 <script>
-fetch('tunnel.json?t=' + Date.now())
-  .then(r => r.json())
-  .then(data => {
-    window.PARTYBLOX_WS_URL = data.url;
-    if(typeof updateBackendUrl === 'function') updateBackendUrl();
-  })
-  .catch(() => console.warn('[BACKEND] tunnel.json não encontrado; usando a origem atual.'));
+window.__PARTYBLOX_BACKEND_READY__ = false;
+(async function bootstrapBackend() {
+  const candidates = [
+    'tunnel.json?t=' + Date.now(),
+    'config.json?t=' + Date.now()
+  ];
+  for (const url of candidates) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const raw = (data && (data.url || data.backend || data.ws)) || '';
+      if (raw && String(raw).trim()) {
+        window.PARTYBLOX_WS_URL = String(raw).trim();
+        console.log('[BACKEND] tunnel.json carregado:', window.PARTYBLOX_WS_URL);
+        break;
+      }
+    } catch (e) { /* tenta próximo */ }
+  }
+  if (!window.PARTYBLOX_WS_URL) {
+    console.warn('[BACKEND] tunnel.json/config.json ausente ou inválido. Usando a origem atual.');
+  }
+  window.__PARTYBLOX_BACKEND_READY__ = true;
+  window.dispatchEvent(new Event('partyblox-backend-ready'));
+})();
 </script>
+
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -635,21 +656,56 @@ function setUploadLoading(active,title='Aguarde o carregamento...',sub='Enviando
   o.classList.toggle('active',!!active);
 }
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+
+// ✅ CORREÇÃO: buildWsUrl agora aceita http(s) e wss, e devolve wss
 function buildWsUrl(rawInput){
   let raw = String(rawInput || '').trim();
   if(!raw) return '';
-  raw = raw.replace(/^https?:\/\//i, '').replace(/^wss?:\/\//i, '');
+  // Se já vem com esquema, respeita
+  if(/^wss?:\/\//i.test(raw)) return raw.replace(/\/+$/,'');
+  // Normaliza http(s) → wss
+  raw = raw.replace(/^https?:\/\//i, '');
   raw = raw.replace(/\/+$/,'');
   if(!raw) return '';
+  // Se for localhost/local, usa ws:// (não wss)
+  if(/^(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(raw)) {
+    return 'ws://' + raw;
+  }
   return 'wss://' + raw;
 }
+
 let BACKEND_URL = `${location.protocol}//${location.host}`;
+
+// ✅ CORREÇÃO: updateBackendUrl agora avisa quando BACKEND_URL aponta para o frontend
 function updateBackendUrl(){
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
-  BACKEND_URL = ws ? ws.replace(/^wss:\/\//i, 'https://') : `${location.protocol}//${location.host}`;
+  if (ws) {
+    // wss://host → https://host   |   ws://host → http://host
+    BACKEND_URL = ws.replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://');
+  } else {
+    BACKEND_URL = `${location.protocol}//${location.host}`;
+  }
   console.log('[BACKEND] usando', BACKEND_URL);
+
+  // Alerta se estiver rodando no GitHub Pages / frontend estático
+  const isStaticHost =
+    /github\.io$/i.test(location.hostname) ||
+    /githubpages|netlify\.app|vercel\.app|pages\.dev$/i.test(location.hostname);
+  if (isStaticHost && BACKEND_URL === `${location.protocol}//${location.host}`) {
+    console.error('[BACKEND] ⚠️ BACKEND_URL aponta para o frontend estático!');
+    setTimeout(() => {
+      toast('⚠️ Configure o tunnel.json com a URL do servidor (TV Box)');
+    }, 800);
+  }
+  return BACKEND_URL;
 }
+
+// Executa imediatamente com o que temos, e de novo quando o bootstrap terminar
 updateBackendUrl();
+window.addEventListener('partyblox-backend-ready', () => {
+  updateBackendUrl();
+});
+
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
@@ -848,9 +904,11 @@ function openLivePix(){
 }
 setTimeout(()=>{try{$('qrImg').src=DONATE_CONFIG.qrImageUrl;}catch(_){}},500);
 function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-').slice(0,30);}
+
+// ✅ CORREÇÃO: wsUrl usa BACKEND_URL já resolvido, e nunca aponta para o próprio frontend estático
 function wsUrl(){
   const built = buildWsUrl(window.PARTYBLOX_WS_URL);
-  if(built) return built;
+  if (built) return built;
   return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`;
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
@@ -1033,7 +1091,7 @@ function connectRoom(creator){
       else if(m.kind==='game_join'){
         if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){const session=gameSessions[currentGame.id]||(gameSessions[currentGame.id]={players:[]});if(!session.players.find(p=>p.id===m.playerId)){session.players.push({id:m.playerId,name:m.name});sendPlayersToIframe();}}
       }else if(m.kind==='game_event'){
-        if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player,promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});}
+        if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player, promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});}
       }
     };
     socket.onclose=e=>{
@@ -1305,7 +1363,9 @@ async function loadMoviesCatalog(){
   try{
     let response=null;
     let lastStatus=0;
-    for(const endpoint of ['/movies-list','/api/movies-list']){
+    // ✅ CORREÇÃO: sempre usa BACKEND_URL resolvido (TV Box via tunnel), nunca o domínio estático
+    const endpoints=['/movies-list','/api/movies-list'];
+    for(const endpoint of endpoints){
       response=await fetch(BACKEND_URL+endpoint+'?t='+Date.now(),{cache:'no-store',mode:'cors',credentials:'omit'});
       if(response.ok)break;
       lastStatus=response.status;
@@ -1331,7 +1391,7 @@ async function loadMoviesCatalog(){
       list.appendChild(button);
     });
   }catch(error){
-    status.textContent='Não foi possível carregar os filmes: '+(error&&error.message?error.message:'erro de conexão')+'. Verifique se o túnel está ativo e se /movies-list responde.';
+    status.textContent='Não foi possível carregar os filmes: '+(error&&error.message?error.message:'erro de conexão')+'. Verifique se o túnel está ativo e se /movies-list responde em '+BACKEND_URL+'.';
   }
 }
 
@@ -1624,117 +1684,132 @@ function sendLocalState(){
 }
 
 /* ===== UPLOAD EM CHUNKS — compatível com Cloudflare + reprodução progressiva ===== */
-const CHUNK_UPLOAD_SIZE = 10 * 1024 * 1024;
+// ✅ CORREÇÃO: 5 MB por chunk (mais tolerante a Wi-Fi ruim da TV Box) + 8 tentativas + timeout de 10 min
+const CHUNK_UPLOAD_SIZE = 5 * 1024 * 1024;
 const PROGRESSIVE_START_PERCENT = 12;
 const PROGRESSIVE_MIN_BYTES = 20 * 1024 * 1024;
-const LARGE_UPLOAD_THRESHOLD = 0; // todos os uploads passam pelo fluxo resistente a tunnel
+const LARGE_UPLOAD_THRESHOLD = 0;
 
 async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
   const total = file.size;
   const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
-  activeUploadId=uploadId;
+  activeUploadId = uploadId;
   let readySent = false;
   let progressiveData = null;
 
-  const notifyProgressive = async (info={})=>{
-    if(readySent || !info.progressiveReady || !info.url) return;
+  const notifyProgressive = async (info = {}) => {
+    if (readySent || !info.progressiveReady || !info.url) return;
     readySent = true;
     progressiveData = {
       url: info.url,
       type: info.type || file.type,
       name: info.name || file.name,
       uploading: true,
-      uploadedBytes: Number(info.uploadedBytes||0),
+      uploadedBytes: Number(info.uploadedBytes || 0),
       totalBytes: total,
-      uploadPercent: Number(info.uploadPercent||0)
+      uploadPercent: Number(info.uploadPercent || 0)
     };
-    if(onReady) await onReady(progressiveData);
+    if (onReady) await onReady(progressiveData);
   };
 
-  for(let index=0; index<totalChunks; index++){
+  for (let index = 0; index < totalChunks; index++) {
     const start = index * CHUNK_UPLOAD_SIZE;
     const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
     const blob = file.slice(start, end);
     let response = null;
     let lastError = null;
 
-    for(let attempt=1; attempt<=4; attempt++){
+    // ✅ CORREÇÃO: 8 tentativas com backoff exponencial e timeout de 10 min
+    for (let attempt = 1; attempt <= 8; attempt++) {
       const controller = new AbortController();
-      activeUploadController=controller;
-      const timeoutId = setTimeout(() => controller.abort(), 180000);
-      try{
+      const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 min
+      try {
         response = await fetch(BACKEND_URL + '/upload-chunk', {
-          method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-          headers:{
-            'Content-Type':'application/octet-stream',
-            'X-Upload-Id':uploadId,
-            'X-Chunk-Index':String(index),
-            'X-Total-Chunks':String(totalChunks),
-            'X-Original-Name':encodeURIComponent(file.name || 'media'),
-            'X-Mime-Type':file.type || 'application/octet-stream',
-            'X-Room-Id':String(roomId || '').slice(0,40),
-            'X-Player-Id':String(myPlayerId || '').slice(0,40),
-            'X-Room-Token':roomUploadToken
+          method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'X-Upload-Id': uploadId,
+            'X-Chunk-Index': String(index),
+            'X-Total-Chunks': String(totalChunks),
+            'X-Original-Name': encodeURIComponent(file.name || 'media'),
+            'X-Mime-Type': file.type || 'application/octet-stream',
+            'X-Room-Id': String(roomId || '').slice(0, 40),
+            'X-Player-Id': String(myPlayerId || '').slice(0, 40),
+            'X-Room-Token': roomUploadToken
           },
-          body:blob, signal:controller.signal
+          body: blob,
+          signal: controller.signal
         });
         clearTimeout(timeoutId);
-        if(activeUploadController===controller) activeUploadController=null;
-        if(response.ok) break;
-        const txt = await response.text().catch(()=> '');
-        throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
-      }catch(e){
+        if (response.ok) break;
+        const txt = await response.text().catch(() => '');
+        // 4xx (exceto 408/429) não retenta
+        if (response.status >= 400 && response.status < 500 &&
+            response.status !== 408 && response.status !== 429) {
+          throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
+        }
+        throw new Error('HTTP ' + response.status);
+      } catch (e) {
         clearTimeout(timeoutId);
-        if(activeUploadController===controller) activeUploadController=null;
-        lastError=e;
-        if(attempt<4) await new Promise(r=>setTimeout(r,1000*attempt));
+        lastError = e;
+        if (attempt < 8) {
+          await new Promise(r => setTimeout(r, Math.min(15000, 1000 * Math.pow(1.5, attempt))));
+        }
       }
     }
 
-    if(!response || !response.ok){
-      throw lastError || new Error('Falha ao enviar o bloco '+(index+1)+'/'+totalChunks);
+    if (!response || !response.ok) {
+      throw lastError || new Error('Falha ao enviar o bloco ' + (index + 1) + '/' + totalChunks);
     }
 
-    const info = await response.json().catch(()=>({}));
-    const pct = Math.min(99, Math.round((end/total)*100));
-    if(onProgress) onProgress(pct,index+1,totalChunks,info);
+    const info = await response.json().catch(() => ({}));
+    const pct = Math.min(99, Math.round((end / total) * 100));
+    if (onProgress) onProgress(pct, index + 1, totalChunks, info);
     await notifyProgressive(info);
   }
 
   let complete;
-  for(let attempt=1; attempt<=4; attempt++){
-    try{
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    try {
       complete = await fetch(BACKEND_URL + '/upload-complete', {
-        method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-        headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken},
-        body:JSON.stringify({uploadId,roomId:String(roomId||'').slice(0,40),name:file.name,type:file.type||'application/octet-stream',size:file.size})
+        method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Player-Id': String(myPlayerId || '').slice(0, 40),
+          'X-Room-Token': roomUploadToken
+        },
+        body: JSON.stringify({
+          uploadId,
+          roomId: String(roomId || '').slice(0, 40),
+          name: file.name,
+          type: file.type || 'application/octet-stream',
+          size: file.size
+        })
       });
-      if(complete.ok) break;
-      const txt=await complete.text().catch(()=> '');
-      if(complete.status===409 && attempt<4){await new Promise(r=>setTimeout(r,500*attempt));continue;}
-      throw new Error('HTTP '+complete.status+' — '+(txt||'falha ao finalizar'));
-    }catch(e){
-      if(attempt===4) throw e;
-      await new Promise(r=>setTimeout(r,1000*attempt));
+      if (complete.ok) break;
+      const txt = await complete.text().catch(() => '');
+      if (complete.status === 409 && attempt < 6) {
+        await new Promise(r => setTimeout(r, 800 * attempt));
+        continue;
+      }
+      throw new Error('HTTP ' + complete.status + ' — ' + (txt || 'falha ao finalizar'));
+    } catch (e) {
+      if (attempt === 6) throw e;
+      await new Promise(r => setTimeout(r, 1000 * attempt));
     }
   }
-  const data=await complete.json().catch(()=>({}));
-  if(!complete.ok || !data.url) throw new Error(data.error||'Falha ao finalizar o upload.');
-  if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100});
-  if(activeUploadId===uploadId) activeUploadId=null;
-  activeUploadController=null;
-  return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100,progressiveData};
+  const data = await complete.json().catch(() => ({}));
+  if (!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
+  if (onProgress) onProgress(100, totalChunks, totalChunks, { ...data, progressiveReady: true, uploadedBytes: total, uploadPercent: 100 });
+  if (activeUploadId === uploadId) activeUploadId = null;
+  return { ...data, uploading: false, uploadedBytes: total, totalBytes: total, uploadPercent: 100, progressiveData };
 }
 
-async function uploadSmallFileNormal(file, roomId, onProgress){
-  return uploadLargeFileInChunks(file,roomId,onProgress,null);
-}
-
-function updateUploadOverlayProgress(pct, large=true, ready=false){
-  const suffix=ready?' — ▶️ reprodução liberada':'';
-  $('uploadSub').textContent=`${pct}% — ${large?'enviando em blocos de 10 MB':'enviando'}${suffix}. Você pode continuar usando a sala.`;
+function updateUploadOverlayProgress(pct, large = true, ready = false){
+  const suffix = ready ? ' — ▶️ reprodução liberada' : '';
+  $('uploadSub').textContent = `${pct}% — ${large ? 'enviando em blocos de 5 MB' : 'enviando'}${suffix}. Você pode continuar usando a sala.`;
 }
 
 async function handleFileUpload(){
@@ -1749,13 +1824,11 @@ async function handleFileUpload(){
   let progressiveStarted=false;
   const onReady=async data=>{
     progressiveStarted=true;
-    // A reprodução já está liberada; não mantenha o modal bloqueando a tela enquanto o upload continua.
     setUploadLoading(false);
     if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
-    // Imagens não têm reprodução parcial confiável; só são exibidas após 100%.
   };
 
-  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 10 MB (até 3 GB). A reprodução começa assim que houver dados suficientes.');
+  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 5 MB (até 3 GB). A reprodução começa assim que houver dados suficientes.');
 
   try{
     const onProgress=(pct,_index,_total,info)=>{
@@ -1769,8 +1842,6 @@ async function handleFileUpload(){
     if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
 
     if(ty==='video'||ty==='audio'){
-      // Usa URL nova após concluir para o navegador buscar o arquivo completo,
-      // sem reutilizar resposta parcial/cacheada do upload progressivo.
       const el=ty==='video'?$('localVideo'):$('localAudio');
       const finalUrl=data.url+(data.url.includes('?')?'&':'?')+'pbfinal='+Date.now();
       mediaType=ty;el.pause();el.src=finalUrl;el.load();el.dataset.name=data.name||f.name;el.style.display=ty==='video'?'block':'none';
@@ -2083,6 +2154,11 @@ window.addEventListener('pagehide',()=>{ });
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress();
 loadTheme();
+
+// ✅ CORREÇÃO: stubs para funções referenciadas mas não definidas (evita ReferenceError)
+function handleRTCMessage(msg){ /* STUB: WebRTC para tela compartilhada - não implementado nesta versão */ }
+function closeAllRTCPeers(){ rtcPeers.forEach(p=>{try{p.close();}catch(_){}}); rtcPeers.clear(); }
+function requestScreenFromOwner(){ /* STUB: solicita stream de tela via WebRTC */ }
 </script>
 <script src="https://www.youtube.com/iframe_api" async></script>
 </body>
