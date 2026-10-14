@@ -8,51 +8,25 @@
 <title>PartyBlox · Assista junto. Compartilhe tudo.</title>
 <link rel="manifest" href="manifest.json">
 <style>
-/* ============================================================
-   DESIGN SYSTEM — MYCINEMA-inspired premium dark
-   ============================================================ */
 :root{
-  --bg-0:#08080c;
-  --bg-1:#0d0d14;
-  --bg-2:#12121c;
-  --bg-3:#181826;
-  --bg-4:#1f1f30;
-  --surface:rgba(255,255,255,.035);
-  --surface-2:rgba(255,255,255,.06);
-  --surface-3:rgba(255,255,255,.1);
-  --border:rgba(255,255,255,.07);
-  --border-2:rgba(255,255,255,.14);
-  --border-3:rgba(255,255,255,.24);
-  --text:#f4f4f8;
-  --text-2:rgba(244,244,248,.72);
-  --text-3:rgba(244,244,248,.45);
-  --text-4:rgba(244,244,248,.28);
-  --accent-1:#8b5cf6;
-  --accent-2:#ec4899;
-  --accent-3:#06b6d4;
-  --gold:#fbbf24;
-  --success:#10b981;
-  --danger:#ef4444;
+  --bg-0:#08080c;--bg-1:#0d0d14;--bg-2:#12121c;--bg-3:#181826;--bg-4:#1f1f30;
+  --surface:rgba(255,255,255,.035);--surface-2:rgba(255,255,255,.06);--surface-3:rgba(255,255,255,.1);
+  --border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.14);--border-3:rgba(255,255,255,.24);
+  --text:#f4f4f8;--text-2:rgba(244,244,248,.72);--text-3:rgba(244,244,248,.45);--text-4:rgba(244,244,248,.28);
+  --accent-1:#8b5cf6;--accent-2:#ec4899;--accent-3:#06b6d4;--gold:#fbbf24;
+  --success:#10b981;--danger:#ef4444;
   --grad-primary:linear-gradient(135deg,#8b5cf6 0%,#ec4899 100%);
   --grad-gold:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
   --grad-blue:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);
-  --grad-mint:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.35);
-  --shadow-md:0 8px 28px rgba(0,0,0,.45);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.35);--shadow-md:0 8px 28px rgba(0,0,0,.45);
   --shadow-lg:0 20px 60px rgba(0,0,0,.55);
   --shadow-glow:0 0 0 1px rgba(139,92,246,.35), 0 8px 40px rgba(139,92,246,.35);
-  --radius-sm:8px;
-  --radius:12px;
-  --radius-lg:18px;
-  --radius-xl:24px;
+  --radius-sm:8px;--radius:12px;--radius-lg:18px;--radius-xl:24px;
   --transition:.22s cubic-bezier(.4,0,.2,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
 html,body{overflow:hidden;height:100dvh;background:var(--bg-0);color:var(--text);font-size:15px;}
-body{
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
 ::selection{background:rgba(139,92,246,.35);color:#fff;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -61,12 +35,8 @@ body{
 button{font-family:inherit;}
 input,textarea{font-family:inherit;}
 
-/* ============================================================
-   LANDING (hero estilo MYCINEMA)
-   ============================================================ */
 .screen{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-0);}
 .screen.active{display:flex;}
-
 .bg-glow{position:absolute;pointer-events:none;border-radius:50%;filter:blur(90px);opacity:.35;z-index:0;}
 .bg-glow.one{width:520px;height:520px;top:-180px;left:-160px;background:radial-gradient(circle,#8b5cf6 0%,transparent 70%);}
 .bg-glow.two{width:560px;height:560px;bottom:-200px;right:-180px;background:radial-gradient(circle,#ec4899 0%,transparent 70%);}
@@ -106,9 +76,6 @@ input,textarea{font-family:inherit;}
 .feature h3{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text);}
 .feature p{font-size:12px;line-height:1.5;color:var(--text-2);}
 
-/* ============================================================
-   MODAL — Criar Sala (MYCINEMA style)
-   ============================================================ */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;z-index:1100;padding:20px;}
 .modal.active{display:flex;}
 .modal-box{position:relative;background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg-1) 100%);border:1px solid var(--border-2);border-radius:var(--radius-xl);padding:32px;width:min(440px,100%);max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
@@ -130,9 +97,6 @@ input,textarea{font-family:inherit;}
 .row{display:flex;gap:10px;margin:6px 0;}
 .row > *{flex:1;}
 
-/* ============================================================
-   APP — Topbar
-   ============================================================ */
 #app{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg-0);}
 #app.active{display:flex;}
 .topbar{min-height:58px;background:rgba(13,13,20,.8);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:8px;z-index:20;}
@@ -148,9 +112,6 @@ input,textarea{font-family:inherit;}
 .tb-btn.donate{background:var(--grad-primary);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(236,72,153,.35);animation:pulseSoft 3s infinite;}
 @keyframes pulseSoft{0%,100%{box-shadow:0 4px 14px rgba(236,72,153,.35);}50%{box-shadow:0 4px 24px rgba(236,72,153,.6);}}
 
-/* ============================================================
-   MAIN LAYOUT
-   ============================================================ */
 .main{flex:1;display:flex;overflow:hidden;position:relative;min-height:0;}
 .video-side{flex:1;display:flex;flex-direction:column;background:#000;position:relative;min-width:0;min-height:0;}
 .video-container{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:0;}
@@ -166,7 +127,6 @@ input,textarea{font-family:inherit;}
 .video-placeholder h3{color:var(--text-2);margin-bottom:10px;font-size:clamp(16px,4vw,22px);font-weight:700;}
 .video-placeholder p{color:var(--text-3);max-width:420px;font-size:clamp(12px,3vw,14px);line-height:1.5;}
 
-/* Host controls float */
 .host-controls{position:absolute;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:55%;z-index:6;}
 .hc-btn{padding:9px 14px;background:rgba(0,0,0,.72);backdrop-filter:blur(14px);border:1px solid var(--border-2);border-radius:10px;color:#fff;cursor:pointer;font-size:12px;font-weight:700;transition:var(--transition);white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
 .hc-btn:hover{background:rgba(139,92,246,.35);border-color:var(--accent-1);transform:translateY(-1px);}
@@ -180,9 +140,6 @@ input,textarea{font-family:inherit;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(0,0,0,.72);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:100px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.7;z-index:5;color:#fff;}
 .chat-hint kbd{padding:2px 7px;background:rgba(255,255,255,.12);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid var(--border-2);}
 
-/* ============================================================
-   PLAYER CONTROLS
-   ============================================================ */
 .player-controls{background:linear-gradient(180deg,var(--bg-3) 0%,var(--bg-2) 100%);padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;display:none;}
 .player-controls.show{display:block;}
 .progress{width:100%;height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;position:relative;margin-bottom:14px;transition:var(--transition);}
@@ -209,7 +166,6 @@ input,textarea{font-family:inherit;}
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:#fff;border-radius:50%;box-shadow:0 0 8px rgba(139,92,246,.6);}
 .vol-slider::-moz-range-thumb{width:13px;height:13px;background:#fff;border-radius:50%;border:none;}
 
-/* YouTube input inline */
 .yt-inline-input{display:none;padding:14px 16px;background:var(--bg-2);border-top:1px solid var(--border);flex-shrink:0;}
 .yt-inline-input.show{display:block;animation:slideDown .25s ease;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
@@ -221,15 +177,11 @@ input,textarea{font-family:inherit;}
 .yt-load-btn:hover{filter:brightness(1.12);transform:translateY(-1px);}
 .yt-hint{font-size:11px;color:var(--text-3);margin-top:8px;max-width:900px;margin-left:auto;margin-right:auto;}
 
-/* Divider */
 .divider{width:6px;background:var(--bg-2);cursor:col-resize;position:relative;flex-shrink:0;transition:var(--transition);touch-action:none;z-index:10;border-left:1px solid var(--border);border-right:1px solid var(--border);}
 .divider:hover{background:linear-gradient(180deg,rgba(139,92,246,.3),rgba(236,72,153,.3));}
 .divider::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:44px;background:rgba(255,255,255,.2);border-radius:2px;transition:var(--transition);}
 .divider:hover::before{background:#fff;}
 
-/* ============================================================
-   CHAT SIDE
-   ============================================================ */
 .chat-side{width:380px;display:flex;flex-direction:column;background:var(--bg-1);min-width:200px;max-width:800px;height:100%;min-height:0;flex-shrink:0;border-left:1px solid var(--border);}
 .chat-head{height:52px;padding:0 16px;background:var(--bg-2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .chat-head h3{font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;color:var(--text);}
@@ -264,14 +216,12 @@ input,textarea{font-family:inherit;}
 .emoji-pop button{width:38px;height:38px;border:none;background:var(--surface);border-radius:9px;font-size:20px;cursor:pointer;transition:var(--transition);}
 .emoji-pop button:hover{background:rgba(139,92,246,.25);transform:scale(1.12);}
 
-/* Reactions */
 .react-grid{padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;overflow-y:auto;min-height:0;align-content:start;}
 .r-btn{padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;font-size:30px;cursor:pointer;transition:var(--transition);text-align:center;line-height:1;}
 .r-btn:hover{background:rgba(139,92,246,.18);transform:scale(1.12);border-color:rgba(139,92,246,.5);}
 .float-react{position:fixed;font-size:72px;pointer-events:none;z-index:500;animation:fUp 2.4s forwards;text-shadow:0 4px 14px rgba(0,0,0,.6);}
 @keyframes fUp{0%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(-300px) scale(1.8) rotate(18deg);opacity:0;}}
 
-/* Host panel */
 .host-panel{padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;height:100%;}
 .host-panel-header{padding:12px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.28);border-radius:12px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#fcd34d;}
 .host-player-list{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;}
@@ -289,7 +239,6 @@ input,textarea{font-family:inherit;}
 .host-give-btn:disabled{opacity:.5;cursor:not-allowed;}
 .host-empty{padding:30px 20px;text-align:center;color:var(--text-3);font-size:12px;}
 
-/* Themes */
 .theme-section{padding:14px;border-bottom:1px solid var(--border);}
 .theme-section-title{font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:12px;text-transform:uppercase;letter-spacing:1.2px;display:flex;align-items:center;gap:6px;}
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
@@ -311,7 +260,6 @@ input,textarea{font-family:inherit;}
 .theme-color-preview.rose{background:linear-gradient(135deg,#42101c,#882238);}
 .theme-option-label{font-size:11px;font-weight:700;color:var(--text);}
 
-/* Games */
 .games-panel{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;}
 .games-list{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start;min-height:0;}
 .games-list.hidden{display:none;}
@@ -330,7 +278,6 @@ input,textarea{font-family:inherit;}
 .game-iframe{flex:1;border:none;width:100%;background:#fff;min-height:0;}
 .game-spectate-bar{height:34px;padding:0 14px;background:rgba(139,92,246,.08);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);gap:6px;flex-shrink:0;font-weight:600;}
 
-/* Movies panel */
 .movies-panel{display:flex;flex-direction:column;gap:12px;padding:14px;min-height:0;height:100%;overflow:hidden;color:var(--text);}
 .movies-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
 .movies-panel-head strong{display:block;font-size:14px;font-weight:800;}
@@ -346,7 +293,6 @@ input,textarea{font-family:inherit;}
 .movie-card .movie-size{font-size:10px;color:var(--text-3);}
 .movie-card .movie-play{font-size:11px;color:#c4b5fd;font-weight:800;}
 
-/* Recording indicator */
 .recording-indicator{display:none;align-items:center;gap:9px;padding:8px 14px;background:rgba(239,68,68,.12);border-top:1px solid rgba(239,68,68,.35);font-size:12px;font-weight:700;color:#fca5a5;}
 .recording-indicator.active{display:flex;}
 .recording-indicator .rec-dot{width:9px;height:9px;background:var(--danger);border-radius:50%;animation:recPulse 1s infinite;}
@@ -355,7 +301,6 @@ input,textarea{font-family:inherit;}
 .recording-cancel{background:var(--surface-2);border:1px solid var(--border-2);color:#fff;padding:5px 11px;border-radius:8px;font-size:11px;cursor:pointer;margin-left:auto;font-weight:700;}
 .recording-cancel:hover{background:rgba(239,68,68,.3);}
 
-/* Chat media */
 .chat-media-container{margin-top:8px;max-width:260px;position:relative;}
 .chat-media-thumb{max-width:100%;max-height:220px;border-radius:10px;cursor:pointer;display:block;transition:var(--transition);}
 .chat-media-thumb:hover{transform:scale(1.03);box-shadow:0 8px 24px rgba(0,0,0,.4);}
@@ -367,9 +312,6 @@ input,textarea{font-family:inherit;}
 .chat-video-thumb{position:relative;}
 .chat-video-thumb::after{content:'▶';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:22px;background:rgba(0,0,0,.72);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;padding-left:4px;}
 
-/* ============================================================
-   DONATE MODAL
-   ============================================================ */
 .donate-wrap{background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg-1) 100%);border-radius:var(--radius-xl);width:min(520px,95vw);max-height:92vh;overflow-y:auto;padding:clamp(20px,4vw,34px);position:relative;border:1px solid var(--border-2);box-shadow:var(--shadow-lg);}
 .donate-header{text-align:center;margin-bottom:26px;}
 .donate-header .heart{font-size:clamp(40px,10vw,64px);animation:beat 1.5s infinite;display:inline-block;}
@@ -401,7 +343,6 @@ input,textarea{font-family:inherit;}
 .donate-footer .stat-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;}
 .donate-footer .thanks{font-size:12px;color:var(--text-2);font-style:italic;}
 
-/* Media viewer */
 .media-viewer-modal{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px;}
 .media-viewer-modal.active{display:flex;}
 .media-viewer-content{max-width:90%;max-height:90%;position:relative;}
@@ -409,7 +350,6 @@ input,textarea{font-family:inherit;}
 .media-viewer-close{position:absolute;top:-44px;right:0;background:rgba(255,255,255,.14);border:1px solid var(--border-2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;transition:var(--transition);}
 .media-viewer-close:hover{background:rgba(239,68,68,.4);}
 
-/* Upload overlay */
 .upload-overlay{pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:5000;}
 .upload-overlay.active{display:flex;}
 .upload-box{min-width:300px;max-width:92vw;padding:26px 30px;background:var(--bg-2);border:1px solid rgba(139,92,246,.4);border-radius:var(--radius-lg);text-align:center;box-shadow:var(--shadow-lg);}
@@ -418,20 +358,15 @@ input,textarea{font-family:inherit;}
 .upload-sub{font-size:12px;color:var(--text-2);line-height:1.45;}
 @keyframes uploadSpin{to{transform:rotate(360deg);}}
 
-/* Toast */
 #toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(20,20,32,.96);backdrop-filter:blur(14px);padding:13px 26px;border-radius:100px;display:none;z-index:600;font-weight:700;font-size:13px;max-width:90%;border:1px solid var(--border-2);color:#fff;box-shadow:var(--shadow-md);animation:toastIn .25s ease;}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-10px);}to{opacity:1;transform:translate(-50%,0);}}
 
 .file-input{display:none;}
 
-/* utilities */
 .video-side.hidden,.divider.hidden{display:none!important;}
 .chat-side.full{width:100%!important;max-width:100%!important;min-width:100%!important;}
 .controls-hidden .host-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 
-/* ============================================================
-   THEMES (aplicado via body.theme-*)
-   ============================================================ */
 body.theme-light{--bg-0:#f5f5fa;--bg-1:#ffffff;--bg-2:#f0f0f6;--bg-3:#e8e8f2;--bg-4:#e0e0ec;--surface:rgba(0,0,0,.03);--surface-2:rgba(0,0,0,.06);--surface-3:rgba(0,0,0,.1);--border:rgba(0,0,0,.07);--border-2:rgba(0,0,0,.14);--border-3:rgba(0,0,0,.24);--text:#1a1a2e;--text-2:rgba(26,26,46,.72);--text-3:rgba(26,26,46,.5);--text-4:rgba(26,26,46,.3);}
 body.theme-blue{--bg-0:#061423;--bg-1:#0a1f33;--bg-2:#0f2942;--bg-3:#143352;--bg-4:#0d2438;--accent-1:#3b82f6;--accent-2:#06b6d4;}
 body.theme-purple{--bg-0:#1a0b2e;--bg-1:#241242;--bg-2:#2f1a56;--bg-3:#3d2268;--bg-4:#2a164a;--accent-1:#a78bfa;--accent-2:#e879f9;}
@@ -444,9 +379,6 @@ body.theme-cyan{--bg-0:#041420;--bg-1:#072334;--bg-2:#0a3548;--bg-3:#0e465e;--bg
 body.theme-yellow{--bg-0:#1c1704;--bg-1:#2b2308;--bg-2:#3d3210;--bg-3:#524216;--bg-4:#332a0a;--accent-1:#eab308;--accent-2:#f59e0b;}
 body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg-4:#38101a;--accent-1:#f43f5e;--accent-2:#ec4899;}
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width:900px) and (orientation:portrait){
   .main{flex-direction:column;}
   .video-side{min-height:42vh;min-width:100%;}
@@ -508,9 +440,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
 </head>
 <body>
 
-<!-- ============================================================
-     UPLOAD OVERLAY
-     ============================================================ -->
 <div class="upload-overlay" id="uploadOverlay" aria-live="polite">
   <div class="upload-box">
     <div class="upload-spinner"></div>
@@ -519,9 +448,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
   </div>
 </div>
 
-<!-- ============================================================
-     LANDING
-     ============================================================ -->
 <div id="landing" class="screen active">
   <div class="bg-glow one"></div>
   <div class="bg-glow two"></div>
@@ -563,9 +489,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
   </main>
 </div>
 
-<!-- ============================================================
-     MODAL CRIAR SALA
-     ============================================================ -->
 <div class="modal" id="modalCreate">
   <div class="modal-box">
     <button class="close" onclick="closeCreateModal()">✕</button>
@@ -593,9 +516,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
   </div>
 </div>
 
-<!-- ============================================================
-     APP
-     ============================================================ -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-left">
@@ -766,9 +686,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
   </div>
 </div>
 
-<!-- ============================================================
-     MODAL DOAÇÃO
-     ============================================================ -->
 <div class="modal" id="donateModal">
   <div class="donate-wrap">
     <button class="close" onclick="closeDonate()">✕</button>
@@ -816,9 +733,6 @@ body.theme-rose{--bg-0:#220810;--bg-1:#320d17;--bg-2:#43121f;--bg-3:#571829;--bg
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 
-<!-- ============================================================
-     BOOTSTRAP
-     ============================================================ -->
 <script>
 window.__PARTYBLOX_BACKEND_READY__ = false;
 window.__PARTYBLOX_BOOTSTRAP__ = (async function bootstrapBackend() {
@@ -838,9 +752,6 @@ window.__PARTYBLOX_BOOTSTRAP__ = (async function bootstrapBackend() {
 })();
 </script>
 
-<!-- ============================================================
-     APP SCRIPT
-     ============================================================ -->
 <script>
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -882,6 +793,7 @@ function updateBackendUrl(){
   } else {
     BACKEND_URL = `${location.protocol}//${location.host}`;
   }
+  window.BACKEND_URL = BACKEND_URL;
   const isStaticHost =
     /github\.io$/i.test(location.hostname) ||
     /githubpages|netlify\.app|vercel\.app|pages\.dev$/i.test(location.hostname);
@@ -893,7 +805,6 @@ function updateBackendUrl(){
 updateBackendUrl();
 window.addEventListener('partyblox-backend-ready', () => updateBackendUrl());
 
-// ---------- state ----------
 const DONATE_CONFIG = {
   pixKey: 'watchparty@livepix.gg',
   livePixUrl: 'https://livepix.gg/SEU_USUARIO',
@@ -925,7 +836,6 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------- PIP ----------
 function getPipVideoElement(){
   if (mediaType==='video') return $('localVideo');
   if (mediaType==='screen') return $('screenVideo');
@@ -1001,7 +911,6 @@ document.addEventListener('leavepictureinpicture', () => {
   updatePipButton();
 });
 
-// ---------- theme ----------
 function loadTheme(){ const s = localStorage.getItem('partyblox-theme'); if (s) setTheme(s, true); }
 function setTheme(t, silent=false){
   document.body.className = '';
@@ -1011,7 +920,6 @@ function setTheme(t, silent=false){
   if (!silent) toast('🎨 Tema: ' + t);
 }
 
-// ---------- autoplay ----------
 async function safePlay(el){
   if (!el) return;
   try { el.muted = false; el.volume = 1; await el.play(); return; } catch(_){}
@@ -1031,11 +939,9 @@ function toggleControls(){
   else { vc.classList.remove('controls-hidden'); $('toggleCtrlBtn').innerHTML='👁️ UI'; }
 }
 
-// ---------- recording ----------
 let mediaRecorder=null, recordedChunks=[], recordingStartTime=null, recordingTimer=null;
 const MAX_AUDIO_DURATION = 30;
 
-// ---------- donate ----------
 function openDonate(){ $('donateModal').classList.add('active'); }
 function closeDonate(){ $('donateModal').classList.remove('active'); }
 function copyPix(){
@@ -1071,7 +977,6 @@ function startMediaHeartbeat(){
 }
 function stopMediaHeartbeat(){ if (mediaHeartbeatTimer) { clearInterval(mediaHeartbeatTimer); mediaHeartbeatTimer=null; } }
 
-// ---------- entry ----------
 function openCreateModal(){ $('modalCreate').classList.add('active'); setTimeout(() => $('inName').focus(), 100); }
 function closeCreateModal(){ $('modalCreate').classList.remove('active'); }
 function quickJoin(){
@@ -1267,7 +1172,6 @@ function connectRoom(creator){
   } catch(e){ scheduleReconnect(); }
 }
 
-// ---------- host UI ----------
 function updateHostUI(){
   $('hostCtrls').style.display = isHost ? 'flex' : 'none';
   updateHostPanel();
@@ -1335,7 +1239,6 @@ function leaveRoom(){
   }
 }
 
-// ---------- tabs ----------
 function switchTab(t){
   document.querySelectorAll('.c-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
   document.querySelectorAll('.chat-panel').forEach(p => p.classList.remove('active'));
@@ -1383,7 +1286,6 @@ function refreshHostChatBadges(){
   });
 }
 
-// ---------- chat ----------
 function addChatMsg(author, text, isSystem=false, isPrivate=false, target=null, media=null, playerId=null){
   const msgs = $('chatMsgs'), d = document.createElement('div');
   d.className = 'cmsg' + (isSystem?' system':'') + (isPrivate?' private':'');
@@ -1443,9 +1345,9 @@ async function uploadChatMedia(media){
     const fd = new FormData();
     fd.append('media', file, filename);
     fd.append('roomId', String(roomId||'').slice(0,40));
+    fd.append('playerId', String(myPlayerId||'').slice(0,40));
     const uploaded = await fetch(BACKEND_URL + '/upload-chat', {
-      method:'POST', body: fd, cache:'no-store',
-      headers: {'X-Room-Id': String(roomId||'').slice(0,40), 'X-Player-Id': String(myPlayerId||'').slice(0,40)}
+      method:'POST', body: fd, cache:'no-store', mode:'cors', credentials:'omit'
     });
     const data = await uploaded.json().catch(() => ({}));
     if (!uploaded.ok || !data.url) throw new Error(data.error || 'Falha ao enviar mídia do chat.');
@@ -1468,7 +1370,6 @@ async function handleChatMediaUpload(){
   $('chatMediaInput').value = '';
 }
 
-// ---------- audio recording ----------
 async function toggleAudioRecording(){
   if (!mediaRecorder || mediaRecorder.state === 'inactive') startAudioRecording();
   else stopAudioRecording();
@@ -1527,7 +1428,6 @@ function closeMediaViewer(){
   modal.classList.remove('active');
 }
 
-// ---------- games ----------
 const BUILTIN_GAMES = [
   {id:'tictactoe', name:'Jogo da Velha', icon:'⭕', desc:'Clássico 2 jogadores', file:'games/tictactoe.html'},
   {id:'chess', name:'Xadrez Online', icon:'♟️', desc:'Xadrez completo com validação', file:'games/chess.html'},
@@ -1608,7 +1508,6 @@ function sendPlayersToIframe(){
 }
 function sendToIframe(msg){ const i = $('gameIframe'); if (i && i.contentWindow) i.contentWindow.postMessage({__game:true, game:currentGame.id, ...msg}, '*'); }
 
-// ---------- movies ----------
 function formatMovieSize(bytes){
   const n = Number(bytes) || 0;
   if (n < 1024*1024) return (n/1024).toFixed(0) + ' KB';
@@ -1652,7 +1551,6 @@ async function loadMoviesCatalog(){
   }
 }
 
-// ---------- emoji + reactions ----------
 const EMOJIS = ['😀','😂','😍','😭','😢','😡','🥳','❤️','🔥','👍','💃','🙌','🥱','😒','🙄','👌','🤟','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
 const REACTIONS = ['😂','❤️','😭','😡','🙄','🥱','🤟','🔥','🎉','👏','👍','🙌','✨','💖','🎊','🎈','🏆','💎','😍','🤯','🥳'];
 (function(){
@@ -1678,7 +1576,6 @@ function showReaction(e){
   setTimeout(() => d.remove(), 2400);
 }
 
-// ---------- divider drag ----------
 (function(){
   const d = $('divider'), cs = $('chatSide');
   let dragging = false, startX = 0, startW = 0, startY = 0, startH = 0;
@@ -1707,7 +1604,6 @@ function showReaction(e){
   addEventListener('touchend', endDrag);
 })();
 
-// ---------- YouTube ----------
 function onYouTubeIframeAPIReady(){ ytReady = true; createYTPlayer(); }
 function createYTPlayer(){
   if (!ytReady || youtubePlayer) return;
@@ -1931,14 +1827,15 @@ function sendLocalState(){
 }
 
 // ============================================================
-// UPLOAD EM CHUNKS (2 MB)
+// UPLOAD EM CHUNKS — via FormData (SEM preflight CORS)
 // ============================================================
 const CHUNK_UPLOAD_SIZE = 2 * 1024 * 1024;
 let activeUploadId = null;
 
 async function uploadLargeFileInChunks(file, roomIdArg, onProgress, onReady){
   const total = file.size;
-  const uploadId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  const uploadId = crypto.randomUUID ? crypto.randomUUID()
+    : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
   activeUploadId = uploadId;
   let progressiveData = null;
@@ -1949,48 +1846,60 @@ async function uploadLargeFileInChunks(file, roomIdArg, onProgress, onReady){
     const blob = file.slice(start, end);
     let response = null, lastError = null;
 
+    const fd = new FormData();
+    fd.append('chunk', blob, 'chunk');
+    fd.append('uploadId', uploadId);
+    fd.append('index', String(index));
+    fd.append('totalChunks', String(totalChunks));
+    fd.append('originalName', file.name || 'media');
+    fd.append('mimeType', file.type || 'application/octet-stream');
+    fd.append('fileSize', String(file.size));
+    fd.append('roomId', String(roomIdArg||'').slice(0,40));
+    fd.append('playerId', String(myPlayerId||'').slice(0,40));
+
+    const url = `${BACKEND_URL}/upload-chunk?u=${encodeURIComponent(uploadId)}&i=${index}`;
+
     for (let attempt = 1; attempt <= 8; attempt++) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('Conexão com a sala foi perdida durante o upload.');
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        throw new Error('Conexão com a sala foi perdida durante o upload. Reconecte-se e tente novamente.');
+      }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 600000);
       try {
-        response = await fetch(BACKEND_URL + '/upload-chunk', {
-          method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-          headers: {
-            'Content-Type':'application/octet-stream',
-            'X-Upload-Id':uploadId,
-            'X-Chunk-Index':String(index),
-            'X-Total-Chunks':String(totalChunks),
-            'X-Original-Name':encodeURIComponent(file.name || 'media'),
-            'X-Mime-Type':file.type || 'application/octet-stream',
-            'X-File-Size':String(file.size),
-            'X-Room-Id':String(roomIdArg||'').slice(0,40),
-            'X-Player-Id':String(myPlayerId||'').slice(0,40)
-          },
-          body: blob,
+        response = await fetch(url, {
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          body: fd,
           signal: controller.signal
         });
         clearTimeout(timeoutId);
         if (response.ok) break;
         const txt = await response.text().catch(() => '');
-        if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) {
-          const err = new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
+        if (response.status >= 400 && response.status < 500 &&
+            response.status !== 408 && response.status !== 429) {
+          const err = new Error(`HTTP ${response.status} — ${txt || 'sem corpo'}`);
           err.nonRetryable = true;
           throw err;
         }
-        throw new Error('HTTP ' + response.status);
-      } catch(e) {
+        throw new Error(`HTTP ${response.status}`);
+      } catch (e) {
         clearTimeout(timeoutId);
         lastError = e;
         if (e && e.nonRetryable) break;
         if (attempt < 8) await new Promise(r => setTimeout(r, Math.min(15000, 1000 * Math.pow(1.5, attempt))));
       }
     }
-    if (!response || !response.ok) throw lastError || new Error('Falha no bloco ' + (index+1) + '/' + totalChunks);
-
+    if (!response || !response.ok) {
+      if (lastError && lastError.name === 'TypeError') {
+        throw new Error(`Failed to fetch em ${url}. Verifique: (1) tunnel.json com URL correta; (2) se a página é HTTPS e o backend também; (3) se o cloudflared está rodando. Detalhe: ${lastError.message}`);
+      }
+      throw lastError || new Error(`Falha no bloco ${index+1}/${totalChunks}`);
+    }
     const info = await response.json().catch(() => ({}));
-    const pct = Math.min(99, Math.round((end/total)*100));
-    if (onProgress) onProgress(pct, index+1, totalChunks, info);
+    const pct = Math.min(99, Math.round((end / total) * 100));
+    if (onProgress) onProgress(pct, index + 1, totalChunks, info);
 
     if (!progressiveData && info.progressiveReady && info.url) {
       progressiveData = {
@@ -2004,32 +1913,35 @@ async function uploadLargeFileInChunks(file, roomIdArg, onProgress, onReady){
   }
 
   let complete = null;
+  const fdFinal = new FormData();
+  fdFinal.append('uploadId', uploadId);
+  fdFinal.append('roomId', String(roomIdArg||'').slice(0,40));
+  fdFinal.append('name', file.name);
+  fdFinal.append('type', file.type || 'application/octet-stream');
+  fdFinal.append('size', String(file.size));
+  fdFinal.append('playerId', String(myPlayerId||'').slice(0,40));
+
   for (let attempt = 1; attempt <= 6; attempt++) {
     try {
       complete = await fetch(BACKEND_URL + '/upload-complete', {
-        method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-        headers: {
-          'Content-Type':'application/json',
-          'X-Player-Id':String(myPlayerId||'').slice(0,40),
-          'X-Room-Id':String(roomIdArg||'').slice(0,40)
-        },
-        body: JSON.stringify({uploadId, roomId:String(roomIdArg||'').slice(0,40), name:file.name, type:file.type||'application/octet-stream', size:file.size})
+        method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+        body: fdFinal
       });
       if (complete.ok) break;
       const txt = await complete.text().catch(() => '');
       if (complete.status === 409 && attempt < 6) { await new Promise(r => setTimeout(r, 800*attempt)); continue; }
-      const err = new Error('HTTP ' + complete.status + ' — ' + (txt || 'falha ao finalizar'));
+      const err = new Error(`HTTP ${complete.status} — ${txt || 'falha ao finalizar'}`);
       err.nonRetryable = complete.status >= 400 && complete.status < 500 && complete.status !== 408 && complete.status !== 429;
       throw err;
-    } catch(e) {
+    } catch (e) {
       if (e && e.nonRetryable) throw e;
       if (attempt === 6) throw e;
       await new Promise(r => setTimeout(r, 1000*attempt));
     }
   }
-  if (!complete) throw new Error('Servidor não respondeu em /upload-complete.');
+  if (!complete || !complete.ok) throw new Error('Falha ao finalizar o upload.');
   const data = await complete.json().catch(() => ({}));
-  if (!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar.');
+  if (!data.url) throw new Error(data.error || 'Servidor não retornou URL final.');
   if (onProgress) onProgress(100, totalChunks, totalChunks, {...data, progressiveReady:true, uploadedBytes:total, uploadPercent:100});
   if (activeUploadId === uploadId) activeUploadId = null;
   return {...data, uploading:false, uploadedBytes:total, totalBytes:total, uploadPercent:100, progressiveData};
@@ -2097,7 +2009,6 @@ async function handleFileUpload(){
   } finally { $('fileInput').value = ''; }
 }
 
-// ---------- screen share ----------
 async function toggleScreenShare(){
   if (!isHost) return;
   if (!isScreenSharing) {
@@ -2151,11 +2062,11 @@ function clearMedia(){
   if (!isHost) { toast('👑 Só host'); return; }
   if (activeUploadId && ws && ws.readyState === WebSocket.OPEN) {
     const cid = activeUploadId; activeUploadId = null;
-    fetch(BACKEND_URL + '/upload-cancel', {
-      method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-      headers:{'Content-Type':'application/json', 'X-Player-Id':String(myPlayerId||'').slice(0,40), 'X-Room-Id':String(roomId||'').slice(0,40)},
-      body: JSON.stringify({uploadId:cid})
-    }).catch(()=>{});
+    const fd = new FormData();
+    fd.append('uploadId', cid);
+    fd.append('playerId', String(myPlayerId||'').slice(0,40));
+    fd.append('roomId', String(roomId||'').slice(0,40));
+    fetch(BACKEND_URL + '/upload-cancel', { method:'POST', body: fd, mode:'cors', credentials:'omit' }).catch(()=>{});
   } else activeUploadId = null;
   if (document.pictureInPictureElement) document.exitPictureInPicture().catch(()=>{});
   if (docPipWindow) try { docPipWindow.close(); } catch(_){}
@@ -2166,7 +2077,6 @@ function clearMedia(){
   toast('🗑️ Telão limpo.');
 }
 
-// ✅ CRÍTICO: normaliza URLs relativas para absolutas usando BACKEND_URL
 function normalizeMediaUrl(url){
   if (!url) return url;
   if (/^https?:\/\//i.test(url) || url.startsWith('blob:') || url.startsWith('data:')) return url;
@@ -2293,13 +2203,11 @@ function applyMediaState(state){
   setTimeout(() => { ytSuppressStateSend = false; }, 2000);
 }
 
-// ---------- bootstrap initial ----------
 try {
   const initialRoom = getRoomFromCurrentUrl();
   if (initialRoom) { $('inRoom').value = initialRoom; $('quickRoom').value = initialRoom; }
 } catch(_){}
 
-// ---------- events ----------
 $('toggleVideoBtn').addEventListener('click', toggleVideoSide);
 $('pipBtn').addEventListener('click', togglePictureInPicture);
 $('exitPipBtn').addEventListener('click', exitPictureInPicture);
@@ -2315,7 +2223,6 @@ $('closeChatBtn').addEventListener('click', toggleChat);
 $('donateBtn').addEventListener('click', openDonate);
 $('copyLinkBtn').addEventListener('click', copyRoomLink);
 $('leaveBtn').addEventListener('click', leaveRoom);
-$('closeDonateBtn')?.addEventListener('click', closeDonate);
 $('livePixBtn').addEventListener('click', openLivePix);
 $('copyPixBtn').addEventListener('click', copyPix);
 $('ytBtn').addEventListener('click', showYTInput);
@@ -2388,10 +2295,9 @@ setTimeout(() => { try { $('qrImg').src = DONATE_CONFIG.qrImageUrl; } catch(_){}
 updateProgress();
 loadTheme();
 
-// Stubs — evita ReferenceError
-function handleRTCMessage(msg){ /* TODO: WebRTC peer signaling */ }
+function handleRTCMessage(msg){ /* WebRTC peer signaling futuro */ }
 function closeAllRTCPeers(){ rtcPeers.forEach(p => { try { p.close(); } catch(_){} }); rtcPeers.clear(); }
-function requestScreenFromOwner(){ /* TODO: WebRTC request */ }
+function requestScreenFromOwner(){ /* WebRTC request futuro */ }
 </script>
 
 <script src="https://www.youtube.com/iframe_api" async></script>
