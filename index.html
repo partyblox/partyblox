@@ -713,7 +713,7 @@ const DONATE_CONFIG={
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
-const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 * 1024;
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false,roomUploadToken='';
 let roomPassword='';
 let hosts=[];
@@ -1029,7 +1029,7 @@ function connectRoom(creator){
         try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
-      if(m.kind==='roomState'){
+      if(m.kind==='uploadToken'){ roomUploadToken=String(m.uploadToken||''); return; }\n      if(m.kind==='roomState'){
         roomUploadToken=String(m.uploadToken||'');
         if(!appEntered){
           appEntered = true;
@@ -1689,23 +1689,9 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
   activeUploadId = uploadId;
-  let readySent = false;
+  // A mídia não é anunciada à sala durante o envio. Só será publicada
+  // pelo servidor depois que /upload-complete validar o arquivo inteiro.
   let progressiveData = null;
-
-  const notifyProgressive = async (info = {}) => {
-    if (readySent || !info.progressiveReady || !info.url) return;
-    readySent = true;
-    progressiveData = {
-      url: info.url,
-      type: info.type || file.type,
-      name: info.name || file.name,
-      uploading: true,
-      uploadedBytes: Number(info.uploadedBytes || 0),
-      totalBytes: total,
-      uploadPercent: Number(info.uploadPercent || 0)
-    };
-    if (onReady) await onReady(progressiveData);
-  };
 
   for (let index = 0; index < totalChunks; index++) {
     const start = index * CHUNK_UPLOAD_SIZE;
@@ -1762,7 +1748,6 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     const info = await response.json().catch(() => ({}));
     const pct = Math.min(99, Math.round((end / total) * 100));
     if (onProgress) onProgress(pct, index + 1, totalChunks, info);
-    await notifyProgressive(info);
   }
 
   let complete;
@@ -1803,7 +1788,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
 }
 
 function updateUploadOverlayProgress(pct, large = true, ready = false){
-  const suffix = ready ? ' — ▶️ reprodução liberada' : '';
+  const suffix = ready ? ' — arquivo completo' : '';
   $('uploadSub').textContent = `${pct}% — ${large ? 'enviando em blocos de 2 MB' : 'enviando'}${suffix}. Você pode continuar usando a sala.`;
 }
 
@@ -1813,7 +1798,7 @@ async function handleFileUpload(){
   if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/'))){$('fileInput').value='';return;}
-  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
+  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 20 GB');$('fileInput').value='';return;}
 
   // ✅ valida conexão antes de começar
   if (!ws || ws.readyState !== WebSocket.OPEN) {
@@ -1822,9 +1807,16 @@ async function handleFileUpload(){
     return;
   }
   if (!roomUploadToken) {
-    toast('❌ Token da sala ausente. Saia e entre de novo na sala.');
-    $('fileInput').value='';
-    return;
+    // Recupera o token da conexão atual sem exigir que a pessoa saia da sala.
+    try { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({kind:'refreshUploadToken'})); } catch (_) {}
+    for (let i=0; i<20 && !roomUploadToken; i++) {
+      await new Promise(resolve=>setTimeout(resolve,100));
+    }
+    if (!roomUploadToken) {
+      toast('❌ Não foi possível recuperar o token da sala. Reconecte-se e tente novamente.');
+      $('fileInput').value='';
+      return;
+    }
   }
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
@@ -1835,13 +1827,11 @@ async function handleFileUpload(){
     if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
   };
 
-  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 2 MB (até 3 GB). A reprodução começa assim que houver dados suficientes.');
+  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 2 MB (até 20 GB). A reprodução começa somente quando o arquivo inteiro chegar ao servidor.');
 
   try{
-    const onProgress=(pct,_index,_total,info)=>{
-      const ready=!!(info&&info.progressiveReady);
-      if(!progressiveStarted) updateUploadOverlayProgress(pct,true,ready);
-      else updateUploadOverlayProgress(pct,true,true);
+    const onProgress=(pct,_index,_total)=>{
+      updateUploadOverlayProgress(pct,true,false);
     };
     const data=await uploadLargeFileInChunks(f,roomId,onProgress,onReady);
 
