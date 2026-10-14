@@ -714,7 +714,7 @@ const DONATE_CONFIG={
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 * 1024;
-let myName='',roomName='',roomId='',myPlayerId=null,isHost=false,roomUploadToken='';
+let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let roomPassword='';
 let hosts=[];
 let founderId=null;
@@ -963,7 +963,7 @@ function enterApp(asHost){
   firstRoomJoin=true;
   appEntered = false;
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
-  ws=null; wsReady=false; roomUploadToken='';
+  ws=null; wsReady=false;
   const chatBox = $('chatMsgs');
   if(chatBox) chatBox.innerHTML = '';
   roomId=getRoomId();
@@ -1029,9 +1029,7 @@ function connectRoom(creator){
         try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
-      if(m.kind==='uploadToken'){ roomUploadToken=String(m.uploadToken||''); return; }
       if(m.kind==='roomState'){
-        roomUploadToken=String(m.uploadToken||'');
         if(!appEntered){
           appEntered = true;
           const n = $('roomNotice'); if(n) n.className='room-notice';
@@ -1271,7 +1269,7 @@ async function uploadChatMedia(media){
     const filename='chat_media_'+Date.now()+'.'+ext;
     const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
     const fd=new FormData();fd.append('media',file,filename);fd.append('roomId',String(roomId||'').slice(0,40));
-    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store',headers:{'X-Room-Id':String(roomId||'').slice(0,40),'X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken}});
+    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store',headers:{'X-Room-Id':String(roomId||'').slice(0,40),'X-Player-Id':String(myPlayerId||'').slice(0,40)}});
     const data=await uploaded.json().catch(()=>({}));
     if(!uploaded.ok||!data.url)throw new Error(data.error||'Falha ao enviar mídia do chat.');
     return {type:media.type,url:data.url,duration:media.duration};
@@ -1718,9 +1716,9 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
             'X-Total-Chunks': String(totalChunks),
             'X-Original-Name': encodeURIComponent(file.name || 'media'),
             'X-Mime-Type': file.type || 'application/octet-stream',
+            'X-File-Size': String(file.size),
             'X-Room-Id': String(roomId || '').slice(0, 40),
             'X-Player-Id': String(myPlayerId || '').slice(0, 40),
-            'X-Room-Token': roomUploadToken
           },
           body: blob,
           signal: controller.signal
@@ -1749,6 +1747,15 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     const info = await response.json().catch(() => ({}));
     const pct = Math.min(99, Math.round((end / total) * 100));
     if (onProgress) onProgress(pct, index + 1, totalChunks, info);
+    if (!progressiveData && info.progressiveReady && info.url) {
+      progressiveData = {
+        type: file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'image',
+        url: info.url, name: file.name, uploading: true,
+        uploadedBytes: info.uploadedBytes || end, totalBytes: total,
+        uploadPercent: info.uploadPercent || pct, updatedAt: Date.now()
+      };
+      if (onReady) await onReady(progressiveData);
+    }
   }
 
   let complete;
@@ -1760,7 +1767,6 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
           'Content-Type': 'application/json',
           'X-Player-Id': String(myPlayerId || '').slice(0, 40),
           'X-Room-Id': String(roomId || '').slice(0, 40),
-          'X-Room-Token': roomUploadToken
         },
         body: JSON.stringify({
           uploadId,
@@ -1808,28 +1814,16 @@ async function handleFileUpload(){
     $('fileInput').value='';
     return;
   }
-  if (!roomUploadToken) {
-    // Recupera o token da conexão atual sem exigir que a pessoa saia da sala.
-    try { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({kind:'refreshUploadToken'})); } catch (_) {}
-    for (let i=0; i<20 && !roomUploadToken; i++) {
-      await new Promise(resolve=>setTimeout(resolve,100));
-    }
-    if (!roomUploadToken) {
-      toast('❌ Não foi possível recuperar o token da sala. Reconecte-se e tente novamente.');
-      $('fileInput').value='';
-      return;
-    }
-  }
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
   let progressiveStarted=false;
   const onReady=async data=>{
     progressiveStarted=true;
     setUploadLoading(false);
-    if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
+    if(ty==='video'||ty==='audio') applyMediaState({...data,type:ty,paused:false,time:0,updatedAt:Date.now()});
   };
 
-  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 2 MB (até 20 GB). A reprodução começa somente quando o arquivo inteiro chegar ao servidor.');
+  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 2 MB (até 20 GB). A reprodução começa assim que houver dados suficientes no servidor; o envio continua em segundo plano.');
 
   try{
     const onProgress=(pct,_index,_total)=>{
@@ -1934,7 +1928,7 @@ function clearMedia(){
   if(activeUploadId && ws && ws.readyState===WebSocket.OPEN){
     const cancelId=activeUploadId;
     activeUploadId=null;
-    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Id':String(roomId||'').slice(0,40),'X-Room-Token':roomUploadToken},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
+    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Id':String(roomId||'').slice(0,40)},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
   } else {
     activeUploadId=null;
   }
