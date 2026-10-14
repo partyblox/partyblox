@@ -656,7 +656,7 @@ const DONATE_CONFIG={
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024;
-let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
+let myName='',roomName='',roomId='',myPlayerId=null,isHost=false,roomUploadToken='';
 let roomPassword='';
 let hosts=[];
 let founderId=null;
@@ -905,7 +905,7 @@ function enterApp(asHost){
   firstRoomJoin=true;
   appEntered = false;
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
-  ws=null; wsReady=false;
+  ws=null; wsReady=false; roomUploadToken='';
   const chatBox = $('chatMsgs');
   if(chatBox) chatBox.innerHTML = '';
   roomId=getRoomId();
@@ -972,6 +972,7 @@ function connectRoom(creator){
         return;
       }
       if(m.kind==='roomState'){
+        roomUploadToken=String(m.uploadToken||'');
         if(!appEntered){
           appEntered = true;
           const n = $('roomNotice'); if(n) n.className='room-notice';
@@ -1215,8 +1216,8 @@ async function uploadChatMedia(media){
     const ext=media.type==='image'?'jpg':media.type==='video'?'mp4':'webm';
     const filename='chat_media_'+Date.now()+'.'+ext;
     const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
-    const fd=new FormData();fd.append('media',file,filename);fd.append('roomId','');
-    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
+    const fd=new FormData();fd.append('media',file,filename);fd.append('roomId',String(roomId||'').slice(0,40));
+    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store',headers:{'X-Room-Id':String(roomId||'').slice(0,40),'X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken}});
     const data=await uploaded.json().catch(()=>({}));
     if(!uploaded.ok||!data.url)throw new Error(data.error||'Falha ao enviar mídia do chat.');
     return {type:media.type,url:data.url,duration:media.duration};
@@ -1227,7 +1228,7 @@ async function handleChatMediaUpload(){
   const f=$('chatMediaInput').files&&$('chatMediaInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/'))){$('chatMediaInput').value='';return;}
-  if(f.size>MAX_UPLOAD_BYTES){$('chatMediaInput').value='';toast('❌ Máx 3GB');return;}
+  if(f.size>300*1024*1024){$('chatMediaInput').value='';toast('❌ Mídias anexadas ao chat: máximo de 300 MB. Para vídeos maiores, use o botão de enviar mídia para o telão.');return;}
   const mediaType2=t.startsWith('image/')?'image':'video';const mediaUrl=URL.createObjectURL(f);
   const input=$('chatText');const text=input.value.trim();const pm=text.match(/^@(\S+)\s+(.+)/);
   if(pm){sendChatWithMedia(pm[2]||'[Mídia]',{type:mediaType2,url:mediaUrl},true,pm[1]);input.value='';}
@@ -1302,8 +1303,15 @@ async function loadMoviesCatalog(){
   list.innerHTML='';
   status.textContent='Carregando biblioteca de filmes...';
   try{
-    const response=await fetch(BACKEND_URL+'/movies-list?t='+Date.now(),{cache:'no-store',mode:'cors',credentials:'omit'});
-    if(!response.ok)throw new Error('Servidor respondeu HTTP '+response.status);
+    let response=null;
+    let lastStatus=0;
+    for(const endpoint of ['/movies-list','/api/movies-list']){
+      response=await fetch(BACKEND_URL+endpoint+'?t='+Date.now(),{cache:'no-store',mode:'cors',credentials:'omit'});
+      if(response.ok)break;
+      lastStatus=response.status;
+      if(response.status!==404)break;
+    }
+    if(!response||!response.ok)throw new Error('Servidor respondeu HTTP '+(response?response.status:lastStatus));
     const data=await response.json();
     if(!data||data.ok===false||!Array.isArray(data.movies))throw new Error(data&&data.error||'Resposta inválida do servidor.');
     if(!data.movies.length){
@@ -1655,7 +1663,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     for(let attempt=1; attempt<=4; attempt++){
       const controller = new AbortController();
       activeUploadController=controller;
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
       try{
         response = await fetch(BACKEND_URL + '/upload-chunk', {
           method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
@@ -1666,7 +1674,9 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
             'X-Total-Chunks':String(totalChunks),
             'X-Original-Name':encodeURIComponent(file.name || 'media'),
             'X-Mime-Type':file.type || 'application/octet-stream',
-            'X-Room-Id':String(roomId || '').slice(0,40)
+            'X-Room-Id':String(roomId || '').slice(0,40),
+            'X-Player-Id':String(myPlayerId || '').slice(0,40),
+            'X-Room-Token':roomUploadToken
           },
           body:blob, signal:controller.signal
         });
@@ -1698,7 +1708,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     try{
       complete = await fetch(BACKEND_URL + '/upload-complete', {
         method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken},
         body:JSON.stringify({uploadId,roomId:String(roomId||'').slice(0,40),name:file.name,type:file.type||'application/octet-stream',size:file.size})
       });
       if(complete.ok) break;
@@ -1745,7 +1755,7 @@ async function handleFileUpload(){
     // Imagens não têm reprodução parcial confiável; só são exibidas após 100%.
   };
 
-  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 10 MB. A reprodução começa assim que houver dados suficientes.');
+  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 10 MB (até 3 GB). A reprodução começa assim que houver dados suficientes.');
 
   try{
     const onProgress=(pct,_index,_total,info)=>{
@@ -1862,7 +1872,7 @@ function clearMedia(){
   if(activeUploadId){
     const cancelId=activeUploadId;
     activeUploadId=null;
-    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
+    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
   }
   if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   if(docPipWindow)try{docPipWindow.close();}catch(_){}
