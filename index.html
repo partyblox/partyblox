@@ -1759,6 +1759,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
         headers: {
           'Content-Type': 'application/json',
           'X-Player-Id': String(myPlayerId || '').slice(0, 40),
+          'X-Room-Id': String(roomId || '').slice(0, 40),
           'X-Room-Token': roomUploadToken
         },
         body: JSON.stringify({
@@ -1933,7 +1934,7 @@ function clearMedia(){
   if(activeUploadId && ws && ws.readyState===WebSocket.OPEN){
     const cancelId=activeUploadId;
     activeUploadId=null;
-    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
+    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Id':String(roomId||'').slice(0,40),'X-Room-Token':roomUploadToken},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
   } else {
     activeUploadId=null;
   }
