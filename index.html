@@ -1728,12 +1728,18 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
         const txt = await response.text().catch(() => '');
         if (response.status >= 400 && response.status < 500 &&
             response.status !== 408 && response.status !== 429) {
-          throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
+          const err = new Error('HTTP ' + response.status + ' em ' + BACKEND_URL + '/upload-chunk — ' + (txt || 'sem corpo') +
+            (response.status === 405 ? '. O servidor/proxy do túnel está recusando POST; confirme que o túnel aponta para o Node.js e encaminha POST/OPTIONS.' : ''));
+          err.nonRetryable = true;
+          throw err;
         }
-        throw new Error('HTTP ' + response.status);
+        throw new Error('HTTP ' + response.status + ' em ' + BACKEND_URL + '/upload-chunk');
       } catch (e) {
         clearTimeout(timeoutId);
         lastError = e;
+        // Não repete erros permanentes como 400/401/403/404/405; isso só mascara
+        // a resposta original e acaba mostrando um genérico "Failed to fetch".
+        if (e && e.nonRetryable) break;
         if (attempt < 8) {
           await new Promise(r => setTimeout(r, Math.min(15000, 1000 * Math.pow(1.5, attempt))));
         }
@@ -1741,6 +1747,9 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
     }
 
     if (!response || !response.ok) {
+      if (lastError && lastError.name === 'TypeError') {
+        throw new Error('Falha de conexão (Failed to fetch) ao acessar ' + BACKEND_URL + '/upload-chunk. Verifique tunnel.json e se o túnel Cloudflare encaminha para o servidor Node.js na porta correta.');
+      }
       throw lastError || new Error('Falha ao enviar o bloco ' + (index + 1) + '/' + totalChunks);
     }
 
@@ -1782,12 +1791,20 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
         await new Promise(r => setTimeout(r, 800 * attempt));
         continue;
       }
-      throw new Error('HTTP ' + complete.status + ' — ' + (txt || 'falha ao finalizar'));
+      const err = new Error('HTTP ' + complete.status + ' em ' + BACKEND_URL + '/upload-complete — ' + (txt || 'falha ao finalizar') +
+        (complete.status === 405 ? '. O servidor/proxy do túnel está recusando POST; confirme que o túnel aponta para o Node.js e encaminha POST/OPTIONS.' : ''));
+      err.nonRetryable = complete.status >= 400 && complete.status < 500 && complete.status !== 408 && complete.status !== 429;
+      throw err;
     } catch (e) {
-      if (attempt === 6) throw e;
+      if (e && e.nonRetryable) throw e;
+      if (attempt === 6) {
+        if (e && e.name === 'TypeError') throw new Error('Falha de conexão (Failed to fetch) ao acessar ' + BACKEND_URL + '/upload-complete. Verifique tunnel.json e o encaminhamento do túnel Cloudflare para o servidor Node.js.');
+        throw e;
+      }
       await new Promise(r => setTimeout(r, 1000 * attempt));
     }
   }
+  if (!complete) throw new Error('O servidor não respondeu ao finalizar o upload em ' + BACKEND_URL + '/upload-complete.');
   const data = await complete.json().catch(() => ({}));
   if (!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
   if (onProgress) onProgress(100, totalChunks, totalChunks, { ...data, progressiveReady: true, uploadedBytes: total, uploadPercent: 100 });
