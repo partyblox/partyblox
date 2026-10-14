@@ -1286,6 +1286,27 @@ function refreshHostChatBadges(){
   });
 }
 
+/* ═════════════════════════════════════════════════════════════
+   ✅ FIX DE URL DE MÍDIA — normaliza para BACKEND_URL
+   ═════════════════════════════════════════════════════════════ */
+function normalizeMediaUrl(url){
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith('blob:') || url.startsWith('data:')) return url;
+  if (url.startsWith('/')) return BACKEND_URL.replace(/\/+$/,'') + url;
+  return url;
+}
+function fixMediaUrl(url){
+  if (!url) return url;
+  if (/^blob:|^data:/i.test(url)) return url;
+  const base = BACKEND_URL.replace(/\/+$/, '');
+  const uploadMatch = url.match(/\/uploads\/([^?#]+)/);
+  if (uploadMatch) return base + '/uploads/' + uploadMatch[1];
+  const movieMatch = url.match(/\/movies\/([^?#]+)/);
+  if (movieMatch) return base + '/movies/' + movieMatch[1];
+  if (url.startsWith('/')) return base + url;
+  return url;
+}
+
 function addChatMsg(author, text, isSystem=false, isPrivate=false, target=null, media=null, playerId=null){
   const msgs = $('chatMsgs'), d = document.createElement('div');
   d.className = 'cmsg' + (isSystem?' system':'') + (isPrivate?' private':'');
@@ -1301,16 +1322,29 @@ function addChatMsg(author, text, isSystem=false, isPrivate=false, target=null, 
     d.appendChild(a); d.appendChild(tx);
     if (media) {
       const mc = document.createElement('div'); mc.className='chat-media-container';
+      const safeUrl = fixMediaUrl(media.url);
       if (media.type === 'image') {
-        const img = document.createElement('img'); img.src = media.url; img.className='chat-media-thumb';
-        img.onclick = () => openMediaViewer(media); mc.appendChild(img);
+        const img = document.createElement('img');
+        img.src = safeUrl;
+        img.className = 'chat-media-thumb';
+        img.loading = 'lazy';
+        img.onclick = () => openMediaViewer({...media, url: safeUrl});
+        img.onerror = () => { img.style.display = 'none'; };
+        mc.appendChild(img);
       } else if (media.type === 'video') {
-        const v = document.createElement('video'); v.src = media.url; v.className='chat-media-thumb chat-video-thumb';
-        v.muted = true; v.playsInline = true; v.onclick = () => openMediaViewer(media); mc.appendChild(v);
+        const v = document.createElement('video');
+        v.src = safeUrl;
+        v.className = 'chat-media-thumb chat-video-thumb';
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = 'metadata';
+        v.onclick = () => openMediaViewer({...media, url: safeUrl});
+        mc.appendChild(v);
       } else if (media.type === 'audio') {
         const am = document.createElement('div'); am.className='chat-audio-msg';
         am.innerHTML = `<span class="audio-icon">🎵</span><div class="audio-info"><div>Áudio (${media.duration||'?'}s)</div><div class="audio-duration">Clique para ouvir</div></div>`;
-        am.onclick = () => playChatAudio(media.url); mc.appendChild(am);
+        am.onclick = () => playChatAudio(safeUrl);
+        mc.appendChild(am);
       }
       d.appendChild(mc);
     }
@@ -1351,7 +1385,7 @@ async function uploadChatMedia(media){
     });
     const data = await uploaded.json().catch(() => ({}));
     if (!uploaded.ok || !data.url) throw new Error(data.error || 'Falha ao enviar mídia do chat.');
-    return {type: media.type, url: data.url, duration: media.duration};
+    return {type: media.type, url: fixMediaUrl(data.url), duration: media.duration};
   }
   return media;
 }
@@ -1411,20 +1445,46 @@ function cancelRecording(){
     $('micBtn').textContent = '🎤'; $('micBtn').style.background = '';
   }
 }
-function playChatAudio(url){ new Audio(url).play().catch(()=>{}); }
+function playChatAudio(url){ new Audio(fixMediaUrl(url)).play().catch(()=>{}); }
+
+/* ═════════════════════════════════════════════════════════════
+   ✅ OPEN MEDIA VIEWER — com fix de URL
+   ═════════════════════════════════════════════════════════════ */
 function openMediaViewer(media){
-  const modal = $('mediaViewerModal'), content = $('mediaViewerContent');
+  if (!media || !media.url) return;
+  const modal = $('mediaViewerModal');
+  const content = $('mediaViewerContent');
+  if (!modal || !content) return;
   while (content.children.length > 1) content.removeChild(content.lastChild);
+  const url = fixMediaUrl(media.url);
+
   if (media.type === 'image') {
-    const img = document.createElement('img'); img.src = media.url; content.appendChild(img);
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = media.name || 'Imagem';
+    img.onerror = () => toast('❌ Não foi possível carregar a imagem');
+    content.appendChild(img);
   } else if (media.type === 'video') {
-    const v = document.createElement('video'); v.src = media.url; v.controls = true; v.autoplay = true; v.playsInline = true; content.appendChild(v);
+    const v = document.createElement('video');
+    v.src = url;
+    v.controls = true;
+    v.autoplay = true;
+    v.playsInline = true;
+    v.onerror = () => toast('❌ Não foi possível carregar o vídeo');
+    content.appendChild(v);
+  } else if (media.type === 'audio') {
+    const a = document.createElement('audio');
+    a.src = url;
+    a.controls = true;
+    a.autoplay = true;
+    a.style.cssText = 'width:min(420px,80vw);margin:20px;';
+    content.appendChild(a);
   }
   modal.classList.add('active');
 }
 function closeMediaViewer(){
   const modal = $('mediaViewerModal'), content = $('mediaViewerContent');
-  content.querySelectorAll('video').forEach(v => v.pause());
+  content.querySelectorAll('video,audio').forEach(v => { try { v.pause(); } catch(_){} });
   modal.classList.remove('active');
 }
 
@@ -1826,9 +1886,9 @@ function sendLocalState(){
   wsSend({kind:'media', state});
 }
 
-// ============================================================
-// UPLOAD EM CHUNKS — via FormData (SEM preflight CORS)
-// ============================================================
+/* ═════════════════════════════════════════════════════════════
+   UPLOAD EM CHUNKS — via FormData (SEM preflight CORS)
+   ═════════════════════════════════════════════════════════════ */
 const CHUNK_UPLOAD_SIZE = 2 * 1024 * 1024;
 let activeUploadId = null;
 
@@ -1944,7 +2004,7 @@ async function uploadLargeFileInChunks(file, roomIdArg, onProgress, onReady){
   if (!data.url) throw new Error(data.error || 'Servidor não retornou URL final.');
   if (onProgress) onProgress(100, totalChunks, totalChunks, {...data, progressiveReady:true, uploadedBytes:total, uploadPercent:100});
   if (activeUploadId === uploadId) activeUploadId = null;
-  return {...data, uploading:false, uploadedBytes:total, totalBytes:total, uploadPercent:100, progressiveData};
+  return {...data, url: fixMediaUrl(data.url), uploading:false, uploadedBytes:total, totalBytes:total, uploadPercent:100, progressiveData};
 }
 function updateUploadOverlayProgress(pct, large=true, ready=false){
   $('uploadSub').textContent = `${pct}% — ${large?'enviando em blocos de 2 MB':'enviando'}${ready?' — arquivo completo':''}. Você pode continuar usando a sala.`;
@@ -1972,10 +2032,11 @@ async function handleFileUpload(){
     const data = await uploadLargeFileInChunks(f, roomId, onProgress, onReady);
     setUploadLoading(false);
     if (!data || !data.url) throw new Error('Servidor não retornou URL.');
+    const finalUrlBase = fixMediaUrl(data.url);
 
     if (ty === 'video' || ty === 'audio') {
       const el = ty === 'video' ? $('localVideo') : $('localAudio');
-      const finalUrl = data.url + (data.url.includes('?') ? '&' : '?') + 'pbfinal=' + Date.now();
+      const finalUrl = finalUrlBase + (finalUrlBase.includes('?') ? '&' : '?') + 'pbfinal=' + Date.now();
       mediaType = ty;
       el.pause(); el.src = finalUrl; el.load();
       el.dataset.name = data.name || f.name;
@@ -1991,13 +2052,13 @@ async function handleFileUpload(){
       sendLocalState();
     } else {
       mediaType = 'image';
-      lastServerMediaState = {type:'image', url:data.url, name:data.name||f.name, uploading:false, uploadPercent:100, updatedAt:Date.now()};
+      lastServerMediaState = {type:'image', url:finalUrlBase, name:data.name||f.name, uploading:false, uploadPercent:100, updatedAt:Date.now()};
       $('localVideo').style.display='none'; $('screenVideo').style.display='none';
       $('youtubeOverlay').style.display='none'; $('placeholder').style.display='none';
       const holder = $('imageHolder'); holder.style.display = 'block';
       const ctx = holder.getContext('2d'); const img = new Image();
       img.onload = () => { holder.width = img.naturalWidth || 1920; holder.height = img.naturalHeight || 1080; ctx.clearRect(0,0,holder.width,holder.height); ctx.drawImage(img,0,0); };
-      img.src = data.url;
+      img.src = finalUrlBase;
       updateMediaBadge('🖼️','Imagem'); showPlayerCtrl();
       wsSend({kind:'media', state:lastServerMediaState});
     }
@@ -2077,13 +2138,6 @@ function clearMedia(){
   toast('🗑️ Telão limpo.');
 }
 
-function normalizeMediaUrl(url){
-  if (!url) return url;
-  if (/^https?:\/\//i.test(url) || url.startsWith('blob:') || url.startsWith('data:')) return url;
-  if (url.startsWith('/')) return BACKEND_URL.replace(/\/+$/,'') + url;
-  return url;
-}
-
 function applyMediaState(state){
   if (!state) return;
   lastServerMediaState = JSON.parse(JSON.stringify(state));
@@ -2128,7 +2182,7 @@ function applyMediaState(state){
     $('screenVideo').style.display = 'none';
     $('imageHolder').style.display = 'none';
     const v = $('localVideo');
-    const url = normalizeMediaUrl(state.url);
+    const url = fixMediaUrl(state.url);
     if (url && v.src !== url) { v.src = url; v.load(); }
     v.dataset.name = state.name || '';
     v.muted = false; v.volume = 1; v.style.display = 'block';
@@ -2147,7 +2201,7 @@ function applyMediaState(state){
     $('screenVideo').style.display = 'none';
     $('imageHolder').style.display = 'none';
     const a = $('localAudio');
-    const url = normalizeMediaUrl(state.url);
+    const url = fixMediaUrl(state.url);
     if (url && a.src !== url) { a.src = url; a.load(); }
     a.dataset.name = state.name || '';
     a.muted = false; a.volume = 1;
@@ -2183,7 +2237,7 @@ function applyMediaState(state){
     };
     img.onerror = () => toast('❌ Não foi possível carregar a imagem');
     img.crossOrigin = 'anonymous';
-    img.src = normalizeMediaUrl(state.url);
+    img.src = fixMediaUrl(state.url);
     mediaType = 'image'; showPlayerCtrl();
   } else if (state.type === 'screen') {
     $('youtubeOverlay').style.display = 'none';
