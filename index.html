@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>PartyBlox</title>
+<!-- PartyBlox: index raiz compatível com /, ?room= e /room/NOME -->
+<script src="https://www.youtube.com/iframe_api"></script>
 <style>
 :root{
   --bg1:#1a1a2e;--bg2:#16213e;--bg3:#161620;--bg4:#121218;
@@ -119,19 +121,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 #tabHost{overflow-y:auto;}
 #tabGames{overflow:hidden;}
 .chat-panel.active{display:flex;}
-.movies-panel{display:flex;flex-direction:column;gap:10px;padding:12px;min-height:0;height:100%;overflow:hidden;color:var(--text);}
-.movies-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
-.movies-panel-head strong{display:block;font-size:14px;}
-.movies-panel-head small{display:block;font-size:11px;opacity:.7;margin-top:4px;line-height:1.35;}
-.movies-panel-head button{border:1px solid var(--border2);border-radius:8px;padding:8px 10px;background:rgba(255,255,255,.08);color:var(--text);cursor:pointer;flex-shrink:0;}
-.movies-status{font-size:12px;opacity:.75;line-height:1.4;flex-shrink:0;}
-.movies-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;overflow-y:auto;min-height:0;padding:2px 2px 12px;}
-.movie-card{display:flex;flex-direction:column;gap:8px;text-align:left;padding:11px;border:1px solid var(--border2);border-radius:10px;background:rgba(255,255,255,.045);color:var(--text);cursor:pointer;min-width:0;}
-.movie-card:hover{border-color:#fdcb6e;background:rgba(253,203,110,.08);}
-.movie-card .movie-icon{font-size:25px;}
-.movie-card .movie-name{font-size:12px;font-weight:700;overflow-wrap:anywhere;line-height:1.35;}
-.movie-card .movie-size{font-size:10px;opacity:.65;}
-.movie-card .movie-play{font-size:11px;color:#fdcb6e;font-weight:700;}
 .chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;background:var(--chat-bg);min-height:0;}
 .cmsg{padding:7px 9px;border-radius:7px;background:transparent;transition:.1s;}
 .cmsg:hover{background:rgba(255,255,255,.04);}
@@ -168,13 +157,7 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .theme-color-preview.blue{background:linear-gradient(135deg,#0a1929,#132f4c);}
 .theme-color-preview.purple{background:linear-gradient(135deg,#2d1b4e,#4a2c6e);}
 .theme-color-preview.green{background:linear-gradient(135deg,#1a2e1a,#213e21);}
-.theme-color-preview.red{background:linear-gradient(135deg,#2e1a1a,#3e2121);}
-.theme-color-preview.pink{background:linear-gradient(135deg,#3b1028,#852052);}
-.theme-color-preview.orange{background:linear-gradient(135deg,#3a1d0b,#824317);}
-.theme-color-preview.teal{background:linear-gradient(135deg,#082c2b,#14665f);}
-.theme-color-preview.cyan{background:linear-gradient(135deg,#062b38,#12657e);}
-.theme-color-preview.yellow{background:linear-gradient(135deg,#3a3008,#786516);}
-.theme-color-preview.rose{background:linear-gradient(135deg,#42101c,#882238);}
+.theme-color-preview.red{background:linear-gradient(135deg,#2e1a1a,#3e2121);}.theme-color-preview.pink{background:linear-gradient(135deg,#3b1028,#852052);}.theme-color-preview.orange{background:linear-gradient(135deg,#3a1d0b,#824317);}.theme-color-preview.teal{background:linear-gradient(135deg,#082c2b,#14665f);}.theme-color-preview.cyan{background:linear-gradient(135deg,#062b38,#12657e);}.theme-color-preview.yellow{background:linear-gradient(135deg,#3a3008,#786516);}.theme-color-preview.rose{background:linear-gradient(135deg,#42101c,#882238);}
 .theme-option-label{font-size:11px;font-weight:600;color:var(--text);}
 .host-panel{padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;height:100%;}
 .host-panel-header{padding:10px 12px;background:rgba(253,203,110,.1);border:1px solid rgba(253,203,110,.3);border-radius:10px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#fdcb6e;}
@@ -196,8 +179,6 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .games-panel .games-list{min-height:0;min-width:0;}
 .game-play-area{min-width:0;width:100%;}
 .game-iframe{display:block;height:100%;min-height:0;min-width:0;}
-.game-card.snes-card{border-color:rgba(162,155,254,.35);}
-.game-card.snes-card:hover{border-color:#a29bfe;}
 .games-panel.active{display:flex;}
 .games-list{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start;}
 .games-list.hidden{display:none;}
@@ -294,28 +275,22 @@ body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
 .room-notice.show{display:block;}
 .room-notice.error{background:rgba(231,76,60,.15);border-color:rgba(231,76,60,.5);color:#ff7675;}
 body.theme-light{--bg1:#f0f0f5;--bg2:#e8e8f0;--bg3:#ffffff;--bg4:#f5f5fa;--text:#2d3436;--text2:rgba(0,0,0,.7);--text3:rgba(0,0,0,.5);--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--chat-bg:#ffffff;--chat-head:#f0f0f5;--input-bg:#f5f5fa;--panel-bg:rgba(0,0,0,.05);--panel-border:rgba(0,0,0,.1);}
-body.theme-light .cmsg .text{color:#2d3436;}
-body.theme-light .video-placeholder{color:#666;}
-body.theme-light .video-placeholder h3{color:#444;}
-body.theme-light .video-placeholder p{color:#666;}
-body.theme-light .panel input[type=text],body.theme-light .panel input[type=password]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
-body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}
-body.theme-light .game-play-close:hover{background:rgba(231,76,60,.2);}
+body.theme-light .cmsg .text{color:#2d3436;}body.theme-light .video-placeholder{color:#666;}body.theme-light .video-placeholder h3{color:#444;}body.theme-light .video-placeholder p{color:#666;}body.theme-light .panel input[type=text],body.theme-light .panel input[type=password]{color:#2d3436;background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
+body.theme-light .game-play-close{background:rgba(0,0,0,.1);color:#2d3436;}body.theme-light .game-play-close:hover{background:rgba(231,76,60,.2);}
 body.theme-blue{--bg1:#0a1929;--bg2:#132f4c;--bg3:#173a5e;--bg4:#0d2137;--text:#e3f2fd;--text2:rgba(227,242,253,.7);--text3:rgba(227,242,253,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#173a5e;--chat-head:#0a1929;--input-bg:#132f4c;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-purple{--bg1:#2d1b4e;--bg2:#4a2c6e;--bg3:#5e3a8a;--bg4:#3d2260;--text:#f3e5f5;--text2:rgba(243,229,245,.7);--text3:rgba(243,229,245,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5e3a8a;--chat-head:#2d1b4e;--input-bg:#4a2c6e;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-green{--bg1:#1a2e1a;--bg2:#213e21;--bg3:#2d5a2d;--bg4:#1a3a1a;--text:#e8f5e9;--text2:rgba(232,245,233,.7);--text3:rgba(232,245,233,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#2d5a2d;--chat-head:#1a2e1a;--input-bg:#213e21;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
-body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#ffebee;--text2:rgba(255,235,238,.7);--text3:rgba(255,235,238,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5a2d2d;--chat-head:#2e1a1a;--input-bg:#3e2121;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
-body.theme-pink{--bg1:#3b1028;--bg2:#64163f;--bg3:#852052;--bg4:#4d1232;--text:#ffe6f2;--text2:rgba(255,230,242,.7);--text3:rgba(255,230,242,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#852052;--chat-head:#3b1028;--input-bg:#64163f;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
+body.theme-red{--bg1:#2e1a1a;--bg2:#3e2121;--bg3:#5a2d2d;--bg4:#3a1a1a;--text:#ffebee;--text2:rgba(255,235,238,.7);--text3:rgba(255,235,238,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#5a2d2d;--chat-head:#2e1a1a;--input-bg:#3e2121;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}body.theme-pink{--bg1:#3b1028;--bg2:#64163f;--bg3:#852052;--bg4:#4d1232;--text:#ffe6f2;--text2:rgba(255,230,242,.7);--text3:rgba(255,230,242,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#852052;--chat-head:#3b1028;--input-bg:#64163f;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-orange{--bg1:#3a1d0b;--bg2:#63310f;--bg3:#824317;--bg4:#4b250c;--text:#fff0df;--text2:rgba(255,240,223,.7);--text3:rgba(255,240,223,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#824317;--chat-head:#3a1d0b;--input-bg:#63310f;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-teal{--bg1:#082c2b;--bg2:#0d4a47;--bg3:#14665f;--bg4:#0b3735;--text:#e0fffb;--text2:rgba(224,255,251,.7);--text3:rgba(224,255,251,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#14665f;--chat-head:#082c2b;--input-bg:#0d4a47;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-cyan{--bg1:#062b38;--bg2:#0b4b60;--bg3:#12657e;--bg4:#083a4b;--text:#e1f9ff;--text2:rgba(225,249,255,.7);--text3:rgba(225,249,255,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#12657e;--chat-head:#062b38;--input-bg:#0b4b60;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-yellow{--bg1:#3a3008;--bg2:#5e4e0d;--bg3:#786516;--bg4:#4b3f0b;--text:#fffde2;--text2:rgba(255,253,226,.7);--text3:rgba(255,253,226,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#786516;--chat-head:#3a3008;--input-bg:#5e4e0d;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#ffe8ed;--text2:rgba(255,232,237,.7);--text3:rgba(255,232,237,.5);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--chat-bg:#882238;--chat-head:#42101c;--input-bg:#691827;--panel-bg:rgba(255,255,255,.08);--panel-border:rgba(255,255,255,.15);}
 @media (max-width: 900px) and (orientation: portrait) {
-  .main{flex-direction:column;}.video-side{min-height:40vh;min-width:100%;}.chat-side{width:100%!important;min-width:100%;flex:1;max-width:none;}.divider{width:100%;height:6px;cursor:row-resize;}.divider::before{width:40px;height:4px;}.host-controls{top:10px;right:10px;max-width:60%;}.media-badge{top:10px;left:10px;}.topbar{padding:8px 10px;gap:6px;}.topbar-right{width:100%;justify-content:flex-end;margin-top:4px;}.tiers{grid-template-columns:repeat(2,1fr);}.vol-slider{width:50px;}.chat-hint{display:none;}.theme-grid{grid-template-columns:repeat(2,1fr);}
+  .main { flex-direction: column; }.video-side { min-height: 40vh; min-width: 100%; }.chat-side { width: 100% !important; min-width: 100%; flex: 1; max-width: none; }.divider { width: 100%; height: 6px; cursor: row-resize; }.divider::before { width: 40px; height: 4px; }.host-controls { top: 10px; right: 10px; max-width: 60%; }.media-badge { top: 10px; left: 10px; }.topbar { padding: 8px 10px; gap: 6px; }.topbar-right { width: 100%; justify-content: flex-end; margin-top: 4px; }.tiers { grid-template-columns: repeat(2, 1fr); }.vol-slider { width: 50px; }.chat-hint { display: none; }.theme-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 900px) and (orientation: landscape) {
-  .main{flex-direction:row!important;}.video-side{min-width:50%!important;flex:1!important;}.chat-side{width:40%!important;min-width:200px!important;max-width:300px!important;flex-shrink:0!important;display:flex!important;flex-direction:column!important;height:100%!important;}.divider{width:6px!important;height:100%!important;cursor:col-resize!important;}.divider::before{width:4px!important;height:30px!important;}.chat-head{height:36px!important;}.chat-head h3{font-size:13px!important;}.chat-tabs{padding:4px!important;}.c-tab{padding:5px 4px!important;font-size:11px!important;}.chat-msgs{flex:1!important;min-height:0!important;overflow-y:auto!important;}.chat-in{padding:6px!important;flex-shrink:0!important;}.chat-in input{padding:8px 10px!important;font-size:12px!important;}.chat-in button{padding:8px 10px!important;}.emo-btn{width:32px!important;height:32px!important;font-size:14px!important;}.emoji-pop{bottom:45px!important;width:280px!important;}.emoji-pop button{width:32px!important;height:32px!important;font-size:18px!important;}.games-list{grid-template-columns:1fr!important;}.theme-grid{grid-template-columns:repeat(2,1fr);}
+  .main { flex-direction: row !important; }.video-side { min-width: 50% !important; flex: 1 !important; }.chat-side { width: 40% !important; min-width: 200px !important; max-width: 300px !important; flex-shrink: 0 !important; display: flex !important; flex-direction: column !important; height: 100% !important; }.divider { width: 6px !important; height: 100% !important; cursor: col-resize !important; }.divider::before { width: 4px !important; height: 30px !important; }.chat-head { height: 36px !important; }.chat-head h3 { font-size: 13px !important; }.chat-tabs { padding: 4px !important; }.c-tab { padding: 5px 4px !important; font-size: 11px !important; }.chat-msgs { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; }.chat-in { padding: 6px !important; flex-shrink: 0 !important; }.chat-in input { padding: 8px 10px !important; font-size: 12px !important; }.chat-in button { padding: 8px 10px !important; }.emo-btn { width: 32px !important; height: 32px !important; font-size: 14px !important; }.emoji-pop { bottom: 45px !important; width: 280px !important; }.emoji-pop button { width: 32px !important; height: 32px !important; font-size: 18px !important; }.games-list { grid-template-columns: 1fr !important; }.theme-grid { grid-template-columns: repeat(2, 1fr); }
 }
 .chat-panel#tabEmote{overflow-y:auto;overflow-x:hidden;min-height:0;}
 .chat-panel#tabEmote .theme-grid{padding-bottom:16px;}
@@ -507,7 +482,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
         <button class="c-tab" data-tab="emote">🎨</button>
         <button class="c-tab" data-tab="host">👑 Host</button>
         <button class="c-tab" data-tab="games">🎮 Jogos</button>
-        <button class="c-tab" data-tab="movies">🎬 Filmes</button>
       </div>
       <div class="chat-panel active" id="tabChat">
         <div class="chat-msgs" id="chatMsgs"></div>
@@ -570,16 +544,6 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
           </div>
         </div>
       </div>
-      <div class="chat-panel" id="tabMovies">
-        <div class="movies-panel">
-          <div class="movies-panel-head">
-            <div><strong>🎬 Filmes baixados</strong><small>Escolha um filme para reproduzir no telão para toda a sala.</small></div>
-            <button type="button" id="refreshMoviesBtn">↻ Atualizar</button>
-          </div>
-          <div id="moviesStatus" class="movies-status">Carregando biblioteca...</div>
-          <div id="moviesList" class="movies-list"></div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -627,37 +591,9 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
 <input type="file" id="fileInput" class="file-input" accept="image/*,video/*,audio/*">
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
-
 <script>
-// ✅ CORREÇÃO: carrega tunnel.json ANTES de qualquer uso de BACKEND_URL
-window.__PARTYBLOX_BACKEND_READY__ = false;
-window.__PARTYBLOX_BOOTSTRAP__ = (async function bootstrapBackend() {
-  const candidates = [
-    'tunnel.json?t=' + Date.now(),
-    'config.json?t=' + Date.now()
-  ];
-  for (const url of candidates) {
-    try {
-      const r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) continue;
-      const data = await r.json();
-      const raw = (data && (data.url || data.backend || data.ws)) || '';
-      if (raw && String(raw).trim()) {
-        window.PARTYBLOX_WS_URL = String(raw).trim();
-        console.log('[BACKEND] tunnel.json carregado:', window.PARTYBLOX_WS_URL);
-        break;
-      }
-    } catch (e) { /* tenta próximo */ }
-  }
-  if (!window.PARTYBLOX_WS_URL) {
-    console.warn('[BACKEND] tunnel.json/config.json ausente ou inválido. Usando a origem atual.');
-  }
-  window.__PARTYBLOX_BACKEND_READY__ = true;
-  window.dispatchEvent(new Event('partyblox-backend-ready'));
-  return true;
-})();
+  window.PARTYBLOX_WS_URL = "https://aspect-bridal-incorporate-widescreen.trycloudflare.com";
 </script>
-
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -668,53 +604,29 @@ function setUploadLoading(active,title='Aguarde o carregamento...',sub='Enviando
   o.classList.toggle('active',!!active);
 }
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
-
-// ✅ CORREÇÃO: normaliza http(s)/ws(s) e respeita IPs privados (ws://)
 function buildWsUrl(rawInput){
   let raw = String(rawInput || '').trim();
   if(!raw) return '';
-  if(/^wss?:\/\//i.test(raw)) return raw.replace(/\/+$/,'');
-  raw = raw.replace(/^https?:\/\//i, '').replace(/\/+$/,'');
+  raw = raw.replace(/^https?:\/\//i, '').replace(/^wss?:\/\//i, '');
+  raw = raw.replace(/\/+$/,'');
   if(!raw) return '';
-  if(/^(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(raw)) {
-    return 'ws://' + raw;
-  }
   return 'wss://' + raw;
 }
-
-let BACKEND_URL = `${location.protocol}//${location.host}`;
-
-function updateBackendUrl(){
+const BACKEND_URL = (() => {
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
-  if (ws) {
-    BACKEND_URL = ws.replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://');
-  } else {
-    BACKEND_URL = `${location.protocol}//${location.host}`;
+  if(ws) return ws.replace(/^wss:\/\//i, 'https://');
+  if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
+    return `${location.protocol}//${location.host}`;
   }
-  console.log('[BACKEND] usando', BACKEND_URL);
-
-  const isStaticHost =
-    /github\.io$/i.test(location.hostname) ||
-    /githubpages|netlify\.app|vercel\.app|pages\.dev$/i.test(location.hostname);
-  if (isStaticHost && BACKEND_URL === `${location.protocol}//${location.host}`) {
-    console.error('[BACKEND] ⚠️ BACKEND_URL aponta para o frontend estático!');
-    setTimeout(() => {
-      toast('⚠️ Configure o tunnel.json com a URL do servidor (TV Box)');
-    }, 800);
-  }
-  return BACKEND_URL;
-}
-
-updateBackendUrl();
-window.addEventListener('partyblox-backend-ready', () => { updateBackendUrl(); });
-
+  return 'https://partyblox.onrender.com';
+})();
 const DONATE_CONFIG={
   pixKey:'watchparty@livepix.gg',
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
-const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 * 1024;
-let myName='',roomName='',roomId='',myPlayerId=null,isHost=false,roomUploadToken='';
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024;
+let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let roomPassword='';
 let hosts=[];
 let founderId=null;
@@ -735,7 +647,6 @@ let mediaNeedsInteraction=false;
 let pipElement=null;
 let youtubeNativePipReady=false;
 let docPipWindow = null;
-
 function getPipVideoElement(){
   if(mediaType==='video') return $('localVideo');
   if(mediaType==='screen') return $('screenVideo');
@@ -857,7 +768,7 @@ function setTheme(t,silent=false){
 function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
 
 /* ===== AUTOPLAY ===== */
-function showMediaInteraction(){}
+function showMediaInteraction(){ /* overlay removido */ }
 function hideMediaInteraction(){ mediaNeedsInteraction=false; }
 async function safePlay(el){
   if(!el) return;
@@ -870,6 +781,7 @@ function resumeCurrentMedia(){
     else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=false; a.volume=1; safePlay(a); }
     else if(mediaType==='youtube'&&youtubePlayer){
       youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo();
+      postToYouTubePopup('unmute'); postToYouTubePopup('volume',{volume:100}); postToYouTubePopup('play');
     }
   }catch(_){}
 }
@@ -885,8 +797,6 @@ function toggleControls(){
   else{vc.classList.remove('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ UI';}
 }
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
-let activeUploadId=null;
-let activeUploadController=null;
 const MAX_AUDIO_DURATION=30;
 function openDonate(){$('donateModal').classList.add('active');}
 function closeDonate(){$('donateModal').classList.remove('active');}
@@ -906,11 +816,11 @@ function openLivePix(){
 }
 setTimeout(()=>{try{$('qrImg').src=DONATE_CONFIG.qrImageUrl;}catch(_){}},500);
 function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-').slice(0,30);}
-
 function wsUrl(){
   const built = buildWsUrl(window.PARTYBLOX_WS_URL);
-  if (built) return built;
-  return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`;
+  if(built) return built;
+  if(location.hostname==='localhost'||location.hostname==='127.0.0.1')return `ws://${location.host}`;
+  return 'wss://partyblox.onrender.com';
 }
 function wsSend(m){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(m));}
 function startMediaHeartbeat(){
@@ -942,14 +852,21 @@ function createRoom(){
 function getRoomFromCurrentUrl(){
   const p=new URLSearchParams(location.search);
   let room=p.get('room')||'';
+
+  // Também aceita links bonitos:
+  // /room/NOME-DA-SALA
+  // /watch/NOME-DA-SALA
   if(!room){
     const parts=location.pathname.split('/').filter(Boolean);
     if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){
       try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); }
     }
   }
+
+  // Limpa caracteres que não devem entrar no ID da sala.
   return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30);
 }
+
 function joinFromLink(){
   const roomFromUrl=getRoomFromCurrentUrl();
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
@@ -963,7 +880,7 @@ function enterApp(asHost){
   firstRoomJoin=true;
   appEntered = false;
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
-  ws=null; wsReady=false; roomUploadToken='';
+  ws=null; wsReady=false;
   const chatBox = $('chatMsgs');
   if(chatBox) chatBox.innerHTML = '';
   roomId=getRoomId();
@@ -1029,9 +946,7 @@ function connectRoom(creator){
         try{ $('inPass').value=''; $('inPass').focus(); }catch(_){}
         return;
       }
-      if(m.kind==='uploadToken'){ roomUploadToken=String(m.uploadToken||''); return; }
       if(m.kind==='roomState'){
-        roomUploadToken=String(m.uploadToken||'');
         if(!appEntered){
           appEntered = true;
           const n = $('roomNotice'); if(n) n.className='room-notice';
@@ -1060,13 +975,14 @@ function connectRoom(creator){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;}
         else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
         updateHostUI();updateHostPanel();refreshHostChatBadges();
-      }else if(m.kind==='movieError'){toast('🎬 '+(m.message||'Não foi possível abrir esse filme.'));}
-      else if(m.kind==='rtc')handleRTCMessage(m);
+      }else if(m.kind==='rtc')handleRTCMessage(m);
       else if(m.kind==='media'||m.kind==='syncState'||m.kind==='sync'){
         if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null;
         const state=m.state||m.media;
         if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));applyMediaState(state);}
       }else if(m.kind==='mediaHeartbeat'){
+        // Heartbeat is persisted on the server but intentionally not broadcast,
+        // so a temporary connection hiccup does not make everyone restart the player.
         if(m.state){lastServerMediaState=JSON.parse(JSON.stringify(m.state));}
       }else if(m.kind==='syncRequest'){
         if(isHost){
@@ -1147,8 +1063,12 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function transferHost(targetId,targetName){
   if(!isHost)return toast('👑 Só hosts podem dar host');
   if(targetId===myPlayerId)return;
-  wsSend({kind:'transferHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
-  if(serverMultiHost && !hosts.includes(targetId))hosts.push(targetId);
+  if(serverMultiHost){
+    wsSend({kind:'transferHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
+    if(!hosts.includes(targetId))hosts.push(targetId);
+  }else{
+    wsSend({kind:'transferHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
+  }
   wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`👑 ${myName} deu host para ${targetName}`,system:true,timestamp:Date.now()});
   toast('👑 Host dado para '+targetName);
   updateHostPanel();
@@ -1157,8 +1077,10 @@ function removeHost(targetId,targetName){
   if(!isHost)return toast('👑 Só hosts podem retirar host');
   if(targetId===myPlayerId)return toast('❌ Você não pode retirar seu próprio host');
   if(targetId===founderId)return toast('❌ Não é possível retirar o fundador');
-  wsSend({kind:'removeHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
-  if(serverMultiHost)hosts=hosts.filter(h=>h!==targetId);
+  if(serverMultiHost){
+    wsSend({kind:'removeHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
+    hosts=hosts.filter(h=>h!==targetId);
+  }
   wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🚫 ${myName} retirou o host de ${targetName}`,system:true,timestamp:Date.now()});
   toast('🚫 Host retirado de '+targetName);
   updateHostPanel();
@@ -1193,7 +1115,6 @@ function switchTab(t){
     },0);
   }
   if(t==='games')loadGamesList();
-  if(t==='movies')loadMoviesCatalog();
   if(t==='host')updateHostPanel();
 }
 function toggleChat(){
@@ -1265,16 +1186,15 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
 }
 async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
-    const response=await fetch(media.url);
-    const blob=await response.blob();
-    const ext=media.type==='image'?'jpg':media.type==='video'?'mp4':'webm';
-    const filename='chat_media_'+Date.now()+'.'+ext;
-    const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
-    const fd=new FormData();fd.append('media',file,filename);fd.append('roomId',String(roomId||'').slice(0,40));
-    const uploaded=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store',headers:{'X-Room-Id':String(roomId||'').slice(0,40),'X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken}});
-    const data=await uploaded.json().catch(()=>({}));
-    if(!uploaded.ok||!data.url)throw new Error(data.error||'Falha ao enviar mídia do chat.');
-    return {type:media.type,url:data.url,duration:media.duration};
+    const response=await fetch(media.url);const blob=await response.blob();const fd=new FormData();
+    fd.append('media',blob,'chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm'));
+    fd.append('roomId', roomId);
+    const res=await fetch(BACKEND_URL+'/upload-chat',{method:'POST',body:fd,cache:'no-store'});
+    const ct=(res.headers.get('content-type')||'').toLowerCase();let data=null;
+    if(ct.includes('application/json')){try{data=await res.json();}catch(_){}}
+    else{await res.text();throw new Error('Backend respondeu HTML');}
+    if(!res.ok||!data||!data.url)throw new Error((data&&data.error)||'Upload falhou');
+    return{type:media.type,url:data.url,duration:media.duration};
   }
   return media;
 }
@@ -1282,7 +1202,7 @@ async function handleChatMediaUpload(){
   const f=$('chatMediaInput').files&&$('chatMediaInput').files[0];if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/'))){$('chatMediaInput').value='';return;}
-  if(f.size>300*1024*1024){$('chatMediaInput').value='';toast('❌ Mídias anexadas ao chat: máximo de 300 MB. Para vídeos maiores, use o botão de enviar mídia para o telão.');return;}
+  if(f.size>MAX_UPLOAD_BYTES){$('chatMediaInput').value='';toast('❌ Máx 3GB');return;}
   const mediaType2=t.startsWith('image/')?'image':'video';const mediaUrl=URL.createObjectURL(f);
   const input=$('chatText');const text=input.value.trim();const pm=text.match(/^@(\S+)\s+(.+)/);
   if(pm){sendChatWithMedia(pm[2]||'[Mídia]',{type:mediaType2,url:mediaUrl},true,pm[1]);input.value='';}
@@ -1341,55 +1261,6 @@ const BUILTIN_GAMES=[
   {id:'chess',name:'Xadrez Online',icon:'♟️',desc:'Xadrez completo com validação',file:'games/chess.html'},
   {id:'checkers',name:'Damas',icon:'🔴',desc:'Damas brasileiras · captura obrigatória',file:'games/checkers.html'}
 ];
-
-function escapeMovieName(value){
-  return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
-function formatMovieSize(bytes){
-  const n=Number(bytes)||0;
-  if(n<1024*1024)return (n/1024).toFixed(0)+' KB';
-  if(n<1024*1024*1024)return (n/1024/1024).toFixed(1)+' MB';
-  return (n/1024/1024/1024).toFixed(2)+' GB';
-}
-async function loadMoviesCatalog(){
-  const list=$('moviesList'),status=$('moviesStatus');
-  if(!list||!status)return;
-  list.innerHTML='';
-  status.textContent='Carregando biblioteca de filmes...';
-  try{
-    let response=null;
-    let lastStatus=0;
-    const endpoints=['/movies-list','/api/movies-list'];
-    for(const endpoint of endpoints){
-      response=await fetch(BACKEND_URL+endpoint+'?t='+Date.now(),{cache:'no-store',mode:'cors',credentials:'omit'});
-      if(response.ok)break;
-      lastStatus=response.status;
-      if(response.status!==404)break;
-    }
-    if(!response||!response.ok)throw new Error('Servidor respondeu HTTP '+(response?response.status:lastStatus));
-    const data=await response.json();
-    if(!data||data.ok===false||!Array.isArray(data.movies))throw new Error(data&&data.error||'Resposta inválida do servidor.');
-    if(!data.movies.length){
-      status.textContent='Nenhum filme compatível foi encontrado na pasta '+(data.directory||'movies')+'. Coloque MP4, WebM, MOV, M4V, OGV, MKV ou AVI nessa pasta e toque em Atualizar.';
-      return;
-    }
-    status.textContent=data.movies.length+' filme(s) disponível(is). Toque em um filme para todos assistirem juntos.';
-    data.movies.forEach(movie=>{
-      const button=document.createElement('button');
-      button.type='button';button.className='movie-card';
-      button.innerHTML='<span class="movie-icon">🎬</span><span class="movie-name">'+escapeMovieName(movie.name)+'</span><span class="movie-size">'+formatMovieSize(movie.size)+'</span><span class="movie-play">▶ Reproduzir na sala</span>';
-      button.addEventListener('click',()=>{
-        if(!ws||ws.readyState!==WebSocket.OPEN){toast('⚠️ Conecte-se novamente à sala antes de escolher um filme.');return;}
-        wsSend({kind:'moviePlay',name:movie.name});
-        toast('🎬 Enviando filme para o telão da sala...');
-      });
-      list.appendChild(button);
-    });
-  }catch(error){
-    status.textContent='Não foi possível carregar os filmes: '+(error&&error.message?error.message:'erro de conexão')+'. Verifique se o túnel está ativo em '+BACKEND_URL+'.';
-  }
-}
-
 let gamesList=null;
 async function loadGamesList(){
   const list=$('gamesList');if(!list)return;
@@ -1417,19 +1288,17 @@ function renderGamesList(list){
 }
 let gameSessions={};
 function openGame(game){
-  currentGame=game;
-  $('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name;
-  $('gameIframe').style.display='block';
+  currentGame=game;$('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name;
   const iframe=$('gameIframe');iframe.src=game.file;
   iframe.onload=()=>{iframe.contentWindow.postMessage({__game:true,game:game.id,type:'hello',myId:myPlayerId,myName:myName},'*');};
   gameSessions[game.id]={players:[],pendingStart:null};
   $('gamesList').classList.add('hidden');$('gamePlayArea').classList.add('active');
-  wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()});
+  wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()});
 }
 function closeGame(){
   if(currentGame)wsSend({kind:'game_event',game:currentGame.id,type:'player_left',player:myPlayerId});
   currentGame=null;$('gamePlayArea').classList.remove('active');$('gamesList').classList.remove('hidden');
-  $('gameIframe').src='about:blank';$('gameIframe').style.display='block';gameSessions={};
+  $('gameIframe').src='about:blank';gameSessions={};
 }
 window.addEventListener('message',e=>{
   const m=e.data;if(!m||!m.__game||!currentGame||m.game!==currentGame.id)return;handleGameMsg(m);
@@ -1629,13 +1498,13 @@ function seekTo(e){
   else if(mediaType==='audio'){$('localAudio').currentTime=$('localAudio').duration*p;sendLocalState();}
 }
 function toggleMute(){
-  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';}}
+  if(mediaType==='youtube'){const m=youtubePlayer.isMuted();if(m){youtubePlayer.unMute();postToYouTubePopup('unmute');$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();postToYouTubePopup('mute');$('muteBtn').textContent='🔇';}}
   else if(mediaType==='video'){const v=$('localVideo');v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇':'🔊';}
   else if(mediaType==='audio'){const a=$('localAudio');a.muted=!a.muted;$('muteBtn').textContent=a.muted?'🔇':'🔊';}
 }
 function setVolume(v){
   const vol=v/100;
-  if(mediaType==='youtube'){youtubePlayer.setVolume(v);}
+  if(mediaType==='youtube'){youtubePlayer.setVolume(v);postToYouTubePopup('volume',{volume:v});}
   else if(mediaType==='video')$('localVideo').volume=vol;
   else if(mediaType==='audio')$('localAudio').volume=vol;
   $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
@@ -1678,198 +1547,227 @@ function sendLocalState(){
   const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state});
 }
 
-/* ===== UPLOAD EM CHUNKS ===== */
-// ✅ CORREÇÃO CRÍTICA #3: chunk de 2 MB (Cloudflare Quick Tunnel derruba uploads grandes)
-const CHUNK_UPLOAD_SIZE = 2 * 1024 * 1024;
-const PROGRESSIVE_START_PERCENT = 12;
-const PROGRESSIVE_MIN_BYTES = 8 * 1024 * 1024;
+/* ===== UPLOAD: SOBE 100% E DEPOIS AVISA TODO MUNDO ===== */
+/* ===== UPLOAD GRANDE VIA CHUNKS =====
+   Evita o limite de ~100 MB por requisição do Cloudflare Tunnel.
+   Arquivos pequenos continuam usando /upload normalmente.
+*/
+const CHUNK_UPLOAD_SIZE = 20 * 1024 * 1024; // 20 MB por requisição
+const LARGE_UPLOAD_THRESHOLD = 80 * 1024 * 1024;
 
-async function uploadLargeFileInChunks(file, roomId, onProgress, onReady){
+async function uploadLargeFileInChunks(file, roomId, onProgress){
   const total = file.size;
   const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
-  activeUploadId = uploadId;
-  // A mídia não é anunciada à sala durante o envio. Só será publicada
-  // pelo servidor depois que /upload-complete validar o arquivo inteiro.
-  let progressiveData = null;
 
-  for (let index = 0; index < totalChunks; index++) {
+  for(let index=0; index<totalChunks; index++){
     const start = index * CHUNK_UPLOAD_SIZE;
     const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
     const blob = file.slice(start, end);
-    let response = null;
-    let lastError = null;
 
-    for (let attempt = 1; attempt <= 8; attempt++) {
-      // ✅ CORREÇÃO CRÍTICA #4: aborta se o WebSocket morreu durante o upload
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        throw new Error('Conexão com a sala foi perdida durante o upload. Reconecte-se e tente de novo.');
-      }
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 600000);
-      try {
+    let response;
+    let lastError;
+    for(let attempt=1; attempt<=3; attempt++){
+      try{
         response = await fetch(BACKEND_URL + '/upload-chunk', {
-          method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'X-Upload-Id': uploadId,
-            'X-Chunk-Index': String(index),
-            'X-Total-Chunks': String(totalChunks),
-            'X-Original-Name': encodeURIComponent(file.name || 'media'),
-            'X-Mime-Type': file.type || 'application/octet-stream',
-            'X-Room-Id': String(roomId || '').slice(0, 40),
-            'X-Player-Id': String(myPlayerId || '').slice(0, 40),
-            'X-Room-Token': roomUploadToken
+          method:'POST',
+          headers:{
+            'Content-Type':'application/octet-stream',
+            'X-Upload-Id':uploadId,
+            'X-Chunk-Index':String(index),
+            'X-Total-Chunks':String(totalChunks),
+            'X-Original-Name':encodeURIComponent(file.name),
+            'X-Mime-Type':file.type || 'application/octet-stream',
+            'X-Room-Id':String(roomId || '').slice(0,40)
           },
-          body: blob,
-          signal: controller.signal
+          body:blob
         });
-        clearTimeout(timeoutId);
-        if (response.ok) break;
-        const txt = await response.text().catch(() => '');
-        if (response.status >= 400 && response.status < 500 &&
-            response.status !== 408 && response.status !== 429) {
-          throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
-        }
-        throw new Error('HTTP ' + response.status);
-      } catch (e) {
-        clearTimeout(timeoutId);
-        lastError = e;
-        if (attempt < 8) {
-          await new Promise(r => setTimeout(r, Math.min(15000, 1000 * Math.pow(1.5, attempt))));
-        }
+        if(response.ok) break;
+        const txt = await response.text().catch(()=> '');
+        throw new Error(txt || ('HTTP ' + response.status));
+      }catch(e){
+        lastError=e;
+        if(attempt<3) await new Promise(r=>setTimeout(r, 1000*attempt));
       }
     }
-
-    if (!response || !response.ok) {
-      throw lastError || new Error('Falha ao enviar o bloco ' + (index + 1) + '/' + totalChunks);
+    if(!response || !response.ok){
+      throw lastError || new Error('Falha ao enviar o bloco ' + (index+1));
     }
 
-    const info = await response.json().catch(() => ({}));
     const pct = Math.min(99, Math.round((end / total) * 100));
-    if (onProgress) onProgress(pct, index + 1, totalChunks, info);
+    if(onProgress) onProgress(pct, index+1, totalChunks);
   }
 
-  let complete;
-  for (let attempt = 1; attempt <= 6; attempt++) {
-    try {
-      complete = await fetch(BACKEND_URL + '/upload-complete', {
-        method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Player-Id': String(myPlayerId || '').slice(0, 40),
-          'X-Room-Token': roomUploadToken
-        },
-        body: JSON.stringify({
-          uploadId,
-          roomId: String(roomId || '').slice(0, 40),
-          name: file.name,
-          type: file.type || 'application/octet-stream',
-          size: file.size
-        })
-      });
-      if (complete.ok) break;
-      const txt = await complete.text().catch(() => '');
-      if (complete.status === 409 && attempt < 6) {
-        await new Promise(r => setTimeout(r, 800 * attempt));
-        continue;
-      }
-      throw new Error('HTTP ' + complete.status + ' — ' + (txt || 'falha ao finalizar'));
-    } catch (e) {
-      if (attempt === 6) throw e;
-      await new Promise(r => setTimeout(r, 1000 * attempt));
-    }
-  }
-  const data = await complete.json().catch(() => ({}));
-  if (!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
-  if (onProgress) onProgress(100, totalChunks, totalChunks, { ...data, progressiveReady: true, uploadedBytes: total, uploadPercent: 100 });
-  if (activeUploadId === uploadId) activeUploadId = null;
-  return { ...data, uploading: false, uploadedBytes: total, totalBytes: total, uploadPercent: 100, progressiveData };
+  const complete = await fetch(BACKEND_URL + '/upload-complete', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      uploadId,
+      roomId:String(roomId || '').slice(0,40),
+      name:file.name,
+      type:file.type || 'application/octet-stream',
+      size:file.size
+    })
+  });
+
+  const data = await complete.json().catch(()=>({}));
+  if(!complete.ok || !data.url) throw new Error(data.error || 'Falha ao finalizar o upload.');
+  if(onProgress) onProgress(100,totalChunks,totalChunks);
+  return data;
 }
 
-function updateUploadOverlayProgress(pct, large = true, ready = false){
-  const suffix = ready ? ' — arquivo completo' : '';
-  $('uploadSub').textContent = `${pct}% — ${large ? 'enviando em blocos de 2 MB' : 'enviando'}${suffix}. Você pode continuar usando a sala.`;
+async function uploadSmallFileNormal(file, roomId, onProgress){
+  const form = new FormData();
+  form.append('media', file);
+  form.append('roomId', roomId || '');
+
+  const xhr = new XMLHttpRequest();
+  const promise = new Promise((resolve,reject)=>{
+    xhr.open('POST', BACKEND_URL + '/upload', true);
+    xhr.upload.onprogress = e=>{
+      if(e.lengthComputable && onProgress)
+        onProgress(Math.round((e.loaded/e.total)*100),1,1);
+    };
+    xhr.onload = ()=>{
+      let data={};
+      try{data=JSON.parse(xhr.responseText||'{}')}catch(_){}
+      if(xhr.status>=200 && xhr.status<300 && data.url) resolve(data);
+      else reject(new Error(data.error || ('Falha no upload (HTTP '+xhr.status+').')));
+    };
+    xhr.onerror=()=>reject(new Error('Falha de rede durante o upload.'));
+    xhr.ontimeout=()=>reject(new Error('Tempo esgotado durante o upload.'));
+    xhr.timeout=0;
+    xhr.send(form);
+  });
+  return promise;
 }
 
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0];
   if(!f)return;
-  const t=f.type||'';
-  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/'))){$('fileInput').value='';return;}
-  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 20 GB');$('fileInput').value='';return;}
 
-  // ✅ valida conexão antes de começar
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    toast('❌ Você não está conectado à sala. Reconecte-se e tente novamente.');
+  const t=f.type||'';
+  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/')))return;
+  if(f.size>MAX_UPLOAD_BYTES){
+    toast('❌ Máx 3 GB');
     $('fileInput').value='';
     return;
   }
-  if (!roomUploadToken) {
-    // Recupera o token da conexão atual sem exigir que a pessoa saia da sala.
-    try { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({kind:'refreshUploadToken'})); } catch (_) {}
-    for (let i=0; i<20 && !roomUploadToken; i++) {
-      await new Promise(resolve=>setTimeout(resolve,100));
-    }
-    if (!roomUploadToken) {
-      toast('❌ Não foi possível recuperar o token da sala. Reconecte-se e tente novamente.');
-      $('fileInput').value='';
-      return;
-    }
-  }
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
-  let progressiveStarted=false;
-  const onReady=async data=>{
-    progressiveStarted=true;
-    setUploadLoading(false);
-    if(ty==='video'||ty==='audio') applyMediaState({...data,paused:false,time:0,updatedAt:Date.now()});
-  };
+  const large=f.size>LARGE_UPLOAD_THRESHOLD;
 
-  setUploadLoading(true,'Enviando mídia...','0% — upload em blocos de 2 MB (até 20 GB). A reprodução começa somente quando o arquivo inteiro chegar ao servidor.');
+  setUploadLoading(
+    true,
+    large ? 'Enviando mídia grande...' : 'Enviando mídia...',
+    large ? '0% — enviando em partes para evitar falha no Cloudflare.' : '0% — só começa a tocar quando o upload terminar.'
+  );
 
   try{
-    const onProgress=(pct,_index,_total)=>{
-      updateUploadOverlayProgress(pct,true,false);
+    const onProgress=(pct)=>{
+      $('uploadSub').textContent =
+        `${pct}% — ${large ? 'enviando em partes' : 'enviando'}, aguarde...`;
     };
-    const data=await uploadLargeFileInChunks(f,roomId,onProgress,onReady);
+
+    const data=large
+      ? await uploadLargeFileInChunks(f,roomId,onProgress)
+      : await uploadSmallFileNormal(f,roomId,onProgress);
 
     setUploadLoading(false);
-    if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
 
-    if(ty==='video'||ty==='audio'){
-      const el=ty==='video'?$('localVideo'):$('localAudio');
-      const finalUrl=data.url+(data.url.includes('?')?'&':'?')+'pbfinal='+Date.now();
-      mediaType=ty;el.pause();el.src=finalUrl;el.load();el.dataset.name=data.name||f.name;el.style.display=ty==='video'?'block':'none';
-      $('placeholder').style.display=ty==='video'?'none':'flex';
-      $('youtubeOverlay').style.display='none';
-      $('screenVideo').style.display='none';$('imageHolder').style.display='none';
-      updateMediaBadge(ty==='video'?'🎬':'🎵',ty==='video'?'Vídeo':'Áudio');showPlayerCtrl();
-      if(ty==='audio'){$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(data.name||f.name)+'</h3><p>Tocando agora...</p>';}
-      el.addEventListener('loadedmetadata',()=>{if(mediaType===ty)safePlay(el);},{once:true});
-      try{await safePlay(el);}catch(_){}
-      sendLocalState();
-    }else{
-      mediaType='image';
-      lastServerMediaState={type:'image',url:data.url,name:data.name||f.name,uploading:false,uploadPercent:100,updatedAt:Date.now()};
-      $('localVideo').style.display='none';$('screenVideo').style.display='none';$('youtubeOverlay').style.display='none';$('placeholder').style.display='none';
-      const holder=$('imageHolder');holder.style.display='block';
-      const ctx=holder.getContext('2d');const img=new Image();
-      img.onload=()=>{holder.width=img.naturalWidth||1920;holder.height=img.naturalHeight||1080;ctx.clearRect(0,0,holder.width,holder.height);ctx.drawImage(img,0,0);};
-      img.onerror=()=>toast('❌ Upload terminou, mas a imagem não pôde ser lida pelo navegador.');
-      img.src=data.url;updateMediaBadge('🖼️','Imagem');showPlayerCtrl();wsSend({kind:'media',state:lastServerMediaState});
+    if(data && data.url){
+      if(ty==='video'){
+        mediaType='video';
+        const v=$('localVideo');
+        v.src=data.url;
+        v.dataset.name=data.name||f.name;
+        v.style.display='block';
+        $('placeholder').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        updateMediaBadge('🎬','Vídeo');
+        v.currentTime=0;
+        try{await v.play()}catch(_){}
+        sendLocalState();
+      }else if(ty==='audio'){
+        mediaType='audio';
+        const a=$('localAudio');
+        a.src=data.url;
+        a.dataset.name=data.name||f.name;
+        a.style.display='none';
+        $('placeholder').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        updateMediaBadge('🎵','Áudio');
+        a.currentTime=0;
+        try{await a.play()}catch(_){}
+        sendLocalState();
+      }else{
+        mediaType='image';
+        lastServerMediaState={
+          type:'image',
+          url:data.url,
+          name:data.name||f.name,
+          updatedAt:Date.now()
+        };
+        $('localVideo').style.display='none';
+        $('screenVideo').style.display='none';
+        $('youtubeOverlay').style.display='none';
+        $('placeholder').style.display='none';
+        const holder=$('imageHolder');
+        holder.style.display='block';
+        const ctx=holder.getContext('2d');
+        const img=new Image();
+        img.onload=()=>{
+          holder.width=img.naturalWidth||1920;
+          holder.height=img.naturalHeight||1080;
+          ctx.clearRect(0,0,holder.width,holder.height);
+          ctx.drawImage(img,0,0);
+        };
+        img.src=data.url;
+        updateMediaBadge('🖼️','Imagem');
+        wsSend({kind:'media',state:lastServerMediaState});
+      }
+
+      toast('✅ Upload concluído!');
     }
-    toast('✅ Upload concluído!');
   }catch(err){
     setUploadLoading(false);
-    if(err && err.name==='AbortError') return;
-    if(err && /Upload cancelado/i.test(err.message||'')) return;
-    console.error('[upload]',err);toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
-  }finally{$('fileInput').value='';}
+    console.error('[upload]',err);
+    toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
+  }finally{
+    $('fileInput').value='';
+  }
 }
 
+
+function rtcConfig(){return {iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};}
+function closeRTCPeer(pid){const pc=rtcPeers.get(pid);if(pc){try{pc.close();}catch(_){}rtcPeers.delete(pid);}}
+function closeAllRTCPeers(){[...rtcPeers.keys()].forEach(closeRTCPeer);}
+function createPeer(pid){
+  closeRTCPeer(pid);
+  const pc=new RTCPeerConnection(rtcConfig());
+  rtcPeers.set(pid,pc);
+  pc.onicecandidate=e=>{if(e.candidate)wsSend({kind:'rtc',action:'candidate',to:pid,candidate:e.candidate});};
+  pc.ontrack=e=>{
+    const sv=$('screenVideo');
+    if(e.streams&&e.streams[0])sv.srcObject=e.streams[0];
+    sv.muted=false; sv.volume=1; sv.style.display='block'; sv.playsInline=true;
+    hidePlaceholder();
+    mediaType='screen';
+    safePlay(sv);
+  };
+  if(screenStream)screenStream.getTracks().forEach(t=>pc.addTrack(t,screenStream));
+  return pc;
+}
+function requestScreenFromOwner(){if(!wsReady||isScreenSharing||!screenOwner)return;wsSend({kind:'rtc',action:'screenRequest',to:screenOwner});}
+async function handleRTCMessage(m){
+  if(m.action==='screenRequest'){if(!isScreenSharing||!screenStream||!m.from)return;try{const pc=createPeer(m.from);const offer=await pc.createOffer();await pc.setLocalDescription(offer);wsSend({kind:'rtc',action:'offer',to:m.from,offer:pc.localDescription});}catch(_){ }return;}
+  if(m.action==='offer'&&m.from&&m.offer){try{const pc=createPeer(m.from);await pc.setRemoteDescription(new RTCSessionDescription(m.offer));const answer=await pc.createAnswer();await pc.setLocalDescription(answer);wsSend({kind:'rtc',action:'answer',to:m.from,answer:pc.localDescription});}catch(_){ }return;}
+  if(m.action==='answer'&&m.from&&m.answer){const pc=rtcPeers.get(m.from);if(pc)try{await pc.setRemoteDescription(new RTCSessionDescription(m.answer));}catch(_){ }return;}
+  if(m.action==='candidate'&&m.from&&m.candidate){const pc=rtcPeers.get(m.from);if(pc)try{await pc.addIceCandidate(new RTCIceCandidate(m.candidate));}catch(_){ }return;}
+  if(m.action==='screenStopped'){closeRTCPeer(m.from);if(!isScreenSharing){$('screenVideo').srcObject=null;$('screenVideo').style.display='none';}}
+}
 async function toggleScreenShare(){
   if(!isHost)return;
   if(!isScreenSharing){
@@ -1896,19 +1794,7 @@ function stopScreenShare(){
 }
 function resetPlayerUI(){
   closeAllRTCPeers();
-  if(screenStream){
-    try{screenStream.getTracks().forEach(track=>track.stop());}catch(_){}
-    screenStream=null;
-  }
-  isScreenSharing=false;screenOwner=null;
-  const screenButton=$('scrBtn');
-  if(screenButton){screenButton.classList.remove('live');screenButton.textContent='🖥️ Compartilhar Tela';}
-  if(youtubePlayer){
-    try{youtubePlayer.stopVideo();}catch(_){}
-    try{youtubePlayer.destroy();}catch(_){}
-    youtubePlayer=null;ytPlayerReady=false;
-    const yt=$('youtubePlayer');if(yt)yt.innerHTML='';
-  }
+  if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
   ytVideoId=null;
   $('youtubeOverlay').style.display='none';
   const lv=$('localVideo'); lv.pause(); lv.removeAttribute('src'); lv.load(); lv.style.display='none';
@@ -1925,29 +1811,15 @@ function resetPlayerUI(){
   updatePipButton();
 }
 function clearMedia(){
-  if(!isHost){
-    toast('👑 Somente o host pode limpar o telão.');
-    return;
-  }
-  if(activeUploadController){try{activeUploadController.abort();}catch(_){} activeUploadController=null;}
-  if(activeUploadId && ws && ws.readyState===WebSocket.OPEN){
-    const cancelId=activeUploadId;
-    activeUploadId=null;
-    fetch(BACKEND_URL+'/upload-cancel',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json','X-Player-Id':String(myPlayerId||'').slice(0,40),'X-Room-Token':roomUploadToken},body:JSON.stringify({uploadId:cancelId})}).catch(()=>{});
-  } else {
-    activeUploadId=null;
-  }
+  if(!isHost)return;
   if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
   if(docPipWindow)try{docPipWindow.close();}catch(_){}
-  const clearState={type:'clear',updatedAt:Date.now()};
-  lastServerMediaState=clearState;
   resetPlayerUI();
-  if(ws && ws.readyState===WebSocket.OPEN) wsSend({kind:'media',state:clearState});
-  toast('🗑️ Telão limpo.');
+  lastServerMediaState={type:'clear',updatedAt:Date.now()};wsSend({kind:'media',state:lastServerMediaState});
 }
 function applyMediaState(state){
   if(!state)return;
-  lastServerMediaState=JSON.parse(JSON.stringify(state));
+  if(state.type!=='clear')lastServerMediaState=JSON.parse(JSON.stringify(state));
   if(state.type==='clear'){ resetPlayerUI(); return; }
   ytSuppressStateSend=true;
   if(state.type==='youtube'){
@@ -1992,7 +1864,7 @@ function applyMediaState(state){
     if(state.url&&v.src!==state.url){v.src=state.url;v.load();}
     v.dataset.name=state.name||'';v.muted=false;v.volume=1;v.style.display='block';
     hidePlaceholder();
-    mediaType='video';updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo');showPlayerCtrl();
+    mediaType='video';updateMediaBadge('🎬','Vídeo');showPlayerCtrl();
     const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } };
     if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});
     if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); }
@@ -2009,7 +1881,7 @@ function applyMediaState(state){
     const p=$('placeholder');
     p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>';
     p.style.display='flex';
-    mediaType='audio';updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio');showPlayerCtrl();
+    mediaType='audio';updateMediaBadge('🎵','Áudio');showPlayerCtrl();
     const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}};
     if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true});
     if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); }
@@ -2052,7 +1924,7 @@ function applyMediaState(state){
   updatePipButton();
   setTimeout(()=>{ytSuppressStateSend=false;},2000);
 }
-
+// Inicialização compatível com a raiz "/" e também com /room/NOME ou /watch/NOME.
 try{
   const initialRoom=getRoomFromCurrentUrl();
   if(initialRoom) $('inRoom').value=initialRoom;
@@ -2067,15 +1939,6 @@ if(document.pictureInPictureEnabled){
 ['localVideo','screenVideo'].forEach(id=>{
   const v=$(id);
   v.addEventListener('loadedmetadata',updatePipButton);
-  if(id==='localVideo') v.addEventListener('error',()=>{
-    if(lastServerMediaState&&lastServerMediaState.uploading&&lastServerMediaState.url){
-      clearTimeout(v._progressiveRetry);
-      v._progressiveRetry=setTimeout(()=>{
-        const t=v.currentTime||0;
-        try{v.load();if(t>0)v.currentTime=t;v.play().catch(()=>{});}catch(_){}
-      },1200);
-    }
-  });
   v.addEventListener('emptied',updatePipButton);
   v.addEventListener('play',updatePipButton);
 });
@@ -2113,7 +1976,6 @@ $('mediaViewerModal').addEventListener('click',e=>{if(e.target===$('mediaViewerM
 $('closeMediaViewerBtn').addEventListener('click',closeMediaViewer);
 $('donateModal').addEventListener('click',e=>{if(e.target===$('donateModal'))closeDonate();});
 $('closeGameBtn').addEventListener('click',closeGame);
-$('refreshMoviesBtn').addEventListener('click',loadMoviesCatalog);
 document.querySelectorAll('.c-tab').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
 document.querySelectorAll('.theme-option').forEach(btn=>btn.addEventListener('click',(e)=>{e.stopPropagation();setTheme(btn.dataset.theme);}));
 document.querySelectorAll('.tier').forEach(t=>t.addEventListener('click',()=>selectTier(t,parseInt(t.dataset.amt))));
@@ -2145,12 +2007,6 @@ window.addEventListener('pagehide',()=>{ });
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress();
 loadTheme();
-
-// Stubs (evita ReferenceError se a função for chamada)
-function handleRTCMessage(msg){ /* STUB */ }
-function closeAllRTCPeers(){ rtcPeers.forEach(p=>{try{p.close();}catch(_){}}); rtcPeers.clear(); }
-function requestScreenFromOwner(){ /* STUB */ }
 </script>
-<script src="https://www.youtube.com/iframe_api" async></script>
 </body>
 </html>
