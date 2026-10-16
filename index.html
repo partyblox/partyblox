@@ -430,6 +430,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
           <div class="chat-hint">Pressione <kbd>;</kbd> para digitar</div>
           <div class="host-controls" id="hostCtrls" style="display:none">
             <button class="hc-btn" id="ytBtn">🔗 YouTube</button>
+            <button class="hc-btn" id="moviesBtn">🎞️ Filmes</button>
             <button class="hc-btn" id="fileBtn">📁 Enviar Mídia</button>
             <button class="hc-btn" id="scrBtn">🖥️ Compartilhar Tela</button>
             <button class="hc-btn" id="clearBtn">🗑️ Limpar</button>
@@ -588,6 +589,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
     <button class="media-viewer-close" id="closeMediaViewerBtn">✕</button>
   </div>
 </div>
+<div class="modal" id="moviesModal"><div class="donate-wrap" style="width:min(720px,95vw)"><button class="game-play-close" id="closeMoviesBtn" style="float:right">✕</button><h2 style="margin-bottom:12px">🎞️ Filmes da pasta uploads/movies</h2><div id="moviesList" class="host-player-list" style="max-height:60vh;overflow:auto"></div></div></div>
 <input type="file" id="fileInput" class="file-input" accept="image/*,video/*,audio/*">
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
@@ -630,7 +632,7 @@ const DONATE_CONFIG={
   livePixUrl:'https://livepix.gg/SEU_USUARIO',
   qrImageUrl:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=watchparty@livepix.gg'
 };
-const MAX_UPLOAD_BYTES = 3 * 1024 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024; // 10 GiB
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
 let roomPassword='';
 let hosts=[];
@@ -921,6 +923,11 @@ function connectRoom(creator){
     };
     socket.onmessage=e=>{
       let m;try{m=JSON.parse(e.data)}catch(_){return}
+      if(m.kind==='kicked'){
+        intentionalDisconnect=true; stopMediaHeartbeat(); toast(m.message||'Você foi removido da sala.');
+        try{socket.close(4001,'kicked');}catch(_){}
+        setTimeout(()=>{location.href=location.pathname;},500); return;
+      }
       if(m.kind==='roomExists'||m.kind==='roomError'||m.kind==='joinRejected'){
         const msg=m.message||m.error||(m.kind==='roomExists'?'Essa sala já existe. Use ENTRAR para entrar nela.':'Não foi possível entrar na sala.');
         showRoomNotice(msg, m.kind==='roomExists');
@@ -1038,6 +1045,9 @@ function updateHostPanel(){
     const initial=(p.name||'?')[0].toUpperCase();
     let html=`<div class="host-player-info"><div class="host-player-avatar">${escapeHtml(initial)}</div><div class="host-player-name">${escapeHtml(p.name)}${p.isSelf?'<small>(você)</small>':''}</div></div>`;
     if(isPlayerHost)html+=`<span class="host-badge">HOST</span>`;
+    if(isHost && !p.isSelf && pid!==founderId){
+      html+=`<button class="host-give-btn" data-pid="${pid}" data-action="kick" style="background:rgba(231,76,60,.18);border-color:#e74c3c;color:#ff7675;">Remover da sala</button>`;
+    }
     if(isHost && serverMultiHost){
       if(!isPlayerHost){ html+=`<button class="host-give-btn" data-pid="${pid}" data-action="give">Dar Host</button>`; }
       else if(!p.isSelf && pid!==founderId){ html+=`<button class="host-give-btn" data-pid="${pid}" data-action="remove" style="background:rgba(231,76,60,.15);border-color:#e74c3c;color:#ff7675;">Retirar Host</button>`; }
@@ -1050,6 +1060,7 @@ function updateHostPanel(){
         const targetName=escapeHtml(p.name);
         if(action==='give')transferHost(targetPid,targetName);
         else if(action==='remove')removeHost(targetPid,targetName);
+        else if(action==='kick')kickPlayer(targetPid,targetName);
       });
     });
     list.appendChild(item);
@@ -1080,6 +1091,13 @@ function removeHost(targetId,targetName){
   wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🚫 ${myName} retirou o host de ${targetName}`,system:true,timestamp:Date.now()});
   toast('🚫 Host retirado de '+targetName);
   updateHostPanel();
+}
+function kickPlayer(targetId,targetName){
+  if(!isHost)return toast('👑 Só o host pode remover alguém.');
+  if(!targetId||targetId===myPlayerId||targetId===founderId)return;
+  if(!confirm('Remover '+targetName+' da sala?'))return;
+  wsSend({kind:'kickPlayer',targetId});
+  toast('🚪 Solicitação para remover '+targetName+' enviada.');
 }
 function claimHost(){wsSend({kind:'claimHost',playerId:myPlayerId,timestamp:Date.now()});}
 function copyRoomLink(){
@@ -1172,12 +1190,15 @@ function sendChat(){
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined});
 }
 function sendChatWithMedia(text,media,isPrivate=false,target=null){
-  const pm=isPrivate?target:null;lastSentChat={text:text,ts:Date.now()};
-  addChatMsg(myName,text,false,isPrivate,pm,media);
-  setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${media.type==='image'?'imagem':media.type==='video'?'vídeo':'áudio'} do chat.`);
+  const pm=isPrivate?target:null;
+  setUploadLoading(true,'Aguarde o carregamento...',`Enviando ${media.type==='image'?'imagem':media.type==='video'?'vídeo':'áudio'} do chat em blocos de 10 MB.`);
   uploadChatMedia(media).then(uploadedMedia=>{
+    uploadedMedia.name=uploadedMedia.name||media.name||'Mídia do chat';
+    lastSentChat={text:text,ts:Date.now()};
+    addChatMsg(myName,text,false,isPrivate,pm,uploadedMedia,myPlayerId);
     wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:text,to:pm||undefined,media:uploadedMedia});
-  }).catch(e=>{toast('❌ Erro: '+e.message);})
+    toast('✅ Mídia enviada ao chat e ao player.');
+  }).catch(e=>{toast('❌ Erro no envio do chat: '+e.message);})
     .finally(()=>{setUploadLoading(false);try{if(media.url.startsWith('blob:'))URL.revokeObjectURL(media.url);}catch(_){}});
 }
 async function uploadChatMedia(media){
@@ -1196,9 +1217,9 @@ async function uploadChatMedia(media){
 async function handleChatMediaUpload(){
   const f=$('chatMediaInput').files&&$('chatMediaInput').files[0];if(!f)return;
   const t=f.type||'';
-  if(!(t.startsWith('image/')||t.startsWith('video/'))){$('chatMediaInput').value='';return;}
-  if(f.size>MAX_UPLOAD_BYTES){$('chatMediaInput').value='';toast('❌ Máx 3GB');return;}
-  const mediaType2=t.startsWith('image/')?'image':'video';const mediaUrl=URL.createObjectURL(f);
+  if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/'))){$('chatMediaInput').value='';return;}
+  if(f.size>MAX_UPLOAD_BYTES){$('chatMediaInput').value='';toast('❌ Máx 10 GB');return;}
+  const mediaType2=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';const mediaUrl=URL.createObjectURL(f);
   const input=$('chatText');const text=input.value.trim();const pm=text.match(/^@(\S+)\s+(.+)/);
   if(pm){sendChatWithMedia(pm[2]||'[Mídia]',{type:mediaType2,url:mediaUrl},true,pm[1]);input.value='';}
   else{sendChatWithMedia(text||'[Mídia]',{type:mediaType2,url:mediaUrl});input.value='';}
@@ -1654,7 +1675,7 @@ async function handleFileUpload(){
   if(!f)return;
   const t=f.type||'';
   if(!(t.startsWith('image/')||t.startsWith('video/')||t.startsWith('audio/'))){$('fileInput').value='';return;}
-  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 3 GB');$('fileInput').value='';return;}
+  if(f.size>MAX_UPLOAD_BYTES){toast('❌ Máx 10 GB');$('fileInput').value='';return;}
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
   let progressiveStarted=false;
@@ -1897,7 +1918,32 @@ $('leaveBtn').addEventListener('click',leaveRoom);
 $('closeDonateBtn').addEventListener('click',closeDonate);
 $('livePixBtn').addEventListener('click',openLivePix);
 $('copyPixBtn').addEventListener('click',copyPix);
+async function openMovies(){
+  $('moviesModal').classList.add('active');
+  const list=$('moviesList');list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
+  try{
+    const r=await fetch(BACKEND_URL+'/api/movies?t='+Date.now(),{cache:'no-store'});
+    const data=await r.json(); if(!r.ok)throw new Error(data.error||'Falha ao listar filmes');
+    list.innerHTML='';
+    if(!data.movies||!data.movies.length){list.innerHTML='<div class="host-empty">Nenhum arquivo encontrado. Coloque os vídeos na pasta uploads/movies da TV Box.</div>';return;}
+    data.movies.forEach(movie=>{
+      const row=document.createElement('div');row.className='host-player-item';
+      const info=document.createElement('div');info.className='host-player-info';
+      const label=document.createElement('div');label.className='host-player-name';label.textContent=movie.name;
+      info.appendChild(label);
+      const play=document.createElement('button');play.className='host-give-btn';play.textContent='▶ Tocar';
+      play.onclick=()=>{const ext=movie.type;const type=['.mp3','.m4a','.ogg','.wav'].includes(ext)?'audio':['.jpg','.jpeg','.png','.webp','.gif'].includes(ext)?'image':'video';
+        const state={type,url:BACKEND_URL+movie.url,name:movie.name,paused:false,time:0,updatedAt:Date.now()};
+        lastServerMediaState=state;applyMediaState(state);wsSend({kind:'media',state});$('moviesModal').classList.remove('active');
+      };
+      row.append(info,play);list.appendChild(row);
+    });
+  }catch(e){list.innerHTML='<div class="host-empty">Erro ao listar filmes: '+escapeHtml(e.message)+'</div>';}
+}
 $('ytBtn').addEventListener('click',showYTInput);
+$('moviesBtn').addEventListener('click',openMovies);
+$('closeMoviesBtn').addEventListener('click',()=>$('moviesModal').classList.remove('active'));
+$('moviesModal').addEventListener('click',e=>{if(e.target===$('moviesModal'))$('moviesModal').classList.remove('active');});
 $('ytLoadBtn').addEventListener('click',loadFromInlineInput);
 $('ytUrlInput').addEventListener('keypress',e=>{if(e.key==='Enter')loadFromInlineInput();});
 $('fileBtn').addEventListener('click',()=>$('fileInput').click());
