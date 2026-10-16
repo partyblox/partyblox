@@ -589,7 +589,7 @@ body.theme-rose{--bg1:#42101c;--bg2:#691827;--bg3:#882238;--bg4:#51121f;--text:#
     <button class="media-viewer-close" id="closeMediaViewerBtn">✕</button>
   </div>
 </div>
-<div class="modal" id="moviesModal"><div class="donate-wrap" style="width:min(720px,95vw)"><button class="game-play-close" id="closeMoviesBtn" style="float:right">✕</button><h2 style="margin-bottom:12px">🎞️ Filmes da pasta uploads/movies</h2><div id="moviesList" class="host-player-list" style="max-height:60vh;overflow:auto"></div></div></div>
+<div class="modal" id="moviesModal"><div class="donate-wrap" style="width:min(720px,95vw)"><button class="game-play-close" id="closeMoviesBtn" style="float:right">✕</button><h2 style="margin-bottom:12px">🎞️ Filmes de /mnt/pendrive/uploads/movies</h2><div id="moviesList" class="host-player-list" style="max-height:60vh;overflow:auto"></div></div></div>
 <input type="file" id="fileInput" class="file-input" accept="image/*,video/*,audio/*">
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
@@ -1197,7 +1197,7 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
     lastSentChat={text:text,ts:Date.now()};
     addChatMsg(myName,text,false,isPrivate,pm,uploadedMedia,myPlayerId);
     wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:text,to:pm||undefined,media:uploadedMedia});
-    toast('✅ Mídia enviada ao chat e ao player.');
+    toast('✅ Mídia enviada ao chat.');
   }).catch(e=>{toast('❌ Erro no envio do chat: '+e.message);})
     .finally(()=>{setUploadLoading(false);try{if(media.url.startsWith('blob:'))URL.revokeObjectURL(media.url);}catch(_){}});
 }
@@ -1925,7 +1925,7 @@ async function openMovies(){
     const r=await fetch(BACKEND_URL+'/api/movies?t='+Date.now(),{cache:'no-store'});
     const data=await r.json(); if(!r.ok)throw new Error(data.error||'Falha ao listar filmes');
     list.innerHTML='';
-    if(!data.movies||!data.movies.length){list.innerHTML='<div class="host-empty">Nenhum arquivo encontrado. Coloque os vídeos na pasta uploads/movies da TV Box.</div>';return;}
+    if(!data.movies||!data.movies.length){list.innerHTML='<div class="host-empty">Nenhum arquivo encontrado em /mnt/pendrive/uploads/movies. Confira se os arquivos estão nessa pasta da TV Box.</div>';return;}
     data.movies.forEach(movie=>{
       const row=document.createElement('div');row.className='host-player-item';
       const info=document.createElement('div');info.className='host-player-info';
