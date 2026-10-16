@@ -1813,16 +1813,13 @@ async function handleFileUpload(){
     return;
   }
   if (!roomUploadToken) {
-    // Recupera o token da conexão atual sem exigir que a pessoa saia da sala.
+    // Solicita o token, mas não bloqueia o envio se a resposta não chegar.
+    // O servidor valida a sessão pelo WebSocket ativo nesse caso.
     try { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({kind:'refreshUploadToken'})); } catch (_) {}
-    for (let i=0; i<20 && !roomUploadToken; i++) {
+    for (let i=0; i<10 && !roomUploadToken; i++) {
       await new Promise(resolve=>setTimeout(resolve,100));
     }
-    if (!roomUploadToken) {
-      toast('❌ Não foi possível recuperar o token da sala. Reconecte-se e tente novamente.');
-      $('fileInput').value='';
-      return;
-    }
+    if (!roomUploadToken) console.warn('[UPLOAD] token não recebido; usando validação da sessão WebSocket ativa.');
   }
 
   const ty=t.startsWith('image/')?'image':t.startsWith('video/')?'video':'audio';
