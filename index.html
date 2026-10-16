@@ -22,7 +22,6 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui,sans-serif;user-select:none;-webkit-user-select:none;}
 body{overflow:hidden;height:100dvh;background:var(--bg1);color:var(--text);}
-/* animated bg */
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(0,229,255,.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(180,77,255,.06) 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,rgba(0,255,163,.04) 0%,transparent 50%);pointer-events:none;z-index:0;}
 .screen{position:fixed;inset:0;z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--grad1),var(--grad2),var(--grad3));background-size:300% 300%;animation:gradShift 12s ease infinite;}
 @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
@@ -155,7 +154,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .theme-option.active{border-color:var(--neon1);background:rgba(0,229,255,.1);box-shadow:0 0 15px rgba(0,229,255,.2);}
 .theme-color-preview{width:100%;aspect-ratio:2/1;border-radius:6px;border:1px solid rgba(255,255,255,.1);}
 .theme-option-label{font-size:11px;font-weight:600;color:var(--text);}
-/* nickname colors */
 .nick-color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:4px;}
 .nick-color{width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.25s;position:relative;}
 .nick-color:hover{transform:scale(1.15);box-shadow:0 0 15px currentColor;}
@@ -271,7 +269,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .room-notice{display:none;padding:10px 14px;border-radius:10px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:var(--neon1);font-size:13px;font-weight:600;margin-bottom:14px;text-align:center;line-height:1.35;}
 .room-notice.show{display:block;}
 .room-notice.error{background:rgba(255,0,68,.08);border-color:rgba(255,0,68,.4);color:#ff6688;}
-/* themes */
 body.theme-light{--bg1:#e8ecf5;--bg2:#f0f4ff;--bg3:#ffffff;--bg4:#eef2fa;--text:#1a1a2e;--text2:rgba(30,40,80,.7);--text3:rgba(60,80,120,.5);--border:rgba(60,100,200,.1);--border2:rgba(60,100,200,.2);--chat-bg:rgba(240,244,255,.9);--chat-head:rgba(232,236,245,.95);--input-bg:rgba(255,255,255,.8);--panel-bg:rgba(255,255,255,.7);--panel-border:rgba(60,100,200,.15);}
 body.theme-blue{--bg1:#050a18;--bg2:#0a1428;--bg3:#0f1e3a;--bg4:#081020;--text:#c8e0ff;--chat-bg:rgba(15,30,58,.85);--chat-head:rgba(10,20,40,.9);}
 body.theme-purple{--bg1:#0d0518;--bg2:#1a0a30;--bg3:#250f45;--bg4:#150828;--text:#e8d0ff;--chat-bg:rgba(37,15,69,.85);--chat-head:rgba(20,8,40,.9);}
@@ -302,7 +299,6 @@ body.theme-light .tier{background:rgba(200,210,240,.5);}
 body.theme-light .tier .tier-label{color:rgba(30,40,80,.7);}
 body.theme-light .video-placeholder h3{color:#4a5570;}
 body.theme-light .video-placeholder p{color:#6a7a9a;}
-/* responsive */
 @media (max-width:900px) and (orientation:portrait){
   .main{flex-direction:column;}
   .video-side{min-height:40vh;min-width:100%;}
@@ -416,7 +412,6 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 @media (max-height:650px){#landing .logo{font-size:clamp(24px,5.5vw,36px);}#landing .tagline{font-size:clamp(10px,2.2vw,13px);}#landing .panel{padding:clamp(12px,3vw,18px);}#landing .panel h2{display:none;}#landing .lbl{margin:3px 0 2px;}#landing .panel input[type=text],#landing .panel input[type=password]{padding:7px 10px;margin-bottom:5px;}#landing .btn{padding:8px 10px;}}
 @media (max-width:380px){#landing .logo{font-size:clamp(28px,10vw,40px);letter-spacing:-1px;}#landing .tagline{padding:0 4px;}#landing .panel{padding:12px 12px 16px;border-radius:18px;}#landing .lbl{font-size:11px;}#landing .row{flex-direction:column;}#landing .row > *{width:100%;}}
 @media (min-height:1000px){#landing .logo{font-size:72px;}#landing .tagline{font-size:20px;}}
-/* scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:3px;}
@@ -652,13 +647,20 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 <input type="file" id="chatMediaInput" class="file-input" accept="image/*,video/*,audio/*">
 <div id="toast"></div>
 <script>
-fetch('tunnel.json?t=' + Date.now())
-  .then(r => r.json())
-  .then(data => {
-    window.PARTYBLOX_WS_URL = data.url;
-    if(typeof updateBackendUrl === 'function') updateBackendUrl();
-  })
-  .catch(() => console.warn('[BACKEND] tunnel.json não encontrado; usando a origem atual.'));
+/* ===== BACKEND URL BOOTSTRAP ===== */
+(function(){
+  let backendWsUrl = '';
+  try{
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET','tunnel.json?t='+Date.now(),false); // sync só pro bootstrap
+    xhr.send(null);
+    if(xhr.status===200){
+      const data = JSON.parse(xhr.responseText);
+      if(data && data.url) backendWsUrl = String(data.url);
+    }
+  }catch(_){ console.warn('[BACKEND] tunnel.json não encontrado; usando a origem atual.'); }
+  window.PARTYBLOX_WS_URL = backendWsUrl;
+})();
 </script>
 <script>
 const $=id=>document.getElementById(id);
@@ -720,6 +722,101 @@ const NICK_COLORS = [
   '#e040fb','#ff6e40','#18ffff','#b2ff59','#ff4081','#536dfe',
   '#f4ff81','#84ffff','#ffab40','#ea80fc','#8c9eff','#ffffff'
 ];
+/* ===== RTC STUBS (compartilhamento de tela) ===== */
+function handleRTCMessage(msg){
+  if(!msg || !msg.action) return;
+  if(msg.action==='screenRequest'){
+    if(isScreenSharing && screenStream){
+      // envia offer simples via sinalização (implementação básica)
+      createRTCPeerForViewer(msg.from);
+    }
+    return;
+  }
+  if(msg.action==='screenStarted'){
+    screenOwner = msg.from || null;
+    if(!isScreenSharing){
+      mediaType='screen';
+      const p=$('placeholder');
+      if(p){ p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(msg.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>'; p.style.display='none'; }
+      updateMediaBadge('🖥️','Tela ao vivo');showPlayerCtrl();
+      requestScreenFromOwner();
+    }
+    return;
+  }
+  if(msg.action==='screenStopped'){
+    if(screenOwner===msg.from){
+      screenOwner=null;
+      if(!isScreenSharing){ resetPlayerUI(); }
+    }
+    return;
+  }
+  // Offer / Answer / ICE
+  handleRTCPeerMessage(msg);
+}
+function createRTCPeerForViewer(viewerId){
+  if(!screenStream || !viewerId) return;
+  try{
+    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    rtcPeers.set(viewerId, pc);
+    screenStream.getTracks().forEach(t=>pc.addTrack(t, screenStream));
+    pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:viewerId, candidate:e.candidate}); };
+    pc.createOffer().then(off=>pc.setLocalDescription(off)).then(()=>{
+      wsSend({kind:'rtc', action:'offer', to:viewerId, sdp: pc.localDescription});
+    }).catch(err=>console.warn('[RTC] offer falhou:', err));
+  }catch(e){ console.warn('[RTC] createRTCPeerForViewer:', e); }
+}
+function requestScreenFromOwner(){
+  if(!screenOwner) return;
+  const targetId = screenOwner;
+  try{
+    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    rtcPeers.set(targetId, pc);
+    pc.ontrack = ev => {
+      const sv = $('screenVideo');
+      if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); }
+      hidePlaceholder();
+      updateMediaBadge('🖥️','Tela ao vivo');
+    };
+    pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:targetId, candidate:e.candidate}); };
+    wsSend({kind:'rtc', action:'screenRequest', to:targetId});
+  }catch(e){ console.warn('[RTC] requestScreenFromOwner:', e); }
+}
+async function handleRTCPeerMessage(msg){
+  try{
+    const from = msg.from;
+    let pc = rtcPeers.get(from);
+    if(msg.action==='offer'){
+      if(!pc){
+        pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+        rtcPeers.set(from, pc);
+        pc.ontrack = ev => {
+          const sv = $('screenVideo');
+          if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); }
+          hidePlaceholder();
+          updateMediaBadge('🖥️','Tela ao vivo');
+        };
+        pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:from, candidate:e.candidate}); };
+      }
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      wsSend({kind:'rtc', action:'answer', to:from, sdp: pc.localDescription});
+      return;
+    }
+    if(msg.action==='answer' && pc){
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+      return;
+    }
+    if(msg.action==='ice' && pc && msg.candidate){
+      try{ await pc.addIceCandidate(new RTCIceCandidate(msg.candidate)); }catch(_){}
+      return;
+    }
+  }catch(e){ console.warn('[RTC] handleRTCPeerMessage:', e); }
+}
+function closeAllRTCPeers(){
+  for(const pc of rtcPeers.values()){ try{ pc.close(); }catch(_){} }
+  rtcPeers.clear();
+}
 function getPipVideoElement(){
   if(mediaType==='video') return $('localVideo');
   if(mediaType==='screen') return $('screenVideo');
@@ -839,7 +936,6 @@ function setTheme(t,silent=false){
   if(!silent)toast('🎨 Tema aplicado: '+getThemeName(t));
 }
 function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
-/* Nick color */
 function loadNickColor(){
   const saved=localStorage.getItem('partyblox-nickcolor');
   if(saved)myNickColor=saved;
@@ -867,12 +963,10 @@ function setNickColor(c){
 }
 function getNickColor(name){
   if(name===myName)return myNickColor;
-  // deterministic color for others
   let hash=0;
   for(let i=0;i<name.length;i++)hash=name.charCodeAt(i)+((hash<<5)-hash);
   return NICK_COLORS[Math.abs(hash)%NICK_COLORS.length];
 }
-/* AUTOPLAY */
 function showMediaInteraction(){}
 function hideMediaInteraction(){ mediaNeedsInteraction=false; }
 async function safePlay(el){
@@ -1084,7 +1178,6 @@ function connectRoom(creator){
           if(state)wsSend({kind:'syncState',targetId:m.playerId||m.requesterId||null,state:state,timestamp:Date.now()});
         }
       }else if(m.kind==='chat'){
-        // private echo: mostra pro remetente também
         if(m.pid===myPlayerId && m._echo){
           addChatMsg(m.name,m.text,false,!!m.to,m.to,m.media,m.pid,m.color);
           return;
@@ -1280,10 +1373,8 @@ function sendChat(){
   const input=$('chatText'),text=input.value.trim();if(!text)return;
   const pm=text.match(/^@(\S+)\s+(.+)/);
   lastSentChat={text:pm?pm[2]:text,ts:Date.now()};
-  // eco local imediato
   addChatMsg(myName,pm?pm[2]:text,false,!!pm,pm?pm[1]:null,null,myPlayerId,myNickColor);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined,color:myNickColor});
-  // mantém o @nickname no input para continuar a conversa privada
   if(pm){ input.value='@'+pm[1]+' '; input.focus(); }
   else { input.value=''; }
 }
@@ -1301,10 +1392,11 @@ function sendChatWithMedia(text,media,isPrivate=false,target=null){
 }
 async function uploadChatMedia(media){
   if(media.url.startsWith('data:')||media.url.startsWith('blob:')){
-    const response=await fetch(media.url);const blob=await response.blob();
+    const response=await fetch(media.url);
+    const blob=await response.blob();
     const filename='chat_media_'+Date.now()+'.'+(media.type==='image'?'jpg':media.type==='video'?'mp4':'webm');
     const file=new File([blob],filename,{type:blob.type||'application/octet-stream'});
-    const data=await uploadLargeFileInChunks(file,roomId,()=>{},null,true); // isChat=true
+    const data=await uploadLargeFileInChunks(file,roomId,()=>{},null,true);
     if(!data||!data.url)throw new Error('Upload falhou');
     return{type:media.type,url:data.url,duration:media.duration};
   }
@@ -1667,9 +1759,11 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat
   const uploadId = (crypto.randomUUID ? crypto.randomUUID() :
     Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
   const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
+  const endpoint = isChat ? '/upload-chunk-chat' : '/upload-chunk';
   let readySent = false;
+
   const notifyProgressive = async (info={})=>{
-    if(isChat)return; // chat nunca é progressivo no player
+    if(isChat) return;
     if(readySent || !info.progressiveReady || !info.url) return;
     readySent = true;
     if(onReady) await onReady({
@@ -1678,16 +1772,18 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat
       totalBytes: total, uploadPercent: Number(info.uploadPercent||0)
     });
   };
+
   for(let index=0; index<totalChunks; index++){
     const start = index * CHUNK_UPLOAD_SIZE;
     const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
     const blob = file.slice(start, end);
     let response = null, lastError = null;
+
     for(let attempt=1; attempt<=4; attempt++){
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000);
       try{
-        response = await fetch(BACKEND_URL + '/upload-chunk', {
+        response = await fetch(BACKEND_URL + endpoint, {
           method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
           headers:{
             'Content-Type':'application/octet-stream',
@@ -1696,8 +1792,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat
             'X-Total-Chunks':String(totalChunks),
             'X-Original-Name':encodeURIComponent(file.name || 'media'),
             'X-Mime-Type':file.type || 'application/octet-stream',
-            'X-Room-Id':String(roomId || '').slice(0,40),
-            'X-Chat-Upload': isChat ? '1' : '0'
+            'X-Room-Id':String(roomId || '').slice(0,40)
           },
           body:blob, signal:controller.signal
         });
@@ -1719,13 +1814,21 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat
     if(onProgress) onProgress(pct,index+1,totalChunks,info);
     await notifyProgressive(info);
   }
+
   let complete;
   for(let attempt=1; attempt<=4; attempt++){
     try{
       complete = await fetch(BACKEND_URL + '/upload-complete', {
         method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({uploadId,roomId:String(roomId||'').slice(0,40),name:file.name,type:file.type||'application/octet-stream',size:file.size})
+        body:JSON.stringify({
+          uploadId,
+          roomId:String(roomId||'').slice(0,40),
+          name:file.name,
+          type:file.type||'application/octet-stream',
+          size:file.size,
+          isChat: !!isChat
+        })
       });
       if(complete.ok) break;
       const txt=await complete.text().catch(()=> '');
@@ -1804,6 +1907,7 @@ async function toggleScreenShare(){
       hidePlaceholder();updateMediaBadge('🖥️','Tela');
       stream.getVideoTracks()[0].addEventListener('ended',()=>stopScreenShare(),{once:true});
       const state={type:'screen',active:true,name:myName,updatedAt:Date.now()};lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'media',state:state,screenOwner:myPlayerId});
+      wsSend({kind:'rtc',action:'screenStarted'});
     }catch(e){}
   }else stopScreenShare();
 }
@@ -1815,6 +1919,7 @@ function stopScreenShare(){
   isScreenSharing=false;screenOwner=null;mediaType=null;
   $('scrBtn').classList.remove('live');$('scrBtn').textContent='🖥️ Compartilhar Tela';
   lastServerMediaState={type:'clear',updatedAt:Date.now()};wsSend({kind:'media',state:lastServerMediaState});
+  wsSend({kind:'rtc',action:'screenStopped'});
   restorePlaceholder();$('mediaBadge').classList.remove('active');$('playerCtrl').style.display='none';
 }
 function resetPlayerUI(){
@@ -1983,36 +2088,65 @@ $('leaveBtn').addEventListener('click',leaveRoom);
 $('closeDonateBtn').addEventListener('click',closeDonate);
 $('livePixBtn').addEventListener('click',openLivePix);
 $('copyPixBtn').addEventListener('click',copyPix);
+/* ===== MOVIES ===== */
 async function openMovies(){
   $('moviesModal').classList.add('active');
-  const list=$('moviesList');list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
-  try{
-    const r=await fetch(BACKEND_URL+'/api/movies?t='+Date.now(),{cache:'no-store'});
-    const data=await r.json(); if(!r.ok)throw new Error(data.error||'Falha ao listar filmes');
-    list.innerHTML='';
-    if(!data.movies||!data.movies.length){
-      list.innerHTML='<div class="host-empty">Nenhum arquivo encontrado.<br>Pasta: <code style="color:var(--neon1)">'+escapeHtml(data.dir||'/mnt/pendrive/uploads/movies')+'</code>'+(data.exists===false?'<br><br>⚠️ A pasta não existe no servidor.':'')+'</div>';
-      return;
-    }
-    data.movies.forEach(movie=>{
-      const row=document.createElement('div');row.className='host-player-item';
-      const info=document.createElement('div');info.className='host-player-info';
-      const label=document.createElement('div');label.className='host-player-name';label.textContent=movie.name;
-      const size=document.createElement('small');size.style.cssText='display:block;font-size:10px;opacity:.5;font-weight:400;';
-      const mb=(movie.size/1024/1024).toFixed(1);
-      size.textContent=mb+' MB';
-      info.appendChild(label);info.appendChild(size);
-      const play=document.createElement('button');play.className='host-give-btn';play.textContent='▶ Tocar';
-      play.onclick=()=>{
-        const ext=movie.type;
-        const type=['.mp3','.m4a','.ogg','.wav'].includes(ext)?'audio':['.jpg','.jpeg','.png','.webp','.gif'].includes(ext)?'image':'video';
-        const state={type,url:BACKEND_URL+movie.url,name:movie.name,paused:false,time:0,updatedAt:Date.now()};
-        lastServerMediaState=state;applyMediaState(state);wsSend({kind:'media',state});
-        $('moviesModal').classList.remove('active');
-      };
-      row.append(info,play);list.appendChild(row);
-    });
-  }catch(e){list.innerHTML='<div class="host-empty">Erro ao listar filmes: '+escapeHtml(e.message)+'<br><br>Pasta: <code style="color:var(--neon1)">'+escapeHtml(BACKEND_URL+'/api/movies')+'</code></div>';}
+  const list=$('moviesList');
+  list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
+
+  const candidates = [];
+  if (BACKEND_URL) candidates.push(BACKEND_URL + '/api/movies');
+  const originUrl = `${location.protocol}//${location.host}/api/movies`;
+  if (!candidates.includes(originUrl)) candidates.push(originUrl);
+  candidates.push('/api/movies');
+
+  let data = null, lastErr = null, usedUrl = null;
+  for (const url of candidates) {
+    try {
+      console.log('[movies] tentando', url);
+      const r = await fetch(url + '?t=' + Date.now(), {cache:'no-store'});
+      if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; }
+      const j = await r.json();
+      if (j && Array.isArray(j.movies)) { data = j; usedUrl = url; break; }
+      lastErr = new Error('Resposta inválida');
+    } catch(e) { lastErr = e; console.warn('[movies] falha em', url, e.message); }
+  }
+
+  list.innerHTML='';
+  if (!data) {
+    list.innerHTML = '<div class="host-empty">❌ Não foi possível carregar a lista de filmes.<br><br>Erro: <code style="color:#ff6688">' + escapeHtml(lastErr?.message || 'desconhecido') + '</code><br><br>Tentei:<br>' + candidates.map(u => '<code style="color:var(--neon1);font-size:10px;display:block;word-break:break-all">' + escapeHtml(u) + '</code>').join('') + '</div>';
+    return;
+  }
+
+  if (!data.movies.length) {
+    list.innerHTML = '<div class="host-empty">📂 Nenhum arquivo encontrado em:<br><code style="color:var(--neon1)">' + escapeHtml(data.dir || '/mnt/pendrive/uploads/movies') + '</code>' + (data.exists === false ? '<br><br>⚠️ A pasta não existe no servidor.' : '') + '<br><br><small style="opacity:.6">Fonte: ' + escapeHtml(usedUrl) + '</small></div>';
+    return;
+  }
+
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:8px 4px 12px;font-size:12px;color:var(--text2)';
+  header.textContent = data.movies.length + ' arquivo(s) em ' + (data.dir || '');
+  list.appendChild(header);
+
+  data.movies.forEach(movie=>{
+    const row=document.createElement('div');row.className='host-player-item';
+    const info=document.createElement('div');info.className='host-player-info';
+    const label=document.createElement('div');label.className='host-player-name';label.textContent=movie.name;
+    const size=document.createElement('small');size.style.cssText='display:block;font-size:10px;opacity:.5;font-weight:400;';
+    const mb=(movie.size/1024/1024).toFixed(1);
+    size.textContent=mb+' MB';
+    info.appendChild(label);info.appendChild(size);
+    const play=document.createElement('button');play.className='host-give-btn';play.textContent='▶ Tocar';
+    play.onclick=()=>{
+      const ext=movie.type;
+      const type=['.mp3','.m4a','.ogg','.wav'].includes(ext)?'audio':['.jpg','.jpeg','.png','.webp','.gif'].includes(ext)?'image':'video';
+      const baseUrl = usedUrl.replace(/\/api\/movies.*$/, '');
+      const state={type,url:baseUrl + movie.url,name:movie.name,paused:false,time:0,updatedAt:Date.now()};
+      lastServerMediaState=state;applyMediaState(state);wsSend({kind:'media',state});
+      $('moviesModal').classList.remove('active');
+    };
+    row.append(info,play);list.appendChild(row);
+  });
 }
 $('ytBtn').addEventListener('click',showYTInput);
 $('moviesBtn').addEventListener('click',openMovies);
