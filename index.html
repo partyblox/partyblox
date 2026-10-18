@@ -1310,7 +1310,7 @@ $('chatText').addEventListener('input', () => {
   const now = Date.now();
   const text = $('chatText').value.trim();
 
-  if (text && now - lastTypingSent > 1500) {
+  if (text && (!typingWasActive || now - lastTypingSent > 800)) {
     lastTypingSent = now;
     wsSend({ kind: 'typing' });
     typingWasActive = true;
@@ -1325,7 +1325,14 @@ $('chatText').addEventListener('input', () => {
       wsSend({ kind: 'stopTyping' });
       typingWasActive = false;
     }
-  }, 2000);
+  }, 1800);
+});
+$('chatText').addEventListener('blur', () => {
+  if (typingWasActive) {
+    wsSend({ kind: 'stopTyping' });
+    typingWasActive = false;
+  }
+  if (typingStopTimer) { clearTimeout(typingStopTimer); typingStopTimer = null; }
 });
 
 async function openMovies(){
