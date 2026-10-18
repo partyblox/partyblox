@@ -30,8 +30,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tagline{font-size:clamp(14px,3vw,22px);margin:10px 0 36px;opacity:.8;text-align:center;padding:0 16px;color:var(--text2);}
 .panel{background:var(--panel-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:clamp(16px,4vw,38px);border-radius:20px;border:1px solid var(--panel-border);width:min(460px,92%);box-shadow:var(--glow2),inset 0 1px 0 rgba(255,255,255,.05);}
 .panel h2{color:var(--text);margin-bottom:18px;font-size:clamp(18px,4vw,22px);background:linear-gradient(90deg,var(--neon1),var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-block;}
-.panel input[type=text],.panel input[type=password]{width:100%;padding:clamp(10px,2.5vw,14px) clamp(12px,3vw,18px);border-radius:10px;border:1px solid var(--border2);background:var(--input-bg);color:#fff;font-size:clamp(13px,3vw,15px);margin-bottom:14px;outline:none;transition:.3s;}
-.panel input[type=text]:focus,.panel input[type=password]:focus{border-color:var(--neon1);box-shadow:0 0 0 3px rgba(0,229,255,.15),0 0 20px rgba(0,229,255,.1);background:rgba(0,229,255,.03);}
+.panel input[type=text],.panel input[type=password],.panel input[type=number]{width:100%;padding:clamp(10px,2.5vw,14px) clamp(12px,3vw,18px);border-radius:10px;border:1px solid var(--border2);background:var(--input-bg);color:#fff;font-size:clamp(13px,3vw,15px);margin-bottom:14px;outline:none;transition:.3s;}
+.panel input[type=text]:focus,.panel input[type=password]:focus,.panel input[type=number]:focus{border-color:var(--neon1);box-shadow:0 0 0 3px rgba(0,229,255,.15),0 0 20px rgba(0,229,255,.1);background:rgba(0,229,255,.03);}
 .btn{width:100%;padding:clamp(10px,2.5vw,14px);background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(180,77,255,.15));border:1px solid var(--border2);border-radius:10px;color:#fff;font-size:clamp(13px,3vw,16px);font-weight:700;cursor:pointer;margin-top:8px;transition:.3s;position:relative;overflow:hidden;}
 .btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--neon1),var(--neon2));opacity:0;transition:.3s;z-index:-1;}
 .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,229,255,.25);border-color:var(--neon1);}
@@ -47,7 +47,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .topbar{min-height:56px;background:rgba(8,8,20,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:8px;}
 .topbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .topbar-logo{font-weight:900;font-size:clamp(16px,3.5vw,20px);background:linear-gradient(90deg,var(--neon1),var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.room-chip{padding:5px 12px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:20px;font-size:clamp(11px,2.5vw,13px);white-space:nowrap;color:var(--neon1);text-shadow:0 0 10px rgba(0,229,255,.3);}
+.room-chip{padding:5px 12px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:20px;font-size:clamp(11px,2.5vw,13px);white-space:nowrap;color:var(--neon1);text-shadow:0 0 10px rgba(0,229,255,.3);display:flex;align-items:center;gap:6px;}
 .topbar-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;}
 .tb-btn{padding:clamp(6px,1.5vw,8px) clamp(10px,2vw,14px);background:rgba(20,20,50,.6);border:1px solid var(--border2);border-radius:10px;color:var(--text);cursor:pointer;font-weight:600;font-size:clamp(11px,2.5vw,13px);transition:.25s;white-space:nowrap;backdrop-filter:blur(10px);}
 .tb-btn:hover{background:rgba(0,229,255,.1);border-color:var(--neon1);box-shadow:0 0 15px rgba(0,229,255,.15);transform:translateY(-1px);}
@@ -110,7 +110,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .c-tab{flex:1;padding:9px 6px;background:transparent;border:none;color:var(--text3);border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;transition:.25s;white-space:nowrap;min-width:max-content;}
 .c-tab:hover{background:rgba(0,229,255,.06);color:var(--text);}
 .c-tab.active{background:rgba(0,229,255,.12);color:var(--neon1);box-shadow:0 0 12px rgba(0,229,255,.15);}
-.chat-panel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;min-height:0;min-width:0;}
+.chat-panel{flex:1;display:none;flex-direction:column;overflow:hidden;height:100%;min-height:0;min-width:0;position:relative;}
 .chat-panel.active{display:flex;}
 .chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;background:transparent;min-height:0;}
 .cmsg{padding:7px 9px;border-radius:8px;background:transparent;transition:.2s;border-left:3px solid transparent;}
@@ -121,6 +121,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cmsg.system{background:rgba(0,255,163,.04);border-left-color:var(--neon3);}
 .cmsg.system .auth{color:var(--neon3);}
 .cmsg .text{font-size:13px;line-height:1.4;color:#d0d8f0;word-wrap:break-word;overflow-wrap:break-word;}
+.chat-typing{font-size:11px;color:var(--text3);height:16px;padding:0 12px;font-style:italic;display:flex;align-items:center;}
 .chat-in{padding:10px;background:rgba(8,8,20,.7);border-top:1px solid var(--border);display:flex;gap:7px;align-items:center;flex-shrink:0;}
 .chat-in input{flex:1;padding:10px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--input-bg);color:var(--text);font-size:13px;outline:none;min-width:0;transition:.3s;}
 .chat-in input:focus{border-color:var(--neon1);box-shadow:0 0 0 3px rgba(0,229,255,.1);}
@@ -227,39 +228,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .room-notice{display:none;padding:10px 14px;border-radius:10px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:var(--neon1);font-size:13px;font-weight:600;margin-bottom:14px;text-align:center;line-height:1.35;}
 .room-notice.show{display:block;}
 .room-notice.error{background:rgba(255,0,68,.08);border-color:rgba(255,0,68,.4);color:#ff6688;}
-body.theme-light{--bg1:#e8ecf5;--bg2:#f0f4ff;--bg3:#ffffff;--bg4:#eef2fa;--text:#1a1a2e;--text2:rgba(30,40,80,.7);--text3:rgba(60,80,120,.5);--border:rgba(60,100,200,.1);--border2:rgba(60,100,200,.2);--chat-bg:rgba(240,244,255,.9);--chat-head:rgba(232,236,245,.95);--input-bg:rgba(255,255,255,.8);--panel-bg:rgba(255,255,255,.7);--panel-border:rgba(60,100,200,.15);}
-body.theme-blue{--bg1:#050a18;--bg2:#0a1428;--bg3:#0f1e3a;--bg4:#081020;--text:#c8e0ff;--chat-bg:rgba(15,30,58,.85);--chat-head:rgba(10,20,40,.9);}
-body.theme-purple{--bg1:#0d0518;--bg2:#1a0a30;--bg3:#250f45;--bg4:#150828;--text:#e8d0ff;--chat-bg:rgba(37,15,69,.85);--chat-head:rgba(20,8,40,.9);}
-body.theme-green{--bg1:#031208;--bg2:#061e0e;--bg3:#0a2e15;--bg4:#041a0a;--text:#c8ffd8;--chat-bg:rgba(10,46,21,.85);--chat-head:rgba(6,30,14,.9);}
-body.theme-red{--bg1:#180505;--bg2:#280a0a;--bg3:#3a1010;--bg4:#200808;--text:#ffd0d0;--chat-bg:rgba(58,16,16,.85);--chat-head:rgba(40,10,10,.9);}
-body.theme-pink{--bg1:#180510;--bg2:#280a1e;--bg3:#3a1028;--bg4:#200818;--text:#ffd0e8;--chat-bg:rgba(58,16,40,.85);--chat-head:rgba(40,10,30,.9);}
-body.theme-orange{--bg1:#180d05;--bg2:#28140a;--bg3:#3a1e10;--bg4:#200f08;--text:#ffd8b8;--chat-bg:rgba(58,30,16,.85);--chat-head:rgba(40,20,10,.9);}
-body.theme-teal{--bg1:#031515;--bg2:#062828;--bg3:#0a3a3a;--bg4:#042020;--text:#b8fffa;--chat-bg:rgba(10,58,58,.85);--chat-head:rgba(6,40,40,.9);}
-body.theme-cyan{--bg1:#031318;--bg2:#062830;--bg3:#0a3a48;--bg4:#042028;--text:#b8f0ff;--chat-bg:rgba(10,58,72,.85);--chat-head:rgba(6,40,48,.9);}
-body.theme-yellow{--bg1:#181505;--bg2:#28230a;--bg3:#3a3410;--bg4:#201c08;--text:#fff8c8;--chat-bg:rgba(58,52,16,.85);--chat-head:rgba(40,35,10,.9);}
-body.theme-rose{--bg1:#180508;--bg2:#280a12;--bg3:#3a101c;--bg4:#20080e;--text:#ffd0dc;--chat-bg:rgba(58,16,28,.85);--chat-head:rgba(40,10,18,.9);}
-body.theme-light .cmsg .text{color:#2a3040;}
-body.theme-light .panel input{color:#1a1a2e;}
-body.theme-light .game-play-close{color:#1a1a2e;}
-body.theme-light .game-play-close:hover{background:rgba(255,0,68,.2);}
-body.theme-light .cbtn{color:#1a1a2e;}
-body.theme-light .tb-btn{color:#1a1a2e;}
-body.theme-light .hc-btn{color:#1a1a2e;}
-body.theme-light .emo-btn{color:#1a1a2e;}
-body.theme-light .c-tab{color:rgba(30,40,80,.5);}
-body.theme-light .c-tab:hover{color:#1a1a2e;}
-body.theme-light .c-tab.active{color:var(--neon1);}
-body.theme-light .chat-in input{color:#1a1a2e;}
-body.theme-light .host-player-name{color:#1a1a2e;}
-body.theme-light .game-card{background:rgba(200,210,240,.5);}
-body.theme-light .game-card .game-name{color:#1a1a2e;}
-body.theme-light .video-placeholder h3{color:#4a5570;}
-body.theme-light .video-placeholder p{color:#6a7a9a;}
 
+/* MÁGICA MOBILE: NÃO EMPURRAR O SITE */
 @media (max-width:900px) and (orientation:portrait){
-  .main{flex-direction:column;}
+  body{height:100dvh;overflow:hidden;}
+  #app{height:100dvh;}
+  .main{height:100%;}
   .video-side{min-height:35vh;flex:0 0 35vh;min-width:100%;}
-  .chat-side{width:100%!important;min-width:100%;flex:1;max-width:none;height:auto!important;}
+  .chat-side{width:100%!important;min-width:100%;flex:1;max-width:none;height:auto!important;display:flex;flex-direction:column;overflow:hidden;}
+  .chat-panel.active{flex:1;display:flex;flex-direction:column;min-height:0;}
+  .chat-msgs{flex:1;overflow-y:auto;min-height:0;}
+  .chat-in{position:relative;flex-shrink:0;}
   .divider{width:100%;height:6px;cursor:row-resize;}
   .divider::before{width:40px;height:4px;}
   .host-controls{top:10px;right:10px;max-width:60%;}
@@ -359,11 +338,11 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 #landing .panel{width:min(460px,100%);padding:clamp(14px,3.5vw,32px);}
 #landing .panel h2{font-size:clamp(16px,4vw,20px);margin-bottom:clamp(8px,1.5vh,16px);}
 #landing .lbl{font-size:clamp(11px,2.6vw,12px);margin:clamp(4px,.8vh,8px) 0 clamp(3px,.6vh,6px);}
-#landing .panel input[type=text],#landing .panel input[type=password]{padding:clamp(9px,2.2vw,13px) clamp(11px,2.8vw,16px);font-size:clamp(13px,3vw,15px);margin-bottom:clamp(6px,1.2vh,12px);}
+#landing .panel input[type=text],#landing .panel input[type=password],#landing .panel input[type=number]{padding:clamp(9px,2.2vw,13px) clamp(11px,2.8vw,16px);font-size:clamp(13px,3vw,15px);margin-bottom:clamp(6px,1.2vh,12px);}
 #landing .btn{padding:clamp(9px,2.2vw,13px);font-size:clamp(13px,3vw,15px);margin-top:0;}
 #landing .row{gap:clamp(8px,2vw,10px);}
 #landing .row > *{min-width:0;}
-@media (max-height:650px){#landing .logo{font-size:clamp(24px,5.5vw,36px);}#landing .tagline{font-size:clamp(10px,2.2vw,13px);}#landing .panel{padding:clamp(12px,3vw,18px);}#landing .panel h2{display:none;}#landing .lbl{margin:3px 0 2px;}#landing .panel input[type=text],#landing .panel input[type=password]{padding:7px 10px;margin-bottom:5px;}#landing .btn{padding:8px 10px;}}
+@media (max-height:650px){#landing .logo{font-size:clamp(24px,5.5vw,36px);}#landing .tagline{font-size:clamp(10px,2.2vw,13px);}#landing .panel{padding:clamp(12px,3vw,18px);}#landing .panel h2{display:none;}#landing .lbl{margin:3px 0 2px;}#landing .panel input[type=text],#landing .panel input[type=password],#landing .panel input[type=number]{padding:7px 10px;margin-bottom:5px;}#landing .btn{padding:8px 10px;}}
 @media (max-width:380px){#landing .logo{font-size:clamp(28px,10vw,40px);letter-spacing:-1px;}#landing .tagline{padding:0 4px;}#landing .panel{padding:12px 12px 16px;border-radius:18px;}#landing .lbl{font-size:11px;}#landing .row{flex-direction:column;}#landing .row > *{width:100%;}}
 @media (min-height:1000px){#landing .logo{font-size:72px;}#landing .tagline{font-size:20px;}}
 ::-webkit-scrollbar{width:6px;height:6px;}
@@ -375,7 +354,6 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 <body>
 <div class="upload-overlay" id="uploadOverlay" aria-live="polite">
   <div class="upload-spinner"></div>
-  <div class="upload-title" id="uploadTitle">Aguarde o carregamento...</div>
   <div class="upload-sub" id="uploadSub">Enviando mídia...</div>
 </div>
 <div id="landing" class="screen active">
@@ -390,6 +368,8 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
     <input type="text" id="inRoom" maxlength="30" placeholder="Ex: Cinema-Sexta" value="">
     <div class="lbl">🔒 Senha da sala <span style="opacity:.6;font-weight:500">(opcional)</span></div>
     <input type="text" id="inPass" maxlength="40" placeholder="Deixe vazio para não usar senha" value="" autocomplete="off">
+    <div class="lbl" id="limitLabel" style="display:none;">👥 Limite de pessoas <span style="opacity:.6;font-weight:500">(0 = sem limite)</span></div>
+    <input type="number" id="inLimit" min="0" max="999" placeholder="Ex: 10" value="0" style="display:none;">
     <div class="row" style="margin-top:20px;">
       <button class="btn blue" onclick="createRoom()">➕ Criar Sala</button>
       <button class="btn green" onclick="joinFromLink()">🔗 Entrar em Sala</button>
@@ -482,13 +462,14 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
       </div>
       <div class="chat-panel active" id="tabChat">
         <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-typing" id="chatTyping"></div>
         <div class="recording-indicator" id="recordingIndicator">
           <span class="rec-dot"></span>
           <span>Gravando...</span>
           <span class="recording-timer" id="recordingTimer">0:00</span>
           <button class="recording-cancel" id="cancelRecBtn">Cancelar</button>
         </div>
-        <div style="position:relative">
+        <div style="position:relative" id="chatInputArea">
           <div class="emoji-pop" id="emojiPop"></div>
           <div class="chat-in">
             <button class="emo-btn" id="emojiBtn">😊</button>
@@ -577,7 +558,6 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-/* ✅ CORRIGIDO: setUploadLoading null-safe (não quebra se uploadTitle não existir) */
 function setUploadLoading(active,title='Aguarde...',sub='Enviando mídia...'){
   const o=$('uploadOverlay'); if(!o)return;
   const t=$('uploadTitle'); if(t) t.textContent=title;
@@ -599,22 +579,15 @@ function buildWsUrl(rawInput){
 let BACKEND_URL = `${location.protocol}//${location.host}`;
 function updateBackendUrl(){
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
-  if (ws) {
-    BACKEND_URL = ws.replace(/^wss:\/\//i, 'https://');
-  } else {
-    BACKEND_URL = `${location.protocol}//${location.host}`;
-  }
+  if (ws) BACKEND_URL = ws.replace(/^wss:\/\//i, 'https://');
+  else BACKEND_URL = `${location.protocol}//${location.host}`;
   console.log('[BACKEND] usando', BACKEND_URL);
-  if (BACKEND_URL.includes('github.io') || BACKEND_URL.includes('netlify.app')) {
-    console.warn('[BACKEND] AVISO: GitHub Pages/Netlify sem tunnel.json configurado!');
-    toast('⚠️ Configure tunnel.json com a URL do Cloudflare.');
-  }
 }
 updateBackendUrl();
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024;
 let myName='',roomName='',roomId='',myPlayerId=null,isHost=false;
-let roomPassword='';
+let roomPassword='', roomLimit=0;
 let hosts=[];
 let founderId=null;
 let serverMultiHost=true;
@@ -635,6 +608,7 @@ let pipElement=null;
 let youtubeNativePipReady=false;
 let docPipWindow = null;
 let pendingMessages = [];
+let typingTimeout = null;
 
 let myNickColor = localStorage.getItem('partyblox-nickcolor') || '#00e5ff';
 const NICK_COLORS = [
@@ -646,40 +620,26 @@ const NICK_COLORS = [
 
 function wsSend(m){
   if(ws && ws.readyState === WebSocket.OPEN){
-    if(ws.bufferedAmount > 1024 * 64){
-      pendingMessages.push(m);
-    } else {
-      ws.send(JSON.stringify(m));
-    }
-  } else {
-    pendingMessages.push(m);
-  }
+    if(ws.bufferedAmount > 1024 * 64) pendingMessages.push(m);
+    else ws.send(JSON.stringify(m));
+  } else pendingMessages.push(m);
 }
 
 setInterval(() => {
   if(ws && ws.readyState === WebSocket.OPEN && pendingMessages.length > 0 && ws.bufferedAmount < 1024 * 32){
-    const msgs = [...pendingMessages];
-    pendingMessages = [];
-    msgs.forEach(m => ws.send(JSON.stringify(m)));
+    const msgs = [...pendingMessages]; pendingMessages = []; msgs.forEach(m => ws.send(JSON.stringify(m)));
   }
 }, 1000);
 
-setInterval(() => {
-  if(ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({kind:'ping'}));
-  }
-}, 20000);
+setInterval(() => { if(ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({kind:'ping'})); }, 20000);
 
 async function fetchOnlineCount(){
   try{
     const r = await fetch(BACKEND_URL + '/api/ping', {method:'POST', cache:'no-store'});
     if(!r.ok) throw new Error();
     const d = await r.json();
-    if(typeof d.online === 'number'){
-      const el = $('onlineCount');
-      if(el) el.textContent = d.online;
-    }
-  }catch(err){ console.warn('[online] erro', err); }
+    if(typeof d.online === 'number'){ const el = $('onlineCount'); if(el) el.textContent = d.online; }
+  }catch(err){}
 }
 setInterval(() => { if($('landing').classList.contains('active')) fetchOnlineCount(); }, 10000);
 fetchOnlineCount();
@@ -689,12 +649,7 @@ function handleRTCMessage(msg){
   if(msg.action==='screenRequest'){ if(isScreenSharing && screenStream) createRTCPeerForViewer(msg.from); return; }
   if(msg.action==='screenStarted'){
     screenOwner = msg.from || null;
-    if(!isScreenSharing){
-      mediaType='screen';
-      const p=$('placeholder');
-      if(p){ p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(msg.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando...</p>'; p.style.display='none'; }
-      updateMediaBadge('🖥️','Tela ao vivo');showPlayerCtrl();requestScreenFromOwner();
-    }
+    if(!isScreenSharing){ mediaType='screen'; const p=$('placeholder'); if(p){ p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(msg.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando...</p>'; p.style.display='none'; } updateMediaBadge('🖥️','Tela ao vivo');showPlayerCtrl();requestScreenFromOwner(); }
     return;
   }
   if(msg.action==='screenStopped'){ if(screenOwner===msg.from){ screenOwner=null; if(!isScreenSharing) resetPlayerUI(); } return; }
@@ -703,48 +658,26 @@ function handleRTCMessage(msg){
 function createRTCPeerForViewer(viewerId){
   if(!screenStream || !viewerId) return;
   try{
-    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-    rtcPeers.set(viewerId, pc);
-    screenStream.getTracks().forEach(t=>pc.addTrack(t, screenStream));
+    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}); rtcPeers.set(viewerId, pc); screenStream.getTracks().forEach(t=>pc.addTrack(t, screenStream));
     pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:viewerId, candidate:e.candidate}); };
-    pc.createOffer().then(off=>pc.setLocalDescription(off)).then(()=>{ wsSend({kind:'rtc', action:'offer', to:viewerId, sdp: pc.localDescription}); }).catch(err=>console.warn('[RTC] erro', err));
+    pc.createOffer().then(off=>pc.setLocalDescription(off)).then(()=>{ wsSend({kind:'rtc', action:'offer', to:viewerId, sdp: pc.localDescription}); }).catch(err=>{});
   }catch(e){}
 }
 function requestScreenFromOwner(){
-  if(!screenOwner) return;
-  const targetId = screenOwner;
+  if(!screenOwner) return; const targetId = screenOwner;
   try{
-    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-    rtcPeers.set(targetId, pc);
-    pc.ontrack = ev => {
-      const sv = $('screenVideo');
-      if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); }
-      hidePlaceholder(); updateMediaBadge('🖥️','Tela ao vivo');
-    };
+    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}); rtcPeers.set(targetId, pc);
+    pc.ontrack = ev => { const sv = $('screenVideo'); if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); } hidePlaceholder(); updateMediaBadge('🖥️','Tela ao vivo'); };
     pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:targetId, candidate:e.candidate}); };
     wsSend({kind:'rtc', action:'screenRequest', to:targetId});
   }catch(e){}
 }
 async function handleRTCPeerMessage(msg){
   try{
-    const from = msg.from;
-    let pc = rtcPeers.get(from);
+    const from = msg.from; let pc = rtcPeers.get(from);
     if(msg.action==='offer'){
-      if(!pc){
-        pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-        rtcPeers.set(from, pc);
-        pc.ontrack = ev => {
-          const sv = $('screenVideo');
-          if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); }
-          hidePlaceholder(); updateMediaBadge('🖥️','Tela ao vivo');
-        };
-        pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:from, candidate:e.candidate}); };
-      }
-      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      wsSend({kind:'rtc', action:'answer', to:from, sdp: pc.localDescription});
-      return;
+      if(!pc){ pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}); rtcPeers.set(from, pc); pc.ontrack = ev => { const sv = $('screenVideo'); if(sv){ sv.srcObject = ev.streams[0]; sv.muted = false; sv.volume = 1; sv.style.display='block'; safePlay(sv); } hidePlaceholder(); updateMediaBadge('🖥️','Tela ao vivo'); }; pc.onicecandidate = e => { if(e.candidate) wsSend({kind:'rtc', action:'ice', to:from, candidate:e.candidate}); }; }
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp)); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); wsSend({kind:'rtc', action:'answer', to:from, sdp: pc.localDescription}); return;
     }
     if(msg.action==='answer' && pc){ await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp)); return; }
     if(msg.action==='ice' && pc && msg.candidate){ try{ await pc.addIceCandidate(new RTCIceCandidate(msg.candidate)); }catch(_){} return; }
@@ -762,8 +695,7 @@ function updatePipButton(){
   const ytSupported=!!(mediaType==='youtube' && ytVideoId && 'documentPictureInPicture' in window);
   const supported=nativeSupported || ytSupported;
   const active=!!document.pictureInPictureElement || !!docPipWindow || !!window._partybloxNativeYoutubePip;
-  btn.disabled=!supported;
-  btn.title=supported?'Abrir PiP':'PiP não disponível';
+  btn.disabled=!supported; btn.title=supported?'Abrir PiP':'PiP indisponível';
   btn.classList.toggle('active',active);
   if(back)back.style.display=active?'flex':'none';
 }
@@ -777,36 +709,26 @@ async function togglePictureInPicture(){
   if(mediaType==='youtube'){ return toggleDocumentPip(); }
   const v=getPipVideoElement();
   if(!v||!document.pictureInPictureEnabled||typeof v.requestPictureInPicture!=='function'){ return toast('⚠️ PiP indisponível'); }
-  try{
-    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
-    pipElement=v; await v.requestPictureInPicture();
-  }catch(e){ toast('❌ Falha no PiP'); }
-  finally{ updatePipButton(); }
+  try{ if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; } pipElement=v; await v.requestPictureInPicture(); }
+  catch(e){ toast('❌ Falha no PiP'); } finally{ updatePipButton(); }
 }
 async function toggleDocumentPip(){
   if(docPipWindow){ try{ docPipWindow.close(); }catch(_){} docPipWindow = null; updatePipButton(); return; }
-  if(!('documentPictureInPicture' in window)){ return toast('❌ Document PiP não suportado'); }
+  if(!('documentPictureInPicture' in window)){ return toast('❌ Document PiP não suportado neste navegador'); }
   try{
     const pipWin = await documentPictureInPicture.requestWindow({ width: 720, height: 420 });
     docPipWindow = pipWin;
     document.querySelectorAll('style').forEach(s=>{ try{ pipWin.document.head.appendChild(s.cloneNode(true)); }catch(_){} });
     pipWin.document.body.style.cssText = 'margin:0;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;';
-    const container = pipWin.document.createElement('div');
-    container.style.cssText = 'width:100vw;height:100vh;background:#000;position:relative;overflow:hidden;';
+    const container = pipWin.document.createElement('div'); container.style.cssText = 'width:100vw;height:100vh;background:#000;position:relative;overflow:hidden;';
     pipWin.document.body.appendChild(container);
-    const overlay = $('youtubeOverlay');
-    const originalParent = overlay.parentNode; const originalNext = overlay.nextSibling;
-    overlay._origParent = originalParent; overlay._origNext = originalNext;
-    overlay.style.cssText = 'position:relative;width:100%;height:100%;display:block;inset:auto;';
+    const overlay = $('youtubeOverlay'); const originalParent = overlay.parentNode; const originalNext = overlay.nextSibling;
+    overlay._origParent = originalParent; overlay._origNext = originalNext; overlay.style.cssText = 'position:relative;width:100%;height:100%;display:block;inset:auto;';
     container.appendChild(overlay);
-    const iframe = overlay.querySelector('iframe');
-    if(iframe){ iframe.style.width='100%'; iframe.style.height='100%'; }
+    const iframe = overlay.querySelector('iframe'); if(iframe){ iframe.style.width='100%'; iframe.style.height='100%'; }
     pipWin.addEventListener('pagehide', () => {
       try{
-        if(overlay._origParent){
-          if(overlay._origNext && overlay._origNext.parentNode === overlay._origParent){ overlay._origParent.insertBefore(overlay, overlay._origNext); }
-          else{ overlay._origParent.appendChild(overlay); }
-        }
+        if(overlay._origParent){ if(overlay._origNext && overlay._origNext.parentNode === overlay._origParent){ overlay._origParent.insertBefore(overlay, overlay._origNext); } else{ overlay._origParent.appendChild(overlay); } }
         overlay.style.cssText = '';
       }catch(e){}
       docPipWindow = null; updatePipButton();
@@ -827,90 +749,39 @@ const ORIGINAL_PLACEHOLDER_HTML = $('placeholder') ? $('placeholder').innerHTML 
 
 function restorePlaceholder(){ const p = $('placeholder'); if(!p) return; p.innerHTML = ORIGINAL_PLACEHOLDER_HTML; p.style.display = 'flex'; }
 function hidePlaceholder(){ const p = $('placeholder'); if(!p) return; p.style.display = 'none'; }
-function showRoomNotice(msg, isError=false){
-  const n = $('roomNotice'); if(!n) return;
-  n.textContent = msg; n.className = 'room-notice show' + (isError ? ' error' : '');
-  clearTimeout(n._x); n._x = setTimeout(()=>{ n.className = 'room-notice'; }, 6000);
-}
+function showRoomNotice(msg, isError=false){ const n = $('roomNotice'); if(!n) return; n.textContent = msg; n.className = 'room-notice show' + (isError ? ' error' : ''); clearTimeout(n._x); n._x = setTimeout(()=>{ n.className = 'room-notice'; }, 6000); }
 let currentTheme='dark';
 function loadTheme(){const saved=localStorage.getItem('partyblox-theme');if(saved)setTheme(saved,true);}
-function setTheme(t,silent=false){
-  currentTheme=t;document.body.className='';
-  if(t!=='dark')document.body.classList.add('theme-'+t);
-  localStorage.setItem('partyblox-theme',t);
-  document.querySelectorAll('.theme-option').forEach(el=>el.classList.toggle('active',el.dataset.theme===t));
-  if(!silent)toast('🎨 Tema aplicado: '+getThemeName(t));
-}
+function setTheme(t,silent=false){ currentTheme=t;document.body.className=''; if(t!=='dark')document.body.classList.add('theme-'+t); localStorage.setItem('partyblox-theme',t); document.querySelectorAll('.theme-option').forEach(el=>el.classList.toggle('active',el.dataset.theme===t)); if(!silent)toast('🎨 Tema aplicado: '+getThemeName(t)); }
 function getThemeName(t){return{dark:'Escuro',light:'Claro',blue:'Azul',purple:'Roxo',green:'Verde',red:'Vermelho',pink:'Rosa',orange:'Laranja',teal:'Turquesa',cyan:'Ciano',yellow:'Amarelo',rose:'Rosa forte'}[t]||t;}
 function loadNickColor(){ const saved=localStorage.getItem('partyblox-nickcolor'); if(saved)myNickColor=saved; renderNickColors(); }
-function renderNickColors(){
-  const grid=$('nickColorGrid'); if(!grid)return; grid.innerHTML='';
-  NICK_COLORS.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='nick-color'+(c===myNickColor?' active':'');
-    d.style.background=c; d.style.color=c; d.dataset.color=c; d.title=c;
-    d.onclick=()=>setNickColor(c);
-    grid.appendChild(d);
-  });
-}
+function renderNickColors(){ const grid=$('nickColorGrid'); if(!grid)return; grid.innerHTML=''; NICK_COLORS.forEach(c=>{ const d=document.createElement('div'); d.className='nick-color'+(c===myNickColor?' active':''); d.style.background=c; d.style.color=c; d.dataset.color=c; d.title=c; d.onclick=()=>setNickColor(c); grid.appendChild(d); }); }
 function setNickColor(c){ myNickColor=c; localStorage.setItem('partyblox-nickcolor',c); renderNickColors(); toast('🌈 Cor do nick: '+c); }
 function getNickColor(name){ if(name===myName)return myNickColor; let hash=0; for(let i=0;i<name.length;i++)hash=name.charCodeAt(i)+((hash<<5)-hash); return NICK_COLORS[Math.abs(hash)%NICK_COLORS.length]; }
 function showMediaInteraction(){}
 function hideMediaInteraction(){ mediaNeedsInteraction=false; }
 async function safePlay(el){ if(!el) return; try { el.muted=false; el.volume=1; await el.play(); return; } catch(_){} try { el.muted=true; await el.play(); el.muted=false; el.volume=1; } catch(_){} }
-function resumeCurrentMedia(){
-  try{
-    if(mediaType==='video'){ const v=$('localVideo'); v.muted=false; v.volume=1; safePlay(v); }
-    else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=false; a.volume=1; safePlay(a); }
-    else if(mediaType==='youtube'&&youtubePlayer){ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); }
-  }catch(_){}
-}
-function toggleVideoSide(){
-  const vs=$('videoSide'),d=$('divider'),cs=$('chatSide');
-  videoSideHidden=!videoSideHidden;
-  if(videoSideHidden){vs.classList.add('hidden');d.classList.add('hidden');cs.classList.add('full');$('toggleVideoBtn').innerHTML='📺 Mostrar';}
-  else{vs.classList.remove('hidden');d.classList.remove('hidden');cs.classList.remove('full');$('toggleVideoBtn').innerHTML='📺 Tela';}
-}
-function toggleControls(){
-  const vc=$('videoCont');controlsHidden=!controlsHidden;
-  if(controlsHidden){vc.classList.add('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ Mostrar';}
-  else{vc.classList.remove('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ UI';}
-}
+function resumeCurrentMedia(){ try{ if(mediaType==='video'){ const v=$('localVideo'); v.muted=false; v.volume=1; safePlay(v); } else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=false; a.volume=1; safePlay(a); } else if(mediaType==='youtube'&&youtubePlayer){ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); } }catch(_){} }
+function toggleVideoSide(){ const vs=$('videoSide'),d=$('divider'),cs=$('chatSide'); videoSideHidden=!videoSideHidden; if(videoSideHidden){vs.classList.add('hidden');d.classList.add('hidden');cs.classList.add('full');$('toggleVideoBtn').innerHTML='📺 Mostrar';} else{vs.classList.remove('hidden');d.classList.remove('hidden');cs.classList.remove('full');$('toggleVideoBtn').innerHTML='📺 Tela';} }
+function toggleControls(){ const vc=$('videoCont');controlsHidden=!controlsHidden; if(controlsHidden){vc.classList.add('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ Mostrar';} else{vc.classList.remove('controls-hidden');$('toggleCtrlBtn').innerHTML='👁️ UI';} }
 let mediaRecorder=null,recordedChunks=[],recordingStartTime=null,recordingTimer=null;
 const MAX_AUDIO_DURATION=30;
 
 function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-').slice(0,30);}
-function wsUrl(){
-  const built = buildWsUrl(window.PARTYBLOX_WS_URL);
-  if(built) return built;
-  return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`;
-}
-function startMediaHeartbeat(){
-  if(mediaHeartbeatTimer)clearInterval(mediaHeartbeatTimer);
-  mediaHeartbeatTimer=setInterval(()=>{
-    if(!isHost||!wsReady||intentionalDisconnect)return;
-    const state=getCurrentMediaState();
-    if(!state)return;
-    lastServerMediaState=JSON.parse(JSON.stringify(state));
-    wsSend({kind:'mediaHeartbeat',state:state});
-  },3000);
-}
+function wsUrl(){ const built = buildWsUrl(window.PARTYBLOX_WS_URL); if(built) return built; return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`; }
+function startMediaHeartbeat(){ if(mediaHeartbeatTimer)clearInterval(mediaHeartbeatTimer); mediaHeartbeatTimer=setInterval(()=>{ if(!isHost||!wsReady||intentionalDisconnect)return; const state=getCurrentMediaState(); if(!state)return; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'mediaHeartbeat',state:state}); },3000); }
 function stopMediaHeartbeat(){ if(mediaHeartbeatTimer){clearInterval(mediaHeartbeatTimer);mediaHeartbeatTimer=null;} }
 function createRoom(){
-  const name=$('inName').value.trim(), room=$('inRoom').value.trim(), pass=($('inPass').value||'').trim();
+  const name=$('inName').value.trim(), room=$('inRoom').value.trim(), pass=($('inPass').value||'').trim(), limit=parseInt($('inLimit').value)||0;
   showRoomNotice('',false);
   if(!name){ showRoomNotice('⚠️ Digite seu apelido.',true); $('inName').focus(); return; }
   if(!room){ showRoomNotice('⚠️ Digite o nome da sala.',true); $('inRoom').focus(); return; }
   if(name.length<2){ showRoomNotice('⚠️ Apelido curto.',true); $('inName').focus(); return; }
   if(room.length<2){ showRoomNotice('⚠️ Nome da sala curto.',true); $('inRoom').focus(); return; }
-  myName=name; roomName=room; roomPassword=pass;
+  myName=name; roomName=room; roomPassword=pass; roomLimit=limit;
   enterApp(true);
 }
-function getRoomFromCurrentUrl(){
-  const p=new URLSearchParams(location.search); let room=p.get('room')||'';
-  if(!room){ const parts=location.pathname.split('/').filter(Boolean); if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){ try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); } } }
-  return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30);
-}
+function getRoomFromCurrentUrl(){ const p=new URLSearchParams(location.search); let room=p.get('room')||''; if(!room){ const parts=location.pathname.split('/').filter(Boolean); if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){ try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); } } } return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30); }
 function joinFromLink(){
   const roomFromUrl=getRoomFromCurrentUrl();
   myName=$('inName').value.trim()||('Visitante'+Math.floor(Math.random()*999));
@@ -921,7 +792,6 @@ function joinFromLink(){
 }
 function enterApp(asHost){
   intentionalDisconnect=false; firstRoomJoin=true; appEntered = false;
-  /* ✅ CORRIGIDO: limpa fila de mensagens pendentes ao reentrar */
   pendingMessages = [];
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
@@ -932,24 +802,16 @@ function enterApp(asHost){
   connectRoom(asHost);
   updateHostUI();
 }
-function scheduleReconnect(){
-  if(intentionalDisconnect)return; if(!appEntered && !ws)return; if(reconnectTimer)return;
-  const delay=Math.min(15000,Math.max(1500,2000*Math.pow(1.5,reconnectAttempts++)));
-  reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectRoom(false);},delay);
-}
+function scheduleReconnect(){ if(intentionalDisconnect)return; if(!appEntered && !ws)return; if(reconnectTimer)return; const delay=Math.min(15000,Math.max(1500,2000*Math.pow(1.5,reconnectAttempts++))); reconnectTimer=setTimeout(()=>{reconnectTimer=null;connectRoom(false);},delay); }
 function connectRoom(creator){
-  if(intentionalDisconnect)return;
-  if(ws&&(ws.readyState===WebSocket.OPEN||ws.readyState===WebSocket.CONNECTING))return;
+  if(intentionalDisconnect)return; if(ws&&(ws.readyState===WebSocket.OPEN||ws.readyState===WebSocket.CONNECTING))return;
   try{
-    const targetUrl=wsUrl();
-    console.log('[WS] conectando em',targetUrl);
-    const socket=new WebSocket(targetUrl);
-    ws=socket; window.ws=ws; window.wsSend=wsSend;
+    const targetUrl=wsUrl(); console.log('[WS] conectando em',targetUrl);
+    const socket=new WebSocket(targetUrl); ws=socket; window.ws=ws; window.wsSend=wsSend;
     socket.onopen=()=>{
       if(ws!==socket){try{socket.close();}catch(_){}return;}
-      wsReady=true;reconnectAttempts=0;
-      console.log('[WS] conectado ✅');
-      socket.send(JSON.stringify({ kind:'join', room:roomId, name:myName, playerId:myPlayerId, creator:!!creator&&firstRoomJoin, password:roomPassword, timestamp:Date.now() }));
+      wsReady=true;reconnectAttempts=0; console.log('[WS] conectado ✅');
+      socket.send(JSON.stringify({ kind:'join', room:roomId, name:myName, playerId:myPlayerId, creator:!!creator&&firstRoomJoin, password:roomPassword, maxUsers: roomLimit, timestamp:Date.now() }));
       if(pendingMessages.length>0){ const msgs = [...pendingMessages]; pendingMessages = []; msgs.forEach(m => socket.send(JSON.stringify(m))); }
       firstRoomJoin=false;
       if(lastServerMediaState&&!isHost)setTimeout(()=>syncToHost(true),250);
@@ -968,7 +830,10 @@ function connectRoom(creator){
         ws=null; wsReady=false; firstRoomJoin=true; if(m.roomId) $('inRoom').value=m.roomId; try{ $('inPass').value=''; $('inPass').focus(); }catch(_){} return;
       }
       if(m.kind==='roomState'){
-        if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : ''); }
+        if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); }
+        roomLimit = m.maxUsers || 0;
+        const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : '';
+        $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
         if(Array.isArray(m.hosts)){ serverMultiHost=true; hosts=m.hosts; founderId=m.founder||null; isHost=hosts.includes(myPlayerId); }
         else{ serverMultiHost=false; isHost=!!m.host; founderId=m.hostId||null; hosts=isHost?[myPlayerId]:(m.hostId?[m.hostId]:[]); }
         playerCount=Number(m.playerCount||1); $('vcNum').textContent=playerCount;
@@ -982,6 +847,15 @@ function connectRoom(creator){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;} else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
         updateHostUI();updateHostPanel();refreshHostChatBadges();
       }else if(m.kind==='rtc')handleRTCMessage(m);
+      else if(m.kind==='typing'){
+        const typers = m.users || [];
+        const el = $('chatTyping');
+        if(el){
+          if(typers.length === 0) el.textContent = '';
+          else if(typers.length === 1) el.textContent = `${typers[0]} está digitando...`;
+          else el.textContent = `${typers.join(', ')} estão digitando...`;
+        }
+      }
       else if(m.kind==='media'||m.kind==='syncState'||m.kind==='sync'){ if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null; const state=m.state||m.media; if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));applyMediaState(state);} }
       else if(m.kind==='mediaHeartbeat'){ if(m.state){lastServerMediaState=JSON.parse(JSON.stringify(m.state));} }
       else if(m.kind==='syncRequest'){ if(isHost){ const state=getCurrentMediaState(); if(state)wsSend({kind:'syncState',targetId:m.playerId||m.requesterId||null,state:state,timestamp:Date.now()}); } }
@@ -991,15 +865,15 @@ function connectRoom(creator){
         if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
         addChatMsg(m.name,m.text,!!m.system,m.to&&m.to===myName,m.to,m.media,m.playerId||m.pid,m.color);
       }else if(m.kind==='reaction')showReaction(m.emoji);
-      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
-      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
+      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
+      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
       else if(m.kind==='playersList'){connectedPlayers=m.players||[];updateHostPanel();}
       else if(m.kind==='game_join'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){const session=gameSessions[currentGame.id]||(gameSessions[currentGame.id]={players:[]});if(!session.players.find(p=>p.id===m.playerId)){session.players.push({id:m.playerId,name:m.name});sendPlayersToIframe();}} }
       else if(m.kind==='game_event'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player,promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});} }
     };
     socket.onclose=e=>{ if(ws!==socket)return; wsReady=false;stopMediaHeartbeat(); console.warn('[WS] fechado',e.code,e.reason); if(!intentionalDisconnect)scheduleReconnect(); };
-    socket.onerror=e=>{console.error('[WS] erro',e);};
-  }catch(e){console.error('[WS] exceção',e);scheduleReconnect();}
+    socket.onerror=e=>{};
+  }catch(e){scheduleReconnect();}
 }
 function updateHostUI(){ $('hostCtrls').style.display=isHost?'flex':'none'; updateHostPanel(); }
 function updateHostPanel(){
@@ -1028,48 +902,17 @@ function updateHostPanel(){
   });
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function transferHost(targetId,targetName){
-  if(!isHost)return toast('👑 Só hosts podem dar host'); if(targetId===myPlayerId)return;
-  wsSend({kind:'transferHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
-  if(serverMultiHost && !hosts.includes(targetId))hosts.push(targetId);
-  wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`👑 ${myName} deu host para ${targetName}`,system:true,timestamp:Date.now()});
-  toast('👑 Host dado para '+targetName); updateHostPanel();
-}
-function removeHost(targetId,targetName){
-  if(!isHost)return toast('👑 Só hosts podem retirar host'); if(targetId===myPlayerId)return toast('❌ Não pode retirar seu próprio host'); if(targetId===founderId)return toast('❌ Não é possível retirar o fundador');
-  wsSend({kind:'removeHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()});
-  if(serverMultiHost)hosts=hosts.filter(h=>h!==targetId);
-  wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🚫 ${myName} retirou o host de ${targetName}`,system:true,timestamp:Date.now()});
-  toast('🚫 Host retirado de '+targetName); updateHostPanel();
-}
-function kickPlayer(targetId,targetName){
-  if(!isHost)return toast('👑 Só o host pode remover alguém.'); if(!targetId||targetId===myPlayerId||targetId===founderId)return;
-  if(!confirm('Remover '+targetName+' da sala?'))return; wsSend({kind:'kickPlayer',targetId}); toast('🚪 Solicitação para remover '+targetName+' enviada.');
-}
+function transferHost(targetId,targetName){ if(!isHost)return toast('👑 Só hosts podem dar host'); if(targetId===myPlayerId)return; wsSend({kind:'transferHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()}); if(serverMultiHost && !hosts.includes(targetId))hosts.push(targetId); wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`👑 ${myName} deu host para ${targetName}`,system:true,timestamp:Date.now()}); toast('👑 Host dado para '+targetName); updateHostPanel(); }
+function removeHost(targetId,targetName){ if(!isHost)return toast('👑 Só hosts podem retirar host'); if(targetId===myPlayerId)return toast('❌ Não pode retirar seu próprio host'); if(targetId===founderId)return toast('❌ Não é possível retirar o fundador'); wsSend({kind:'removeHost',playerId:myPlayerId,targetId:targetId,timestamp:Date.now()}); if(serverMultiHost)hosts=hosts.filter(h=>h!==targetId); wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🚫 ${myName} retirou o host de ${targetName}`,system:true,timestamp:Date.now()}); toast('🚫 Host retirado de '+targetName); updateHostPanel(); }
+function kickPlayer(targetId,targetName){ if(!isHost)return toast('👑 Só o host pode remover alguém.'); if(!targetId||targetId===myPlayerId||targetId===founderId)return; if(!confirm('Remover '+targetName+' da sala?'))return; wsSend({kind:'kickPlayer',targetId}); toast('🚪 Solicitação para remover '+targetName+' enviada.'); }
 function copyRoomLink(){ const url=new URL(location.href); url.searchParams.set('room',roomId); navigator.clipboard.writeText(url.toString()).then(()=>toast('🔗 Link copiado')).catch(()=>toast('❌ Falha ao copiar')); }
 function leaveRoom(){ if(confirm('Sair da sala?')){ intentionalDisconnect=true;stopMediaHeartbeat(); clearTimeout(reconnectTimer);reconnectTimer=null; try{if(ws&&ws.readyState===WebSocket.OPEN)wsSend({kind:'leave',reason:'user'});}catch(_){} try{if(ws)ws.close(1000,'leave');}catch(_){} location.reload(); } }
 let currentTab='chat';
-function switchTab(t){
-  currentTab=t;
-  document.querySelectorAll('.c-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  document.querySelectorAll('.chat-panel').forEach(p=>p.classList.remove('active'));
-  const p=$('tab'+t.charAt(0).toUpperCase()+t.slice(1));
-  if(p){ p.classList.add('active'); setTimeout(()=>{ const sc=p.querySelector('.chat-msgs,.react-grid,.emote-grid,.host-panel,.games-list'); if(sc&&t!=='chat')sc.scrollTop=0; if(sc&&t==='chat')sc.scrollTop=sc.scrollHeight; },0); }
-  if(t==='games')loadGamesList(); if(t==='host')updateHostPanel();
-}
-function toggleChat(){
-  const s=$('chatSide');const d=$('divider');const vs=$('videoSide');
-  if(s.style.display==='none'){ s.style.display='flex'; if(window.innerWidth > 900){d.style.display='block';if(!videoSideHidden)vs.style.display='flex';} $('chatToggleBtn').innerHTML='✕ Fechar'; }
-  else{ s.style.display='none';d.style.display='none';$('chatToggleBtn').innerHTML='💬 Chat'; }
-}
+function switchTab(t){ currentTab=t; document.querySelectorAll('.c-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t)); document.querySelectorAll('.chat-panel').forEach(p=>p.classList.remove('active')); const p=$('tab'+t.charAt(0).toUpperCase()+t.slice(1)); if(p){ p.classList.add('active'); setTimeout(()=>{ const sc=p.querySelector('.chat-msgs,.react-grid,.emote-grid,.host-panel,.games-list'); if(sc&&t!=='chat')sc.scrollTop=0; if(sc&&t==='chat')sc.scrollTop=sc.scrollHeight; },0); } if(t==='games')loadGamesList(); if(t==='host')updateHostPanel(); }
+function toggleChat(){ const s=$('chatSide');const d=$('divider');const vs=$('videoSide'); if(s.style.display==='none'){ s.style.display='flex'; if(window.innerWidth > 900){d.style.display='block';if(!videoSideHidden)vs.style.display='flex';} $('chatToggleBtn').innerHTML='✕ Fechar'; } else{ s.style.display='none';d.style.display='none';$('chatToggleBtn').innerHTML='💬 Chat'; } }
 function focusChat(e){ if(e)e.preventDefault(); const s=$('chatSide'); if(s.style.display==='none')toggleChat(); switchTab('chat'); setTimeout(()=>{const input=$('chatText');input.focus();input.click();},50); }
 function isPlayerCurrentHost(pid,author){ if(pid&&hosts.includes(pid))return true; return !pid&&author===myName&&isHost; }
-function refreshHostChatBadges(){
-  document.querySelectorAll('.cmsg[data-player-id]').forEach(d=>{
-    const badge=d.querySelector('.host-chat-badge'); const pid=d.dataset.playerId||''; const auth=d.querySelector('.auth'); if(!auth)return;
-    if(isPlayerCurrentHost(pid,auth.dataset.author||'')){ if(!badge){const b=document.createElement('span');b.className='host-chat-badge';b.textContent='HOST';b.style.cssText='display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,var(--neon1),var(--neon2));color:#0a0a14;font-size:9px;font-weight:900;vertical-align:middle;';auth.appendChild(b);} } else if(badge)badge.remove();
-  });
-}
+function refreshHostChatBadges(){ document.querySelectorAll('.cmsg[data-player-id]').forEach(d=>{ const badge=d.querySelector('.host-chat-badge'); const pid=d.dataset.playerId||''; const auth=d.querySelector('.auth'); if(!auth)return; if(isPlayerCurrentHost(pid,auth.dataset.author||'')){ if(!badge){const b=document.createElement('span');b.className='host-chat-badge';b.textContent='HOST';b.style.cssText='display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,var(--neon1),var(--neon2));color:#0a0a14;font-size:9px;font-weight:900;vertical-align:middle;';auth.appendChild(b);} } else if(badge)badge.remove(); }); }
 function addChatMsg(author,text,isSystem=false,isPrivate=false,target=null,media=null,playerId=null,customColor=null){
   const msgs=$('chatMsgs'),d=document.createElement('div');
   d.className='cmsg'+(isSystem?' system':'')+(isPrivate?' private':''); if(playerId)d.dataset.playerId=playerId;
@@ -1149,11 +992,7 @@ async function startAudioRecording(){
     };
     mediaRecorder.start(); recordingStartTime=Date.now();
     $('recordingIndicator').classList.add('active'); $('micBtn').textContent='⏹️'; $('micBtn').style.background='rgba(255,0,68,.3)';
-    recordingTimer=setInterval(()=>{
-      const elapsed=Math.floor((Date.now()-recordingStartTime)/1000);
-      $('recordingTimer').textContent=fmtTime(elapsed);
-      if(elapsed>=MAX_AUDIO_DURATION)stopAudioRecording();
-    },100);
+    recordingTimer=setInterval(()=>{ const elapsed=Math.floor((Date.now()-recordingStartTime)/1000); $('recordingTimer').textContent=fmtTime(elapsed); if(elapsed>=MAX_AUDIO_DURATION)stopAudioRecording(); },100);
   }catch(e){toast('❌ Microfone indisponível');}
 }
 function stopAudioRecording(){ if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();clearInterval(recordingTimer);} }
@@ -1161,56 +1000,17 @@ function cancelRecording(){ if(mediaRecorder&&mediaRecorder.state==='recording')
 function playChatAudio(url){new Audio(url).play().catch(e=>{});}
 $('localVideo').addEventListener('playing',hideMediaInteraction);
 $('localAudio').addEventListener('playing',hideMediaInteraction);
-function openMediaViewer(media){
-  const modal=$('mediaViewerModal'); const content=$('mediaViewerContent');
-  while(content.children.length>1)content.removeChild(content.lastChild);
-  if(media.type==='image'){const img=document.createElement('img');img.src=media.url;content.appendChild(img);}
-  else if(media.type==='video'){const v=document.createElement('video');v.src=media.url;v.controls=true;v.autoplay=true;v.playsInline=true;content.appendChild(v);}
-  modal.classList.add('active');
-}
+function openMediaViewer(media){ const modal=$('mediaViewerModal'); const content=$('mediaViewerContent'); while(content.children.length>1)content.removeChild(content.lastChild); if(media.type==='image'){const img=document.createElement('img');img.src=media.url;content.appendChild(img);} else if(media.type==='video'){const v=document.createElement('video');v.src=media.url;v.controls=true;v.autoplay=true;v.playsInline=true;content.appendChild(v);} modal.classList.add('active'); }
 function closeMediaViewer(){ const modal=$('mediaViewerModal'); const content=$('mediaViewerContent'); content.querySelectorAll('video').forEach(v=>v.pause()); modal.classList.remove('active'); }
 const BUILTIN_GAMES=[ {id:'tictactoe',name:'Jogo da Velha',icon:'⭕',desc:'Clássico 2 jogadores',file:'games/tictactoe.html'}, {id:'chess',name:'Xadrez Online',icon:'♟️',desc:'Xadrez completo com validação',file:'games/chess.html'}, {id:'checkers',name:'Damas',icon:'🔴',desc:'Damas brasileiras · captura obrigatória',file:'games/checkers.html'} ];
 let gamesList=null;
-async function loadGamesList(){
-  const list=$('gamesList'); if(!list)return; if(gamesList){renderGamesList(gamesList);return;}
-  try{ const res=await fetch('games/games.json?t='+Date.now()); if(res.ok){ const data=await res.json(); const builtinIds=new Set(BUILTIN_GAMES.map(g=>g.id)); const extraGames=(data.games||[]).filter(g=>!builtinIds.has(g.id)); gamesList=[...BUILTIN_GAMES,...extraGames]; } else gamesList=[...BUILTIN_GAMES]; }
-  catch(e){gamesList=[...BUILTIN_GAMES];}
-  renderGamesList(gamesList);
-}
-function renderGamesList(list){
-  const container=$('gamesList'); container.innerHTML='';
-  if(!list||list.length===0){container.innerHTML='<div class="games-empty">🎮 Nenhum jogo disponível<br>Crie arquivos na pasta /games/</div>';return;}
-  list.forEach(g=>{
-    const card=document.createElement('div'); card.className='game-card';
-    card.innerHTML=`<div class="game-icon">${g.icon||'🎮'}</div><div class="game-name">${escapeHtml(g.name)}</div><div class="game-desc">${escapeHtml(g.desc||'')}</div>`;
-    card.addEventListener('click',()=>openGame(g)); container.appendChild(card);
-  });
-}
+async function loadGamesList(){ const list=$('gamesList'); if(!list)return; if(gamesList){renderGamesList(gamesList);return;} try{ const res=await fetch('games/games.json?t='+Date.now()); if(res.ok){ const data=await res.json(); const builtinIds=new Set(BUILTIN_GAMES.map(g=>g.id)); const extraGames=(data.games||[]).filter(g=>!builtinIds.has(g.id)); gamesList=[...BUILTIN_GAMES,...extraGames]; } else gamesList=[...BUILTIN_GAMES]; } catch(e){gamesList=[...BUILTIN_GAMES];} renderGamesList(gamesList); }
+function renderGamesList(list){ const container=$('gamesList'); container.innerHTML=''; if(!list||list.length===0){container.innerHTML='<div class="games-empty">🎮 Nenhum jogo disponível<br>Crie arquivos na pasta /games/</div>';return;} list.forEach(g=>{ const card=document.createElement('div'); card.className='game-card'; card.innerHTML=`<div class="game-icon">${g.icon||'🎮'}</div><div class="game-name">${escapeHtml(g.name)}</div><div class="game-desc">${escapeHtml(g.desc||'')}</div>`; card.addEventListener('click',()=>openGame(g)); container.appendChild(card); }); }
 let gameSessions={};
-function openGame(game){
-  currentGame=game; $('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name;
-  const iframe=$('gameIframe'); iframe.src=game.file;
-  iframe.onload=()=>{ iframe.contentWindow.postMessage({__game:true,game:game.id,type:'hello',myId:myPlayerId,myName:myName},'*'); };
-  gameSessions[game.id]={players:[],pendingStart:null};
-  $('gamesList').classList.add('hidden'); $('gamePlayArea').classList.add('active');
-  wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()});
-}
-function closeGame(){
-  if(currentGame)wsSend({kind:'game_event',game:currentGame.id,type:'player_left',player:myPlayerId});
-  currentGame=null; $('gamePlayArea').classList.remove('active'); $('gamesList').classList.remove('hidden');
-  $('gameIframe').src='about:blank'; gameSessions={};
-}
+function openGame(game){ currentGame=game; $('gamePlayTitle').textContent=(game.icon||'🎮')+' '+game.name; const iframe=$('gameIframe'); iframe.src=game.file; iframe.onload=()=>{ iframe.contentWindow.postMessage({__game:true,game:game.id,type:'hello',myId:myPlayerId,myName:myName},'*'); }; gameSessions[game.id]={players:[],pendingStart:null}; $('gamesList').classList.add('hidden'); $('gamePlayArea').classList.add('active'); wsSend({kind:'chat',name:'Sistema',playerId:'system',pid:'system',text:`🎮 ${myName} abriu "${game.name}"!`,system:true,timestamp:Date.now()}); }
+function closeGame(){ if(currentGame)wsSend({kind:'game_event',game:currentGame.id,type:'player_left',player:myPlayerId}); currentGame=null; $('gamePlayArea').classList.remove('active'); $('gamesList').classList.remove('hidden'); $('gameIframe').src='about:blank'; gameSessions={}; }
 window.addEventListener('message',e=>{ const m=e.data; if(!m||!m.__game||!currentGame||m.game!==currentGame.id)return; handleGameMsg(m); });
-function handleGameMsg(m){
-  const game=currentGame; if(!game)return; const session=gameSessions[game.id]; if(!session)return;
-  switch(m.type){
-    case 'ready':case 'join': if(!session.players.find(p=>p.id===myPlayerId))session.players.push({id:myPlayerId,name:myName}); wsSend({kind:'game_join',game:game.id,playerId:myPlayerId,name:myName});sendPlayersToIframe();break;
-    case 'start_request': if(session.players.length>=2){ const list=session.players.slice(0,2).map((p,i)=>({...p, symbol:i===0?'X':'O', color:i===0?'w':'b'})); wsSend({kind:'game_event',game:game.id,type:'start',players:list,startSymbol:'X'}); sendToIframe({type:'start',players:list,startSymbol:'X'}); }break;
-    case 'move': wsSend({kind:'game_event',game:game.id,type:'move',move:m.move,symbol:m.symbol,player:myPlayerId,promo:m.promo});break;
-    case 'rematch_req': wsSend({kind:'game_event',game:game.id,type:'rematch_req',player:myPlayerId}); sendToIframe({type:'rematch_req',player:myPlayerId});break;
-    case 'leave': closeGame();break;
-  }
-}
+function handleGameMsg(m){ const game=currentGame; if(!game)return; const session=gameSessions[game.id]; if(!session)return; switch(m.type){ case 'ready':case 'join': if(!session.players.find(p=>p.id===myPlayerId))session.players.push({id:myPlayerId,name:myName}); wsSend({kind:'game_join',game:game.id,playerId:myPlayerId,name:myName});sendPlayersToIframe();break; case 'start_request': if(session.players.length>=2){ const list=session.players.slice(0,2).map((p,i)=>({...p, symbol:i===0?'X':'O', color:i===0?'w':'b'})); wsSend({kind:'game_event',game:game.id,type:'start',players:list,startSymbol:'X'}); sendToIframe({type:'start',players:list,startSymbol:'X'}); }break; case 'move': wsSend({kind:'game_event',game:game.id,type:'move',move:m.move,symbol:m.symbol,player:myPlayerId,promo:m.promo});break; case 'rematch_req': wsSend({kind:'game_event',game:game.id,type:'rematch_req',player:myPlayerId}); sendToIframe({type:'rematch_req',player:myPlayerId});break; case 'leave': closeGame();break; } }
 function sendPlayersToIframe(){ const session=gameSessions[currentGame?.id]; if(!session||!currentGame)return; const players=session.players.slice(0,2).map((p,i)=>({...p, symbol:i===0?'X':'O', color:i===0?'w':'b'})); session.players=players; sendToIframe({type:'players',players}); }
 function sendToIframe(msg){ const iframe=$('gameIframe'); if(iframe&&iframe.contentWindow)iframe.contentWindow.postMessage({__game:true,game:currentGame.id,...msg},'*'); }
 const EMOJIS=['😀','😂','😍','😭','😢','😡','🥳','❤️','🔥','👍','💃','🙌','🥱','😒','🙄','👌','🤟','🎲','🎬','🌺','☀️','💯','🤔','😴','🥶'];
@@ -1236,22 +1036,11 @@ function createYTPlayer(){
     events:{ onReady:()=>{ ytPlayerReady=true; try{youtubePlayer.setVolume(100);youtubePlayer.unMute();}catch(_){ } fixYouTubeIframe(); if(ytVideoId)loadYouTube(ytVideoId,true,0); }, onStateChange:onYTState, onError:(e)=>{ console.warn("[YT] erro", e.data); } }
   });
 }
-function fixYouTubeIframe(){
-  const container = $('youtubePlayer'); if(!container) return;
-  const iframe = container.querySelector('iframe'); if(!iframe){ setTimeout(fixYouTubeIframe, 300); return; }
-  try{ iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin'); iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen'); iframe.setAttribute('allowfullscreen', ''); }catch(_){}
-}
+function fixYouTubeIframe(){ const container = $('youtubePlayer'); if(!container) return; const iframe = container.querySelector('iframe'); if(!iframe){ setTimeout(fixYouTubeIframe, 300); return; } try{ iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin'); iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen'); iframe.setAttribute('allowfullscreen', ''); }catch(_){} }
 function onYTState(e){
-  if(e.data===YT.PlayerState.PLAYING){
-    mediaType='youtube'; updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent='⏸️';
-    if(isHost && !ytSuppressStateSend && ytVideoId && Date.now()-ytLastStateSent>350){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:false,time:getYTTime(),updatedAt:Date.now()}}); }
-  }else if(e.data===YT.PlayerState.PAUSED){
-    $('playBtn').textContent='▶️';
-    if(isHost && !ytSuppressStateSend && ytVideoId && Date.now()-ytLastStateSent>350){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime(),updatedAt:Date.now()}}); }
-  }else if(e.data===YT.PlayerState.ENDED){
-    $('playBtn').textContent='▶️';
-    if(isHost && !ytSuppressStateSend && ytVideoId){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime(),updatedAt:Date.now()}}); }
-  }
+  if(e.data===YT.PlayerState.PLAYING){ mediaType='youtube'; updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent='⏸️'; if(isHost && !ytSuppressStateSend && ytVideoId && Date.now()-ytLastStateSent>350){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:false,time:getYTTime(),updatedAt:Date.now()}}); } }
+  else if(e.data===YT.PlayerState.PAUSED){ $('playBtn').textContent='▶️'; if(isHost && !ytSuppressStateSend && ytVideoId && Date.now()-ytLastStateSent>350){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime(),updatedAt:Date.now()}}); } }
+  else if(e.data===YT.PlayerState.ENDED){ $('playBtn').textContent='▶️'; if(isHost && !ytSuppressStateSend && ytVideoId){ ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:true,time:getYTTime(),updatedAt:Date.now()}}); } }
 }
 function extractYTId(u){try{const x=new URL(u);if(x.hostname.includes('youtu.be'))return x.pathname.split('/').filter(Boolean)[0]||''; if(x.hostname.includes('youtube.com')){if(x.pathname==='/watch')return x.searchParams.get('v')||''; const m=x.pathname.match(/\/(?:shorts|embed|live)\/([^/?]+)/);if(m)return m[1];}}catch(_){}return '';}
 function getYTTime(){try{return youtubePlayer?youtubePlayer.getCurrentTime()||0:0;}catch(_){return 0;}}
@@ -1271,130 +1060,44 @@ function loadFromInlineInput(){
   const state={type:'youtube',videoId:id,paused:false,time:0,updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state});
   setTimeout(()=>{ytSuppressStateSend=false;},2000); $('ytUrlInput').value=''; $('ytInlineInput').classList.remove('show'); toast('🎬 Vídeo carregado!');
 }
-function togglePlayPause(){
-  if(!isHost)return;
-  if(mediaType==='youtube'){ const playing=youtubePlayer.getPlayerState()===YT.PlayerState.PLAYING; ytSuppressStateSend=false; if(playing){ youtubePlayer.pauseVideo(); $('playBtn').textContent='▶️'; } else{ youtubePlayer.playVideo(); $('playBtn').textContent='⏸️'; } }
-  else if(mediaType==='video'){ const v=$('localVideo'); if(v.paused){v.play();$('playBtn').textContent='⏸️';}else{v.pause();$('playBtn').textContent='▶️';} sendLocalState(); }
-  else if(mediaType==='audio'){ const a=$('localAudio'); if(a.paused){a.play();$('playBtn').textContent='⏸️';}else{a.pause();$('playBtn').textContent='▶️';} sendLocalState(); }
-}
-function skip(s){
-  if(!isHost)return;
-  if(mediaType==='youtube'){ const t=Math.max(0,getYTTime()+s); ytSuppressStateSend=true; youtubePlayer.seekTo(t,true); ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}}); setTimeout(()=>{ytSuppressStateSend=false;},700); }
-  else if(mediaType==='video'){ const v=$('localVideo'); v.currentTime=Math.max(0,v.currentTime+s); sendLocalState(); }
-  else if(mediaType==='audio'){ const a=$('localAudio'); a.currentTime=Math.max(0,a.currentTime+s); sendLocalState(); }
-}
-function seekTo(e){
-  if(!isHost)return;
-  const r=$('progBar').getBoundingClientRect(); const p=(e.clientX-r.left)/r.width;
-  if(mediaType==='youtube'){ const t=getYTDur()*p; ytSuppressStateSend=true; youtubePlayer.seekTo(t,true); ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}}); setTimeout(()=>{ytSuppressStateSend=false;},700); }
-  else if(mediaType==='video'){ $('localVideo').currentTime=$('localVideo').duration*p; sendLocalState(); }
-  else if(mediaType==='audio'){ $('localAudio').currentTime=$('localAudio').duration*p; sendLocalState(); }
-}
-function toggleMute(){
-  if(mediaType==='youtube'){ const m=youtubePlayer.isMuted(); if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';} }
-  else if(mediaType==='video'){ const v=$('localVideo'); v.muted=!v.muted; $('muteBtn').textContent=v.muted?'🔇':'🔊'; }
-  else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=!a.muted; $('muteBtn').textContent=a.muted?'🔇':'🔊'; }
-}
-function setVolume(v){
-  const vol=v/100;
-  if(mediaType==='youtube'){ youtubePlayer.setVolume(v); } else if(mediaType==='video')$('localVideo').volume=vol; else if(mediaType==='audio')$('localAudio').volume=vol;
-  $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊';
-}
-function updateProgress(){
-  if(mediaType==='youtube'){ const c=getYTTime(),d=getYTDur(); const p=d?(c/d)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(c); $('totTime').textContent=fmtTime(d); }
-  else if(mediaType==='video'){ const v=$('localVideo'); const p=v.duration?(v.currentTime/v.duration)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(v.currentTime); $('totTime').textContent=fmtTime(v.duration); }
-  else if(mediaType==='audio'){ const a=$('localAudio'); const p=a.duration?(a.currentTime/a.duration)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(a.currentTime); $('totTime').textContent=fmtTime(a.duration); }
-  setTimeout(updateProgress,250);
-}
+function togglePlayPause(){ if(!isHost)return; if(mediaType==='youtube'){ const playing=youtubePlayer.getPlayerState()===YT.PlayerState.PLAYING; ytSuppressStateSend=false; if(playing){ youtubePlayer.pauseVideo(); $('playBtn').textContent='▶️'; } else{ youtubePlayer.playVideo(); $('playBtn').textContent='⏸️'; } } else if(mediaType==='video'){ const v=$('localVideo'); if(v.paused){v.play();$('playBtn').textContent='⏸️';}else{v.pause();$('playBtn').textContent='▶️';} sendLocalState(); } else if(mediaType==='audio'){ const a=$('localAudio'); if(a.paused){a.play();$('playBtn').textContent='⏸️';}else{a.pause();$('playBtn').textContent='▶️';} sendLocalState(); } }
+function skip(s){ if(!isHost)return; if(mediaType==='youtube'){ const t=Math.max(0,getYTTime()+s); ytSuppressStateSend=true; youtubePlayer.seekTo(t,true); ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}}); setTimeout(()=>{ytSuppressStateSend=false;},700); } else if(mediaType==='video'){ const v=$('localVideo'); v.currentTime=Math.max(0,v.currentTime+s); sendLocalState(); } else if(mediaType==='audio'){ const a=$('localAudio'); a.currentTime=Math.max(0,a.currentTime+s); sendLocalState(); } }
+function seekTo(e){ if(!isHost)return; const r=$('progBar').getBoundingClientRect(); const p=(e.clientX-r.left)/r.width; if(mediaType==='youtube'){ const t=getYTDur()*p; ytSuppressStateSend=true; youtubePlayer.seekTo(t,true); ytLastStateSent=Date.now(); wsSend({kind:'media',state:{type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()===YT.PlayerState.PAUSED,time:t,forceSeek:true}}); setTimeout(()=>{ytSuppressStateSend=false;},700); } else if(mediaType==='video'){ $('localVideo').currentTime=$('localVideo').duration*p; sendLocalState(); } else if(mediaType==='audio'){ $('localAudio').currentTime=$('localAudio').duration*p; sendLocalState(); } }
+function toggleMute(){ if(mediaType==='youtube'){ const m=youtubePlayer.isMuted(); if(m){youtubePlayer.unMute();$('muteBtn').textContent='🔊';}else{youtubePlayer.mute();$('muteBtn').textContent='🔇';} } else if(mediaType==='video'){ const v=$('localVideo'); v.muted=!v.muted; $('muteBtn').textContent=v.muted?'🔇':'🔊'; } else if(mediaType==='audio'){ const a=$('localAudio'); a.muted=!a.muted; $('muteBtn').textContent=a.muted?'🔇':'🔊'; } }
+function setVolume(v){ const vol=v/100; if(mediaType==='youtube'){ youtubePlayer.setVolume(v); } else if(mediaType==='video')$('localVideo').volume=vol; else if(mediaType==='audio')$('localAudio').volume=vol; $('muteBtn').textContent=vol===0?'🔇':vol<.5?'🔉':'🔊'; }
+function updateProgress(){ if(mediaType==='youtube'){ const c=getYTTime(),d=getYTDur(); const p=d?(c/d)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(c); $('totTime').textContent=fmtTime(d); } else if(mediaType==='video'){ const v=$('localVideo'); const p=v.duration?(v.currentTime/v.duration)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(v.currentTime); $('totTime').textContent=fmtTime(v.duration); } else if(mediaType==='audio'){ const a=$('localAudio'); const p=a.duration?(a.currentTime/a.duration)*100:0; $('progFill').style.width=p+'%'; $('curTime').textContent=fmtTime(a.currentTime); $('totTime').textContent=fmtTime(a.duration); } setTimeout(updateProgress,250); }
 function showPlayerCtrl(){ $('playerCtrl').style.display='block'; }
 function updateMediaBadge(icon,text){ $('mediaBadge').classList.add('active'); $('mediaTypeIcon').textContent=icon; $('mediaTypeText').textContent=text; }
-function getCurrentMediaState(){
-  if(mediaType==='youtube'&&ytVideoId&&youtubePlayer)return {type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()!==YT.PlayerState.PLAYING,time:getYTTime(),updatedAt:Date.now()};
-  if(mediaType==='video'){ const v=$('localVideo'); if(v.src)return {type:'video',url:v.src,paused:v.paused,time:v.currentTime||0,name:v.dataset.name||'',updatedAt:Date.now()}; }
-  if(mediaType==='audio'){ const a=$('localAudio'); if(a.src)return {type:'audio',url:a.src,paused:a.paused,time:a.currentTime||0,name:a.dataset.name||'',updatedAt:Date.now()}; }
-  if(mediaType==='image')return lastServerMediaState&&lastServerMediaState.type==='image'?{...lastServerMediaState,updatedAt:Date.now()}:null;
-  if(mediaType==='screen')return {type:'screen',active:true,name:myName,updatedAt:Date.now()};
-  return null;
-}
-function syncToHost(silent=false){
-  if(syncInProgress)return; syncInProgress=true;
-  const btn=$('syncBtn'); if(btn){btn.classList.add('syncing');btn.textContent='⏳ SYNC';}
-  if(isHost){ const state=getCurrentMediaState(); if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'sync',state:state,timestamp:Date.now()});applyMediaState(state);} else if(!silent)toast('ℹ️ Não há mídia para sincronizar.'); }
-  else{ wsSend({kind:'syncRequest',playerId:myPlayerId,requesterId:myPlayerId,timestamp:Date.now()}); if(lastServerMediaState)applyMediaState({...lastServerMediaState}); else if(!silent)toast('⏳ Aguardando o estado do host...'); }
-  setTimeout(()=>{syncInProgress=false;if(btn){btn.classList.remove('syncing');btn.textContent='🔄 SYNC';}},700);
-}
-function sendLocalState(){
-  if(!isHost)return; const el=mediaType==='video'?$('localVideo'):mediaType==='audio'?$('localAudio'):null; if(!el)return;
-  const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state});
-}
+function getCurrentMediaState(){ if(mediaType==='youtube'&&ytVideoId&&youtubePlayer)return {type:'youtube',videoId:ytVideoId,paused:youtubePlayer.getPlayerState()!==YT.PlayerState.PLAYING,time:getYTTime(),updatedAt:Date.now()}; if(mediaType==='video'){ const v=$('localVideo'); if(v.src)return {type:'video',url:v.src,paused:v.paused,time:v.currentTime||0,name:v.dataset.name||'',updatedAt:Date.now()}; } if(mediaType==='audio'){ const a=$('localAudio'); if(a.src)return {type:'audio',url:a.src,paused:a.paused,time:a.currentTime||0,name:a.dataset.name||'',updatedAt:Date.now()}; } if(mediaType==='image')return lastServerMediaState&&lastServerMediaState.type==='image'?{...lastServerMediaState,updatedAt:Date.now()}:null; if(mediaType==='screen')return {type:'screen',active:true,name:myName,updatedAt:Date.now()}; return null; }
+function syncToHost(silent=false){ if(syncInProgress)return; syncInProgress=true; const btn=$('syncBtn'); if(btn){btn.classList.add('syncing');btn.textContent='⏳ SYNC';} if(isHost){ const state=getCurrentMediaState(); if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));wsSend({kind:'sync',state:state,timestamp:Date.now()});applyMediaState(state);} else if(!silent)toast('ℹ️ Não há mídia para sincronizar.'); } else{ wsSend({kind:'syncRequest',playerId:myPlayerId,requesterId:myPlayerId,timestamp:Date.now()}); if(lastServerMediaState)applyMediaState({...lastServerMediaState}); else if(!silent)toast('⏳ Aguardando o estado do host...'); } setTimeout(()=>{syncInProgress=false;if(btn){btn.classList.remove('syncing');btn.textContent='🔄 SYNC';}},700); }
+function sendLocalState(){ if(!isHost)return; const el=mediaType==='video'?$('localVideo'):mediaType==='audio'?$('localAudio'):null; if(!el)return; const state={type:mediaType,url:el.src,paused:el.paused,time:el.currentTime||0,name:el.dataset.name||'',updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state}); }
 /* UPLOAD EM CHUNKS */
 const CHUNK_UPLOAD_SIZE = 10 * 1024 * 1024;
 const PROGRESSIVE_START_PERCENT = 12;
 const PROGRESSIVE_MIN_BYTES = 20 * 1024 * 1024;
 async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat=false){
-  const total = file.size;
-  const uploadId = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
-  const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE);
-  const endpoint = isChat ? '/upload-chunk-chat' : '/upload-chunk';
-  let readySent = false;
-
-  const notifyProgressive = async (info={})=>{
-    if(isChat) return;
-    if(readySent || !info.progressiveReady || !info.url) return;
-    readySent = true;
-    if(onReady) await onReady({ url: info.url, type: info.type || file.type, name: info.name || file.name, uploading: true, uploadedBytes: Number(info.uploadedBytes||0), totalBytes: total, uploadPercent: Number(info.uploadPercent||0) });
-  };
-
+  const total = file.size; const uploadId = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)); const totalChunks = Math.ceil(total / CHUNK_UPLOAD_SIZE); const endpoint = isChat ? '/upload-chunk-chat' : '/upload-chunk'; let readySent = false;
+  const notifyProgressive = async (info={})=>{ if(isChat) return; if(readySent || !info.progressiveReady || !info.url) return; readySent = true; if(onReady) await onReady({ url: info.url, type: info.type || file.type, name: info.name || file.name, uploading: true, uploadedBytes: Number(info.uploadedBytes||0), totalBytes: total, uploadPercent: Number(info.uploadPercent||0) }); };
   for(let index=0; index<totalChunks; index++){
-    const start = index * CHUNK_UPLOAD_SIZE;
-    const end = Math.min(start + CHUNK_UPLOAD_SIZE, total);
-    const blob = file.slice(start, end);
-    let response = null, lastError = null;
-
+    const start = index * CHUNK_UPLOAD_SIZE; const end = Math.min(start + CHUNK_UPLOAD_SIZE, total); const blob = file.slice(start, end); let response = null, lastError = null;
     for(let attempt=1; attempt<=4; attempt++){
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 120000);
       try{
-        response = await fetch(BACKEND_URL + endpoint, {
-          method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-          headers:{ 'Content-Type':'application/octet-stream', 'X-Upload-Id':uploadId, 'X-Chunk-Index':String(index), 'X-Total-Chunks':String(totalChunks), 'X-Original-Name':encodeURIComponent(file.name || 'media'), 'X-Mime-Type':file.type || 'application/octet-stream', 'X-Room-Id':String(roomId || '').slice(0,40) },
-          body:blob, signal:controller.signal
-        });
-        clearTimeout(timeoutId);
-        if(response.ok) break;
-        const txt = await response.text().catch(()=> '');
-        throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
-      }catch(e){
-        clearTimeout(timeoutId);
-        lastError=e;
-        if(attempt<4) await new Promise(r=>setTimeout(r,1000*attempt));
-      }
+        response = await fetch(BACKEND_URL + endpoint, { method:'POST', mode:'cors', credentials:'omit', cache:'no-store', headers:{ 'Content-Type':'application/octet-stream', 'X-Upload-Id':uploadId, 'X-Chunk-Index':String(index), 'X-Total-Chunks':String(totalChunks), 'X-Original-Name':encodeURIComponent(file.name || 'media'), 'X-Mime-Type':file.type || 'application/octet-stream', 'X-Room-Id':String(roomId || '').slice(0,40) }, body:blob, signal:controller.signal });
+        clearTimeout(timeoutId); if(response.ok) break; const txt = await response.text().catch(()=> ''); throw new Error('HTTP ' + response.status + ' — ' + (txt || 'sem corpo'));
+      }catch(e){ clearTimeout(timeoutId); lastError=e; if(attempt<4) await new Promise(r=>setTimeout(r,1000*attempt)); }
     }
     if(!response || !response.ok) throw lastError || new Error('Falha ao enviar o bloco '+(index+1)+'/'+totalChunks);
-    const info = await response.json().catch(()=>({}));
-    const pct = Math.min(99, Math.round((end/total)*100));
-    if(onProgress) onProgress(pct,index+1,totalChunks,info);
-    await notifyProgressive(info);
+    const info = await response.json().catch(()=>({})); const pct = Math.min(99, Math.round((end/total)*100)); if(onProgress) onProgress(pct,index+1,totalChunks,info); await notifyProgressive(info);
   }
-
   let complete;
   for(let attempt=1; attempt<=4; attempt++){
     try{
-      complete = await fetch(BACKEND_URL + '/upload-complete', {
-        method:'POST', mode:'cors', credentials:'omit', cache:'no-store',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ uploadId, roomId:String(roomId||'').slice(0,40), name:file.name, type:file.type||'application/octet-stream', size:file.size, isChat: !!isChat })
-      });
-      if(complete.ok) break;
-      const txt=await complete.text().catch(()=> '');
-      if(complete.status===409 && attempt<4){await new Promise(r=>setTimeout(r,500*attempt));continue;}
-      throw new Error('HTTP '+complete.status+' — '+(txt||'falha ao finalizar'));
+      complete = await fetch(BACKEND_URL + '/upload-complete', { method:'POST', mode:'cors', credentials:'omit', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ uploadId, roomId:String(roomId||'').slice(0,40), name:file.name, type:file.type||'application/octet-stream', size:file.size, isChat: !!isChat }) });
+      if(complete.ok) break; const txt=await complete.text().catch(()=> ''); if(complete.status===409 && attempt<4){await new Promise(r=>setTimeout(r,500*attempt));continue;} throw new Error('HTTP '+complete.status+' — '+(txt||'falha ao finalizar'));
     }catch(e){ if(attempt===4) throw e; await new Promise(r=>setTimeout(r,1000*attempt)); }
   }
-  const data=await complete.json().catch(()=>({}));
-  if(!complete.ok || !data.url) throw new Error(data.error||'Falha ao finalizar o upload.');
-  if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100});
-  return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100};
+  const data=await complete.json().catch(()=>({})); if(!complete.ok || !data.url) throw new Error(data.error||'Falha ao finalizar o upload.'); if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100}); return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100};
 }
 function updateUploadOverlayProgress(pct, large=true, ready=false){ const suffix=ready?' — ▶️ reprodução liberada':''; const s=$('uploadSub'); if(s) s.textContent=`${pct}% — enviando${suffix}. Você pode continuar usando a sala.`; }
 async function handleFileUpload(){
@@ -1409,118 +1112,25 @@ async function handleFileUpload(){
   try{
     const onProgress=(pct,_i,_t,info)=>{ const ready=!!(info&&info.progressiveReady); if(!progressiveStarted) updateUploadOverlayProgress(pct,true,ready); else updateUploadOverlayProgress(pct,true,true); };
     const data=await uploadLargeFileInChunks(f,roomId,onProgress,onReady,false);
-    setUploadLoading(false);
-    if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
-    if(ty==='video'||ty==='audio'){
-      const el=ty==='video'?$('localVideo'):$('localAudio');
-      mediaType=ty; el.src=data.url; el.dataset.name=data.name||f.name; el.style.display=ty==='video'?'block':'none';
-      $('placeholder').style.display=ty==='video'?'none':'flex'; $('youtubeOverlay').style.display='none';
-      updateMediaBadge(ty==='video'?'🎬':'🎵',ty==='video'?'Vídeo':'Áudio'); showPlayerCtrl();
-      if(ty==='audio'){$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(data.name||f.name)+'</h3><p>Tocando agora...</p>';}
-      try{await el.play();}catch(_){}
-      sendLocalState();
-    }else{
-      mediaType='image';
-      lastServerMediaState={type:'image',url:data.url,name:data.name||f.name,uploading:false,uploadPercent:100,updatedAt:Date.now()};
-      $('localVideo').style.display='none';$('screenVideo').style.display='none';$('youtubeOverlay').style.display='none';$('placeholder').style.display='none';
-      const holder=$('imageHolder'); holder.style.display='block';
-      const ctx=holder.getContext('2d'); const img=new Image();
-      img.onload=()=>{holder.width=img.naturalWidth||1920;holder.height=img.naturalHeight||1080;ctx.clearRect(0,0,holder.width,holder.height);ctx.drawImage(img,0,0);};
-      img.onerror=()=>toast('❌ Imagem não pôde ser lida.');
-      img.src=data.url; updateMediaBadge('🖼️','Imagem'); showPlayerCtrl(); wsSend({kind:'media',state:lastServerMediaState});
-    }
+    setUploadLoading(false); if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
+    if(ty==='video'||ty==='audio'){ const el=ty==='video'?$('localVideo'):$('localAudio'); mediaType=ty; el.src=data.url; el.dataset.name=data.name||f.name; el.style.display=ty==='video'?'block':'none'; $('placeholder').style.display=ty==='video'?'none':'flex'; $('youtubeOverlay').style.display='none'; updateMediaBadge(ty==='video'?'🎬':'🎵',ty==='video'?'Vídeo':'Áudio'); showPlayerCtrl(); if(ty==='audio'){$('placeholder').innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(data.name||f.name)+'</h3><p>Tocando agora...</p>';} try{await el.play();}catch(_){} sendLocalState(); }
+    else{ mediaType='image'; lastServerMediaState={type:'image',url:data.url,name:data.name||f.name,uploading:false,uploadPercent:100,updatedAt:Date.now()}; $('localVideo').style.display='none';$('screenVideo').style.display='none';$('youtubeOverlay').style.display='none';$('placeholder').style.display='none'; const holder=$('imageHolder'); holder.style.display='block'; const ctx=holder.getContext('2d'); const img=new Image(); img.onload=()=>{holder.width=img.naturalWidth||1920;holder.height=img.naturalHeight||1080;ctx.clearRect(0,0,holder.width,holder.height);ctx.drawImage(img,0,0);}; img.onerror=()=>toast('❌ Imagem não pôde ser lida.'); img.src=data.url; updateMediaBadge('🖼️','Imagem'); showPlayerCtrl(); wsSend({kind:'media',state:lastServerMediaState}); }
     toast('✅ Upload concluído!');
-  }catch(err){
-    setUploadLoading(false);
-    console.error('[upload] falhou:', err, 'BACKEND_URL=', BACKEND_URL);
-    toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
-  }
+  }catch(err){ setUploadLoading(false); console.error('[upload] falhou:', err, 'BACKEND_URL=', BACKEND_URL); toast('❌ Falha no upload: '+(err.message||'erro desconhecido')); }
   finally{$('fileInput').value='';}
 }
-async function toggleScreenShare(){
-  if(!isHost)return;
-  if(!isScreenSharing){
-    try{
-      const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true});
-      screenStream=stream; const sv=$('screenVideo'); sv.srcObject=stream; sv.muted=true; sv.volume=0; sv.style.display='block';
-      await sv.play(); isScreenSharing=true; mediaType='screen';
-      $('scrBtn').classList.add('live'); $('scrBtn').textContent='🛑 Parar'; hidePlaceholder(); updateMediaBadge('🖥️','Tela');
-      stream.getVideoTracks()[0].addEventListener('ended',()=>stopScreenShare(),{once:true});
-      const state={type:'screen',active:true,name:myName,updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state,screenOwner:myPlayerId}); wsSend({kind:'rtc',action:'screenStarted'});
-    }catch(e){}
-  }else stopScreenShare();
-}
-function stopScreenShare(){
-  if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
-  closeAllRTCPeers();
-  if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;}
-  $('screenVideo').srcObject=null; $('screenVideo').style.display='none'; isScreenSharing=false; screenOwner=null; mediaType=null;
-  $('scrBtn').classList.remove('live'); $('scrBtn').textContent='🖥️ Compartilhar Tela';
-  lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState}); wsSend({kind:'rtc',action:'screenStopped'});
-  restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none';
-}
-function resetPlayerUI(){
-  closeAllRTCPeers(); if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){}
-  ytVideoId=null; $('youtubeOverlay').style.display='none';
-  const lv=$('localVideo'); lv.pause(); lv.removeAttribute('src'); lv.load(); lv.style.display='none';
-  const la=$('localAudio'); la.pause(); la.removeAttribute('src'); la.load();
-  const sv=$('screenVideo'); sv.pause(); sv.srcObject=null; sv.style.display='none';
-  const c=$('imageHolder'); try{ c.width=0; c.height=0; }catch(_){} c.style.display='none';
-  restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none';
-  hideMediaInteraction(); mediaType=null; updatePipButton();
-}
-function clearMedia(){
-  if(!isHost)return;
-  if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{});
-  if(docPipWindow)try{docPipWindow.close();}catch(_){}
-  resetPlayerUI(); lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState});
-}
+async function toggleScreenShare(){ if(!isHost)return; if(!isScreenSharing){ try{ const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true}); screenStream=stream; const sv=$('screenVideo'); sv.srcObject=stream; sv.muted=true; sv.volume=0; sv.style.display='block'; await sv.play(); isScreenSharing=true; mediaType='screen'; $('scrBtn').classList.add('live'); $('scrBtn').textContent='🛑 Parar'; hidePlaceholder(); updateMediaBadge('🖥️','Tela'); stream.getVideoTracks()[0].addEventListener('ended',()=>stopScreenShare(),{once:true}); const state={type:'screen',active:true,name:myName,updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state,screenOwner:myPlayerId}); wsSend({kind:'rtc',action:'screenStarted'}); }catch(e){} }else stopScreenShare(); }
+function stopScreenShare(){ if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{}); closeAllRTCPeers(); if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;} $('screenVideo').srcObject=null; $('screenVideo').style.display='none'; isScreenSharing=false; screenOwner=null; mediaType=null; $('scrBtn').classList.remove('live'); $('scrBtn').textContent='🖥️ Compartilhar Tela'; lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState}); wsSend({kind:'rtc',action:'screenStopped'}); restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none'; }
+function resetPlayerUI(){ closeAllRTCPeers(); if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){} ytVideoId=null; $('youtubeOverlay').style.display='none'; const lv=$('localVideo'); lv.pause(); lv.removeAttribute('src'); lv.load(); lv.style.display='none'; const la=$('localAudio'); la.pause(); la.removeAttribute('src'); la.load(); const sv=$('screenVideo'); sv.pause(); sv.srcObject=null; sv.style.display='none'; const c=$('imageHolder'); try{ c.width=0; c.height=0; }catch(_){} c.style.display='none'; restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none'; hideMediaInteraction(); mediaType=null; updatePipButton(); }
+function clearMedia(){ if(!isHost)return; if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{}); if(docPipWindow)try{docPipWindow.close();}catch(_){} resetPlayerUI(); lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState}); }
 function applyMediaState(state){
   if(!state)return; if(state.type!=='clear')lastServerMediaState=JSON.parse(JSON.stringify(state)); if(state.type==='clear'){ resetPlayerUI(); return; }
   ytSuppressStateSend=true;
-  if(state.type==='youtube'){
-    $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
-    hidePlaceholder(); $('youtubeOverlay').style.display='block'; mediaType='youtube'; ytVideoId=state.videoId;
-    if(!youtubePlayer)createYTPlayer();
-    const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId);
-    if(!sameVideo){ loadYouTube(state.videoId, state.paused===false, Number(state.time)||0); if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId; }
-    else{
-      try{
-        const targetPaused=state.paused===true; const current=youtubePlayer.getPlayerState();
-        if(targetPaused){ if(current!==YT.PlayerState.PAUSED && current!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo(); }
-        else{ if(current!==YT.PlayerState.PLAYING) youtubePlayer.playVideo(); const targetTime = Number(state.time)||0; if(targetTime > 0){ const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-targetTime); if(delta>2 || state.forceSeek===true) youtubePlayer.seekTo(targetTime,true); } }
-      }catch(_){}
-    }
-    updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent=state.paused?'▶️':'⏸️';
-    if(state.paused===false){ try{ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); }catch(_){} }
-  }else if(state.type==='video'){
-    $('youtubeOverlay').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
-    const v=$('localVideo'); if(state.url&&v.src!==state.url){v.src=state.url;v.load();}
-    v.dataset.name=state.name||''; v.muted=false; v.volume=1; v.style.display='block'; hidePlaceholder();
-    mediaType='video'; updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo'); showPlayerCtrl();
-    const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } };
-    if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});
-    if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); } else v.pause();
-    $('playBtn').textContent=state.paused?'▶️':'⏸️';
-  }else if(state.type==='audio'){
-    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
-    const a=$('localAudio'); if(state.url&&a.src!==state.url){a.src=state.url;a.load();}
-    a.dataset.name=state.name||''; a.muted=false; a.volume=1;
-    const p=$('placeholder'); p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>'; p.style.display='flex';
-    mediaType='audio'; updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio'); showPlayerCtrl();
-    const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}};
-    if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true});
-    if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); } else a.pause();
-    $('playBtn').textContent=state.paused?'▶️':'⏸️';
-  }else if(state.type==='image'){
-    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none';
-    const c=$('imageHolder'),img=new Image();
-    img.onload=()=>{ c.width=c.parentElement.clientWidth; c.height=c.parentElement.clientHeight; const ctx=c.getContext('2d'); const r=Math.min(c.width/img.width,c.height/img.height); const w=img.width*r,h=img.height*r; ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h); c.style.display='block'; hidePlaceholder(); updateMediaBadge('🖼️','Imagem'); };
-    img.onerror=()=>toast('❌ Não foi possível carregar a imagem'); img.src=state.url; mediaType='image'; showPlayerCtrl();
-  }else if(state.type==='screen'){
-    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('imageHolder').style.display='none';
-    if(state.active){ mediaType='screen'; const p=$('placeholder'); p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>'; p.style.display='none'; updateMediaBadge('🖥️','Tela ao vivo'); showPlayerCtrl(); requestScreenFromOwner(); }
-  }
+  if(state.type==='youtube'){ $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; hidePlaceholder(); $('youtubeOverlay').style.display='block'; mediaType='youtube'; ytVideoId=state.videoId; if(!youtubePlayer)createYTPlayer(); const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId); if(!sameVideo){ loadYouTube(state.videoId, state.paused===false, Number(state.time)||0); if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId; } else{ try{ const targetPaused=state.paused===true; const current=youtubePlayer.getPlayerState(); if(targetPaused){ if(current!==YT.PlayerState.PAUSED && current!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo(); } else{ if(current!==YT.PlayerState.PLAYING) youtubePlayer.playVideo(); const targetTime = Number(state.time)||0; if(targetTime > 0){ const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-targetTime); if(delta>2 || state.forceSeek===true) youtubePlayer.seekTo(targetTime,true); } } }catch(_){} } updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; if(state.paused===false){ try{ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); }catch(_){} } }
+  else if(state.type==='video'){ $('youtubeOverlay').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; const v=$('localVideo'); if(state.url&&v.src!==state.url){v.src=state.url;v.load();} v.dataset.name=state.name||''; v.muted=false; v.volume=1; v.style.display='block'; hidePlaceholder(); mediaType='video'; updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo'); showPlayerCtrl(); const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } }; if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true}); if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); } else v.pause(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; }
+  else if(state.type==='audio'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; const a=$('localAudio'); if(state.url&&a.src!==state.url){a.src=state.url;a.load();} a.dataset.name=state.name||''; a.muted=false; a.volume=1; const p=$('placeholder'); p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>'; p.style.display='flex'; mediaType='audio'; updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio'); showPlayerCtrl(); const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}}; if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true}); if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); } else a.pause(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; }
+  else if(state.type==='image'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; const c=$('imageHolder'),img=new Image(); img.onload=()=>{ c.width=c.parentElement.clientWidth; c.height=c.parentElement.clientHeight; const ctx=c.getContext('2d'); const r=Math.min(c.width/img.width,c.height/img.height); const w=img.width*r,h=img.height*r; ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h); c.style.display='block'; hidePlaceholder(); updateMediaBadge('🖼️','Imagem'); }; img.onerror=()=>toast('❌ Não foi possível carregar a imagem'); img.src=state.url; mediaType='image'; showPlayerCtrl(); }
+  else if(state.type==='screen'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('imageHolder').style.display='none'; if(state.active){ mediaType='screen'; const p=$('placeholder'); p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>'; p.style.display='none'; updateMediaBadge('🖥️','Tela ao vivo'); showPlayerCtrl(); requestScreenFromOwner(); } }
   updatePipButton(); setTimeout(()=>{ytSuppressStateSend=false;},2000);
 }
 try{ const initialRoom=getRoomFromCurrentUrl(); if(initialRoom) $('inRoom').value=initialRoom; }catch(_){}
@@ -1532,16 +1142,45 @@ $('toggleCtrlBtn').addEventListener('click',toggleControls);
 $('chatToggleBtn').addEventListener('click',toggleChat);
 $('copyLinkBtn').addEventListener('click',copyRoomLink);
 $('leaveBtn').addEventListener('click',leaveRoom);
+
+/* SISTEMA DE TYPING */
+$('chatText').addEventListener('input', () => {
+  wsSend({ kind: 'typing' });
+  if(typingTimeout) clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {}, 2000);
+});
+
+// Alternar input de limite com base no foco do nome da sala
+$('inRoom').addEventListener('focus', () => {
+  $('limitLabel').style.display = 'block';
+  $('inLimit').style.display = 'block';
+});
+$('inName').addEventListener('focus', () => {
+  if(!$('inRoom').value) { $('limitLabel').style.display = 'block'; $('inLimit').style.display = 'block'; }
+});
+// Se o usuário clicar em "Entrar em Sala" e não for host, oculta o limite
+const originalJoin = joinFromLink;
+window.joinFromLink = function() {
+  $('limitLabel').style.display = 'none';
+  $('inLimit').style.display = 'none';
+  originalJoin();
+};
+const originalCreate = createRoom;
+window.createRoom = function() {
+  // mantem visivel
+  originalCreate();
+};
+
 async function openMovies(){
   $('moviesModal').classList.add('active'); const list=$('moviesList'); list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
   const candidates = []; if (BACKEND_URL) candidates.push(BACKEND_URL + '/api/movies'); const originUrl = `${location.protocol}//${location.host}/api/movies`; if (!candidates.includes(originUrl)) candidates.push(originUrl); candidates.push('/api/movies');
   let data = null, lastErr = null, usedUrl = null;
   for (const url of candidates) {
-    try { console.log('[movies] tentando', url); const r = await fetch(url + '?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; } const j = await r.json(); if (j && Array.isArray(j.movies)) { data = j; usedUrl = url; break; } lastErr = new Error('Resposta inválida'); } catch(e) { lastErr = e; console.warn('[movies] falha em', url, e.message); }
+    try { const r = await fetch(url + '?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; } const j = await r.json(); if (j && Array.isArray(j.movies)) { data = j; usedUrl = url; break; } lastErr = new Error('Resposta inválida'); } catch(e) { lastErr = e; }
   }
   list.innerHTML='';
-  if (!data) { list.innerHTML = '<div class="host-empty">❌ Não foi possível carregar a lista de filmes.<br><br>Erro: <code style="color:#ff6688">' + escapeHtml(lastErr?.message || 'desconhecido') + '</code><br><br>Tentei:<br>' + candidates.map(u => '<code style="color:var(--neon1);font-size:10px;display:block;word-break:break-all">' + escapeHtml(u) + '</code>').join('') + '</div>'; return; }
-  if (!data.movies.length) { list.innerHTML = '<div class="host-empty">📂 Nenhum arquivo encontrado em:<br><code style="color:var(--neon1)">' + escapeHtml(data.dir || '/mnt/pendrive/uploads/movies') + '</code>' + (data.exists === false ? '<br><br>⚠️ A pasta não existe no servidor.' : '') + '<br><br><small style="opacity:.6">Fonte: ' + escapeHtml(usedUrl) + '</small></div>'; return; }
+  if (!data) { list.innerHTML = '<div class="host-empty">❌ Não foi possível carregar a lista de filmes.<br><br>Erro: <code style="color:#ff6688">' + escapeHtml(lastErr?.message || 'desconhecido') + '</code></div>'; return; }
+  if (!data.movies.length) { list.innerHTML = '<div class="host-empty">📂 Nenhum arquivo encontrado em:<br><code style="color:var(--neon1)">' + escapeHtml(data.dir || '/mnt/pendrive/uploads/movies') + '</code></div>'; return; }
   const header = document.createElement('div'); header.style.cssText = 'padding:8px 4px 12px;font-size:12px;color:var(--text2)'; header.textContent = data.movies.length + ' arquivo(s) em ' + (data.dir || ''); list.appendChild(header);
   data.movies.forEach(movie=>{
     const row=document.createElement('div'); row.className='host-player-item'; const info=document.createElement('div'); info.className='host-player-info';
