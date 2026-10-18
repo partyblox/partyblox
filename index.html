@@ -258,17 +258,15 @@ body.theme-light .video-placeholder h3{color:#4a5570;}
 body.theme-light .video-placeholder p{color:#6a7a9a;}
 
 @media (max-width:900px) and (orientation:portrait){
-  /* TRAVA GERAL PARA O TECLADO NÃO EMPURRAR */
   body { position: fixed; width: 100%; height: 100%; overflow: hidden; }
   #app { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
   .main { flex-direction: column; height: 100%; min-height: 0; }
   .video-side { min-height: 30vh; flex: 0 0 30vh; min-width: 100%; }
   .chat-side { width: 100%!important; min-width: 100%; flex: 1; max-width: none; height: auto!important; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
   .chat-panel.active { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  .chat-msgs { flex: 1; overflow-y: auto; min-height: 0; }
-  .chat-in { position: relative; flex-shrink: 0; }
-  .divider { width: 100%; height: 6px; cursor: row-resize; }
-  .divider::before { width: 40px; height: 4px; }
+  .chat-msgs { flex: 1; overflow-y: auto; min-height: 0; padding-bottom: 80px; /* espaço para o input flutuante */ }
+  .chat-in { position: absolute; bottom: 0; left: 0; right: 0; z-index: 100; }
+  .divider { display: none; }
   .host-controls { top: 10px; right: 10px; max-width: 60%; }
   .topbar { padding: 8px 10px; gap: 6px; }
   .topbar-right { width: 100%; justify-content: flex-end; margin-top: 4px; }
@@ -876,6 +874,7 @@ function connectRoom(creator){
         updateHostUI();updateHostPanel();refreshHostChatBadges();
       }else if(m.kind==='rtc')handleRTCMessage(m);
       else if(m.kind==='typing'){
+        // O servidor envia os typers. Filtramos o proprio nome.
         const typers = (m.users || []).filter(name => name !== myName);
         const el = $('chatTyping');
         if(el){
@@ -1183,7 +1182,6 @@ $('chatText').addEventListener('input', () => {
   }
 });
 
-// Mostrar limite apenas quando focado
 $('inRoom').addEventListener('focus', () => {
   $('limitLabel').style.display = 'block';
   $('inLimit').style.display = 'block';
@@ -1256,6 +1254,46 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden)return; if
 window.addEventListener('pageshow',()=>{ if(!intentionalDisconnect&&(!ws||ws.readyState!==WebSocket.OPEN))scheduleReconnect(); });
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress(); loadTheme(); loadNickColor();
+
+/* MÁGICA DO TECLADO MOBILE (VISUAL VIEWPORT) */
+const inputArea = document.getElementById('chatInputArea');
+const chatMsgs = document.getElementById('chatMsgs');
+
+function handleVisualViewport() {
+  if (!window.visualViewport) return;
+  
+  // Quando o teclado abre, a altura do visualViewport diminui.
+  // Nós movemos a área de input para cima e reduzimos a altura das mensagens.
+  const viewport = window.visualViewport;
+  const offsetTop = viewport.offsetTop;
+  const height = viewport.height;
+  
+  // Verifica se o teclado está aberto (altura menor que a janela real)
+  const keyboardOpen = height < window.innerHeight * 0.8;
+  
+  if (keyboardOpen) {
+    // Posiciona a área de input logo acima do teclado
+    inputArea.style.position = 'fixed';
+    inputArea.style.bottom = (window.innerHeight - offsetTop - height) + 'px';
+    inputArea.style.left = '0';
+    inputArea.style.right = '0';
+    inputArea.style.zIndex = '9999';
+    
+    // Ajusta a altura do chat para não ficar embaixo do teclado
+    chatMsgs.style.paddingBottom = '60px';
+  } else {
+    // Reseta quando o teclado fecha
+    inputArea.style.position = 'absolute';
+    inputArea.style.bottom = '0';
+    chatMsgs.style.paddingBottom = '0px';
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', handleVisualViewport);
+  window.visualViewport.addEventListener('scroll', handleVisualViewport);
+  handleVisualViewport(); // Executa uma vez ao carregar
+}
 </script>
 </body>
 </html>
