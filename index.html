@@ -270,7 +270,9 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
   .divider { display: none; }
   .host-controls { top: 10px; right: 10px; max-width: 60%; }
   .topbar { padding: 8px 10px; gap: 6px; }
-  .topbar-right { width: 100%; justify-content: flex-end; margin-top: 4px; }
+  /* ═══ FIX BOTOES MOBILE ═══ */
+  .topbar-right { width: 100%; justify-content: space-between; gap: 4px; margin-top: 4px; flex-wrap: nowrap; }
+  .tb-btn { flex: 1; text-align: center; padding: 6px 2px; font-size: clamp(9px, 2.6vw, 11px); border-radius: 7px; min-width: 0; }
   .vol-slider { width: 50px; }
   .chat-hint { display: none; }
   .theme-grid { grid-template-columns: repeat(2,1fr); }
@@ -376,45 +378,6 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,229,255,.2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,229,255,.4); }
-
-/* Ajuste pontual: somente os cinco botões da barra superior no mobile. */
-@media (max-width: 600px) and (orientation: portrait) {
-  .topbar {
-    padding: 7px 10px;
-    gap: 6px;
-  }
-  .topbar-left {
-    max-width: 100%;
-    width: 100%;
-    gap: 7px;
-  }
-  .topbar-right {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    width: 100%;
-    max-width: 100%;
-    gap: 5px;
-    margin-top: 0;
-    overflow: visible;
-  }
-  .topbar-right .tb-btn {
-    width: 100%;
-    min-width: 0;
-    padding: 6px 2px;
-    font-size: clamp(9px, 2.8vw, 12px);
-    line-height: 1.2;
-    white-space: nowrap;
-    text-align: center;
-    border-radius: 8px;
-  }
-}
-@media (max-width: 380px) and (orientation: portrait) {
-  .topbar-right .tb-btn {
-    padding: 6px 1px;
-    font-size: 9px;
-  }
-}
-
 </style>
 </head>
 <body>
@@ -948,12 +911,12 @@ function connectRoom(creator){
         if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); }
         roomLimit = m.maxUsers || 0;
         playerCount = Number(m.playerCount || 1);
-        $('vcNum').textContent = playerCount;
         const showLimit = (roomLimit > 0);
         const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
         $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
         if(Array.isArray(m.hosts)){ serverMultiHost=true; hosts=m.hosts; founderId=m.founder||null; isHost=hosts.includes(myPlayerId); }
         else{ serverMultiHost=false; isHost=!!m.host; founderId=m.hostId||null; hosts=isHost?[myPlayerId]:(m.hostId?[m.hostId]:[]); }
+        $('vcNum').textContent=playerCount;
         if(m.players)connectedPlayers=m.players;
         updateHostUI();updateHostPanel();refreshHostChatBadges();
         if(isHost)startMediaHeartbeat();else stopMediaHeartbeat();
@@ -964,7 +927,6 @@ function connectRoom(creator){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;} else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
         updateHostUI();updateHostPanel();refreshHostChatBadges();
       }else if(m.kind==='rtc')handleRTCMessage(m);
-      /* ═══ FIX typing: clear() antes do forEach (server é autoritativo) ═══ */
       else if(m.kind==='typing'){
         const typers = (m.users || []).filter(name => name !== myName);
         const now = Date.now();
@@ -987,8 +949,30 @@ function connectRoom(creator){
         if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
         addChatMsg(m.name,m.text,!!m.system,m.to&&m.to===myName,m.to,m.media,m.playerId||m.pid,m.color);
       }else if(m.kind==='reaction')showReaction(m.emoji);
-      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
-      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
+      else if(m.kind==='playerJoined'){
+        if(m.playerId===myPlayerId) return;
+        // Força a atualização do contador com o valor enviado pelo servidor
+        playerCount = Math.max(1, Number(m.playerCount || (playerCount + 1)));
+        $('vcNum').textContent = playerCount;
+        const showLimit = (roomLimit > 0);
+        const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
+        $('roomChip').textContent = '🏠 ' + roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
+        addChatMsg('Sistema', m.name + ' entrou na sala', true);
+        if(m.playerId && !connectedPlayers.find(p => (p.id === m.playerId || p.playerId === m.playerId))) {
+            connectedPlayers.push({id: m.playerId, playerId: m.playerId, name: m.name});
+        }
+        updateHostPanel();
+      }
+      else if(m.kind==='playerLeft'){
+        playerCount = Math.max(1, Number(m.playerCount || (playerCount - 1)));
+        $('vcNum').textContent = playerCount;
+        const showLimit = (roomLimit > 0);
+        const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
+        $('roomChip').textContent = '🏠 ' + roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
+        addChatMsg('Sistema', m.name + ' saiu', true);
+        connectedPlayers = connectedPlayers.filter(p => p.id !== m.playerId && p.playerId !== m.playerId);
+        updateHostPanel(); refreshHostChatBadges();
+      }
       else if(m.kind==='playersList'){connectedPlayers=m.players||[];updateHostPanel();}
       else if(m.kind==='game_join'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){const session=gameSessions[currentGame.id]||(gameSessions[currentGame.id]={players:[]});if(!session.players.find(p=>p.id===m.playerId)){session.players.push({id:m.playerId,name:m.name});sendPlayersToIframe();}} }
       else if(m.kind==='game_event'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player,promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});} }
