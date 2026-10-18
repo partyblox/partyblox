@@ -264,7 +264,7 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
   .video-side { min-height: 30vh; flex: 0 0 30vh; min-width: 100%; }
   .chat-side { width: 100%!important; min-width: 100%; flex: 1; max-width: none; height: auto!important; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
   .chat-panel.active { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  .chat-msgs { flex: 1; overflow-y: auto; min-height: 0; padding-bottom: 80px; /* espaço para o input flutuante */ }
+  .chat-msgs { flex: 1; overflow-y: auto; min-height: 0; padding-bottom: 80px; }
   .chat-in { position: absolute; bottom: 0; left: 0; right: 0; z-index: 100; }
   .divider { display: none; }
   .host-controls { top: 10px; right: 10px; max-width: 60%; }
@@ -394,8 +394,9 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
     <input type="text" id="inRoom" maxlength="30" placeholder="Ex: Cinema-Sexta" value="">
     <div class="lbl">🔒 Senha da sala <span style="opacity:.6;font-weight:500">(opcional)</span></div>
     <input type="text" id="inPass" maxlength="40" placeholder="Deixe vazio para não usar senha" value="" autocomplete="off">
-    <div class="lbl" id="limitLabel" style="display:none;">👥 Limite de pessoas <span style="opacity:.6;font-weight:500">(0 = sem limite)</span></div>
-    <input type="number" id="inLimit" min="0" max="999" placeholder="Ex: 10" value="0" style="display:none;">
+    <!-- ═══ FIX #1: limite sempre visível ═══ -->
+    <div class="lbl" id="limitLabel">👥 Limite de pessoas <span style="opacity:.6;font-weight:500">(0 = sem limite)</span></div>
+    <input type="number" id="inLimit" min="0" max="9999" placeholder="Ex: 10" value="0">
     <div class="row" style="margin-top:20px;">
       <button class="btn blue" onclick="createRoom()">➕ Criar Sala</button>
       <button class="btn green" onclick="joinFromLink()">🔗 Entrar em Sala</button>
@@ -636,6 +637,37 @@ let docPipWindow = null;
 let pendingMessages = [];
 let typingTimeout = null;
 
+/* ═══ FIX #2: estrutura do "digitando" (mapa com timestamp por usuário) ═══ */
+let lastTypingSent = 0;
+const typerLastSeen = new Map();
+let typingWasActive = false;
+let typingStopTimer = null;
+let typingRefreshInterval = null;
+
+function refreshTypingDisplay() {
+  const el = $('chatTyping');
+  if (!el) return;
+  const now = Date.now();
+  for (const [name, ts] of typerLastSeen) {
+    if (now - ts > 2500) typerLastSeen.delete(name);
+  }
+  const active = [...typerLastSeen.keys()];
+  el.textContent = active.length === 0 ? ''
+    : active.length === 1 ? `${active[0]} está digitando...`
+    : `${active.join(', ')} estão digitando...`;
+}
+
+function resetTypingState() {
+  typerLastSeen.clear();
+  if (typingStopTimer) { clearTimeout(typingStopTimer); typingStopTimer = null; }
+  typingWasActive = false;
+  const el = $('chatTyping'); if (el) el.textContent = '';
+}
+
+if (!typingRefreshInterval) {
+  typingRefreshInterval = setInterval(() => { if (typerLastSeen.size > 0) refreshTypingDisplay(); }, 500);
+}
+
 let myNickColor = localStorage.getItem('partyblox-nickcolor') || '#00e5ff';
 const NICK_COLORS = [
   '#00e5ff','#b44dff','#00ffa3','#ff0044','#ffaa00','#ff64c8',
@@ -797,14 +829,20 @@ function getRoomId(){return (roomName||'Sala-Publica').trim().replace(/\s+/g,'-'
 function wsUrl(){ const built = buildWsUrl(window.PARTYBLOX_WS_URL); if(built) return built; return location.protocol==='https:' ? `wss://${location.host}` : `ws://${location.host}`; }
 function startMediaHeartbeat(){ if(mediaHeartbeatTimer)clearInterval(mediaHeartbeatTimer); mediaHeartbeatTimer=setInterval(()=>{ if(!isHost||!wsReady||intentionalDisconnect)return; const state=getCurrentMediaState(); if(!state)return; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'mediaHeartbeat',state:state}); },3000); }
 function stopMediaHeartbeat(){ if(mediaHeartbeatTimer){clearInterval(mediaHeartbeatTimer);mediaHeartbeatTimer=null;} }
+
+/* ═══ FIX #1: createRoom com 0 = sem limite (envia 9999 pro servidor) ═══ */
 function createRoom(){
-  const name=$('inName').value.trim(), room=$('inRoom').value.trim(), pass=($('inPass').value||'').trim(), limit=parseInt($('inLimit').value)||0;
+  const name=$('inName').value.trim(), room=$('inRoom').value.trim(), pass=($('inPass').value||'').trim();
+  let limit = parseInt($('inLimit').value);
+  if (isNaN(limit) || limit < 0) limit = 0;
+
   showRoomNotice('',false);
   if(!name){ showRoomNotice('⚠️ Digite seu apelido.',true); $('inName').focus(); return; }
   if(!room){ showRoomNotice('⚠️ Digite o nome da sala.',true); $('inRoom').focus(); return; }
   if(name.length<2){ showRoomNotice('⚠️ Apelido curto.',true); $('inName').focus(); return; }
   if(room.length<2){ showRoomNotice('⚠️ Nome da sala curto.',true); $('inRoom').focus(); return; }
-  myName=name; roomName=room; roomPassword=pass; roomLimit=limit;
+  myName=name; roomName=room; roomPassword=pass;
+  roomLimit = (limit === 0) ? 9999 : limit;
   enterApp(true);
 }
 function getRoomFromCurrentUrl(){ const p=new URLSearchParams(location.search); let room=p.get('room')||''; if(!room){ const parts=location.pathname.split('/').filter(Boolean); if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){ try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); } } } return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30); }
@@ -819,6 +857,7 @@ function joinFromLink(){
 function enterApp(asHost){
   intentionalDisconnect=false; firstRoomJoin=true; appEntered = false;
   pendingMessages = [];
+  resetTypingState();                         /* ═══ FIX #2: limpa typing ═══ */
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
   const chatBox = $('chatMsgs'); if(chatBox) chatBox.innerHTML = '';
@@ -858,7 +897,8 @@ function connectRoom(creator){
       if(m.kind==='roomState'){
         if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); }
         roomLimit = m.maxUsers || 0;
-        const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : '';
+        const showLimit = (roomLimit > 0 && roomLimit < 9999);
+        const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
         $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
         if(Array.isArray(m.hosts)){ serverMultiHost=true; hosts=m.hosts; founderId=m.founder||null; isHost=hosts.includes(myPlayerId); }
         else{ serverMultiHost=false; isHost=!!m.host; founderId=m.hostId||null; hosts=isHost?[myPlayerId]:(m.hostId?[m.hostId]:[]); }
@@ -873,17 +913,12 @@ function connectRoom(creator){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;} else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
         updateHostUI();updateHostPanel();refreshHostChatBadges();
       }else if(m.kind==='rtc')handleRTCMessage(m);
+      /* ═══ FIX #2: typing com timestamp por usuário ═══ */
       else if(m.kind==='typing'){
-        // O servidor envia os typers. Filtramos o proprio nome.
         const typers = (m.users || []).filter(name => name !== myName);
-        const el = $('chatTyping');
-        if(el){
-          if(typers.length === 0) el.textContent = '';
-          else if(typers.length === 1) el.textContent = `${typers[0]} está digitando...`;
-          else el.textContent = `${typers.join(', ')} estão digitando...`;
-          clearTimeout(el._timer);
-          if(typers.length > 0) el._timer = setTimeout(() => { el.textContent = ''; }, 3000);
-        }
+        const now = Date.now();
+        typers.forEach(name => typerLastSeen.set(name, now));
+        refreshTypingDisplay();
       }
       else if(m.kind==='media'||m.kind==='syncState'||m.kind==='sync'){ if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null; const state=m.state||m.media; if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));applyMediaState(state);} }
       else if(m.kind==='mediaHeartbeat'){ if(m.state){lastServerMediaState=JSON.parse(JSON.stringify(m.state));} }
@@ -894,8 +929,8 @@ function connectRoom(creator){
         if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
         addChatMsg(m.name,m.text,!!m.system,m.to&&m.to===myName,m.to,m.media,m.playerId||m.pid,m.color);
       }else if(m.kind==='reaction')showReaction(m.emoji);
-      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
-      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const limitTxt = roomLimit > 0 ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
+      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0 && roomLimit < 9999); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
+      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0 && roomLimit < 9999); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
       else if(m.kind==='playersList'){connectedPlayers=m.players||[];updateHostPanel();}
       else if(m.kind==='game_join'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){const session=gameSessions[currentGame.id]||(gameSessions[currentGame.id]={players:[]});if(!session.players.find(p=>p.id===m.playerId)){session.players.push({id:m.playerId,name:m.name});sendPlayersToIframe();}} }
       else if(m.kind==='game_event'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player,promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});} }
@@ -972,6 +1007,9 @@ function sendChat(){
   addChatMsg(myName,pm?pm[2]:text,false,!!pm,pm?pm[1]:null,null,myPlayerId,myNickColor);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined,color:myNickColor});
   if(pm){ input.value='@'+pm[1]+' '; input.focus(); } else { input.value=''; }
+  /* ═══ FIX #2: para o typing ao enviar ═══ */
+  if (typingWasActive) { wsSend({kind:'stopTyping'}); typingWasActive = false; }
+  if (typingStopTimer) { clearTimeout(typingStopTimer); typingStopTimer = null; }
 }
 function sendChatWithMedia(text,media,isPrivate=false,target=null){
   const pm=isPrivate?target:null;
@@ -1172,29 +1210,31 @@ $('chatToggleBtn').addEventListener('click',toggleChat);
 $('copyLinkBtn').addEventListener('click',copyRoomLink);
 $('leaveBtn').addEventListener('click',leaveRoom);
 
-/* SISTEMA DE TYPING */
-let lastTypingSent = 0;
+/* ═══ FIX #2: input listener reescrito ═══ */
 $('chatText').addEventListener('input', () => {
   const now = Date.now();
-  if (now - lastTypingSent > 1500) {
+  const text = $('chatText').value.trim();
+
+  if (text && now - lastTypingSent > 1500) {
     lastTypingSent = now;
     wsSend({ kind: 'typing' });
+    typingWasActive = true;
   }
+  if (!text && typingWasActive) {
+    wsSend({ kind: 'stopTyping' });
+    typingWasActive = false;
+  }
+  if (typingStopTimer) clearTimeout(typingStopTimer);
+  typingStopTimer = setTimeout(() => {
+    if (typingWasActive) {
+      wsSend({ kind: 'stopTyping' });
+      typingWasActive = false;
+    }
+  }, 2000);
 });
 
-$('inRoom').addEventListener('focus', () => {
-  $('limitLabel').style.display = 'block';
-  $('inLimit').style.display = 'block';
-});
-$('inName').addEventListener('focus', () => {
-  if(!$('inRoom').value) { $('limitLabel').style.display = 'block'; $('inLimit').style.display = 'block'; }
-});
-const originalJoin = joinFromLink;
-window.joinFromLink = function() {
-  $('limitLabel').style.display = 'none';
-  $('inLimit').style.display = 'none';
-  originalJoin();
-};
+/* ═══ FIX #1: listeners que escondiam o campo foram REMOVIDOS ═══ */
+/* (o limitLabel e inLimit agora ficam sempre visíveis) */
 
 async function openMovies(){
   $('moviesModal').classList.add('active'); const list=$('moviesList'); list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
@@ -1255,44 +1295,29 @@ window.addEventListener('pageshow',()=>{ if(!intentionalDisconnect&&(!ws||ws.rea
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress(); loadTheme(); loadNickColor();
 
-/* MÁGICA DO TECLADO MOBILE (VISUAL VIEWPORT) */
-const inputArea = document.getElementById('chatInputArea');
-const chatMsgs = document.getElementById('chatMsgs');
+/* ═══ FIX #3: visualViewport encolhe #app inteiro (não mexe no input) ═══ */
+const appEl = document.getElementById('app');
 
 function handleVisualViewport() {
-  if (!window.visualViewport) return;
-  
-  // Quando o teclado abre, a altura do visualViewport diminui.
-  // Nós movemos a área de input para cima e reduzimos a altura das mensagens.
-  const viewport = window.visualViewport;
-  const offsetTop = viewport.offsetTop;
-  const height = viewport.height;
-  
-  // Verifica se o teclado está aberto (altura menor que a janela real)
-  const keyboardOpen = height < window.innerHeight * 0.8;
-  
+  if (!window.visualViewport || !appEl) return;
+  const vv = window.visualViewport;
+  const keyboardOpen = (window.innerHeight - vv.height) > 100;
+
   if (keyboardOpen) {
-    // Posiciona a área de input logo acima do teclado
-    inputArea.style.position = 'fixed';
-    inputArea.style.bottom = (window.innerHeight - offsetTop - height) + 'px';
-    inputArea.style.left = '0';
-    inputArea.style.right = '0';
-    inputArea.style.zIndex = '9999';
-    
-    // Ajusta a altura do chat para não ficar embaixo do teclado
-    chatMsgs.style.paddingBottom = '60px';
+    appEl.style.height = vv.height + 'px';
+    appEl.style.top = vv.offsetTop + 'px';
+    appEl.style.bottom = 'auto';
   } else {
-    // Reseta quando o teclado fecha
-    inputArea.style.position = 'absolute';
-    inputArea.style.bottom = '0';
-    chatMsgs.style.paddingBottom = '0px';
+    appEl.style.height = '';
+    appEl.style.top = '';
+    appEl.style.bottom = '';
   }
 }
 
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', handleVisualViewport);
   window.visualViewport.addEventListener('scroll', handleVisualViewport);
-  handleVisualViewport(); // Executa uma vez ao carregar
+  handleVisualViewport();
 }
 </script>
 </body>
