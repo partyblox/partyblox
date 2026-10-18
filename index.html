@@ -271,8 +271,19 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
   .host-controls { top: 10px; right: 10px; max-width: 60%; }
   .topbar { padding: 8px 10px; gap: 6px; }
   /* ═══ FIX BOTOES MOBILE ═══ */
-  .topbar-right { width: 100%; justify-content: space-between; gap: 4px; margin-top: 4px; flex-wrap: nowrap; }
-  .tb-btn { flex: 1; text-align: center; padding: 6px 2px; font-size: clamp(9px, 2.6vw, 11px); border-radius: 7px; min-width: 0; }
+    /* Aumentei o gap para dar respiro entre os botões */
+  .topbar-right { width: 100%; justify-content: space-between; gap: 6px; margin-top: 4px; flex-wrap: nowrap; }
+  
+  /* Mudei o padding lateral (de 2px para 6px) e removi o flex:1 para o botão crescer conforme o texto */
+  .tb-btn { 
+    flex: 1 1 auto; 
+    text-align: center; 
+    padding: 6px 6px; 
+    font-size: clamp(10px, 2.8vw, 12px); 
+    border-radius: 7px; 
+    min-width: max-content; 
+    white-space: nowrap; 
+  }
   .vol-slider { width: 50px; }
   .chat-hint { display: none; }
   .theme-grid { grid-template-columns: repeat(2,1fr); }
