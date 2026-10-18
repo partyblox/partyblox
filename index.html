@@ -169,7 +169,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .host-give-btn{padding:6px 12px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);border-radius:6px;font-size:11px;cursor:pointer;color:var(--neon1);font-weight:700;white-space:nowrap;transition:.25s;flex-shrink:0;}
 .host-give-btn:hover{background:rgba(0,229,255,.18);transform:translateY(-1px);box-shadow:0 0 12px rgba(0,229,255,.2);}
 .host-empty{padding:20px;text-align:center;color:var(--text3);font-size:12px;}
-.games-panel{display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;overflow:hidden;}
+.games-panel{display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;overflow:hidden;position:relative;}
 .games-list{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start;}
 .games-list.hidden{display:none;}
 .game-card{background:rgba(20,20,50,.5);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:.25s;display:flex;flex-direction:column;gap:8px;min-height:100px;}
@@ -178,13 +178,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .game-card .game-name{font-weight:700;font-size:14px;color:var(--text);}
 .game-card .game-desc{font-size:11px;color:var(--text3);line-height:1.3;}
 .games-empty{grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--text3);font-size:13px;}
-.game-play-area{flex:1;display:none;flex-direction:column;min-height:0;overflow:hidden;}
+.game-play-area{flex:1;display:none;flex-direction:column;min-height:0;overflow:hidden;height:100%;}
 .game-play-area.active{display:flex;}
 .game-play-header{height:40px;min-height:40px;padding:0 12px;background:rgba(8,8,20,.9);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .game-play-header h4{font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px;}
 .game-play-close{background:rgba(255,255,255,.06);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;transition:.25s;display:flex;align-items:center;justify-content:center;}
 .game-play-close:hover{background:rgba(255,0,68,.3);}
-.game-iframe{flex:1;border:none;width:100%;background:#fff;min-height:0;}
+.game-iframe{flex:1;border:none;width:100%;background:#fff;min-height:0;height:100%;display:block;}
 .game-spectate-bar{height:32px;padding:0 12px;background:rgba(0,229,255,.04);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text2);gap:6px;flex-shrink:0;}
 .float-react{position:fixed;font-size:70px;pointer-events:none;z-index:500;animation:fUp 2.4s forwards;text-shadow:0 4px 15px rgba(0,229,255,.5);}
 @keyframes fUp{0%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(-280px) scale(1.7) rotate(15deg);opacity:0;}}
@@ -224,7 +224,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .controls-hidden .host-controls,.controls-hidden .media-badge,.controls-hidden .viewer-count{display:none!important;}
 .chat-hint{position:absolute;bottom:14px;right:14px;padding:6px 12px;background:rgba(8,8,22,.8);backdrop-filter:blur(12px);border-radius:20px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:.5;z-index:5;border:1px solid var(--border);}
 .chat-hint kbd{padding:2px 6px;background:rgba(0,229,255,.1);border-radius:4px;font-family:monospace;font-size:10px;border:1px solid rgba(0,229,255,.2);color:var(--neon1);}
-/* NOTIFICAÇÃO DE UPLOAD SIMPLES (sem blur, topo) */
 .upload-overlay{pointer-events:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(8,8,22,.95);padding:12px 24px;border-radius:12px;display:none;align-items:center;gap:12px;z-index:5000;border:1px solid var(--neon1);box-shadow:0 0 20px rgba(0,229,255,.3);color:var(--text);font-size:13px;font-weight:600;}
 .upload-overlay.active{display:flex;}
 .upload-spinner{width:18px;height:18px;border:2px solid rgba(0,229,255,.2);border-top-color:var(--neon1);border-radius:50%;animation:uploadSpin .8s linear infinite;flex-shrink:0;}
@@ -234,7 +233,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .room-notice{display:none;padding:10px 14px;border-radius:10px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:var(--neon1);font-size:13px;font-weight:600;margin-bottom:14px;text-align:center;line-height:1.35;}
 .room-notice.show{display:block;}
 .room-notice.error{background:rgba(255,0,68,.08);border-color:rgba(255,0,68,.4);color:#ff6688;}
-/* TEMA CLARO E OUTROS TEMAS (mantidos) */
 body.theme-light{--bg1:#e8ecf5;--bg2:#f0f4ff;--bg3:#ffffff;--bg4:#eef2fa;--text:#1a1a2e;--text2:rgba(30,40,80,.7);--text3:rgba(60,80,120,.5);--border:rgba(60,100,200,.1);--border2:rgba(60,100,200,.2);--chat-bg:rgba(240,244,255,.9);--chat-head:rgba(232,236,245,.95);--input-bg:rgba(255,255,255,.8);--panel-bg:rgba(255,255,255,.7);--panel-border:rgba(60,100,200,.15);}
 body.theme-blue{--bg1:#050a18;--bg2:#0a1428;--bg3:#0f1e3a;--bg4:#081020;--text:#c8e0ff;--chat-bg:rgba(15,30,58,.85);--chat-head:rgba(10,20,40,.9);}
 body.theme-purple{--bg1:#0d0518;--bg2:#1a0a30;--bg3:#250f45;--bg4:#150828;--text:#e8d0ff;--chat-bg:rgba(37,15,69,.85);--chat-head:rgba(20,8,40,.9);}
@@ -264,11 +262,10 @@ body.theme-light .game-card .game-name{color:#1a1a2e;}
 body.theme-light .video-placeholder h3{color:#4a5570;}
 body.theme-light .video-placeholder p{color:#6a7a9a;}
 
-/* Responsividade */
 @media (max-width:900px) and (orientation:portrait){
   .main{flex-direction:column;}
-  .video-side{min-height:35vh;flex:0 0 35vh;min-width:100%;} /* Player mais pra cima */
-  .chat-side{width:100%!important;min-width:100%;flex:1;max-width:none;height:auto!important;} /* Chat maior */
+  .video-side{min-height:35vh;flex:0 0 35vh;min-width:100%;}
+  .chat-side{width:100%!important;min-width:100%;flex:1;max-width:none;height:auto!important;}
   .divider{width:100%;height:6px;cursor:row-resize;}
   .divider::before{width:40px;height:4px;}
   .host-controls{top:10px;right:10px;max-width:60%;}
@@ -587,7 +584,6 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
 function setUploadLoading(active,title='Aguarde...',sub='Enviando mídia, não feche esta página.'){
   const o=$('uploadOverlay'); if(!o)return;
-  // Agora o overlay é um toast simples no topo, sem fundo borrado
   $('uploadTitle').textContent=title;
   $('uploadSub').textContent=sub;
   o.classList.toggle('active',!!active);
@@ -630,7 +626,7 @@ let mediaNeedsInteraction=false;
 let pipElement=null;
 let youtubeNativePipReady=false;
 let docPipWindow = null;
-let pendingMessages = []; // FILA DE MENSAGENS DO WS
+let pendingMessages = [];
 
 /* Nickname color */
 let myNickColor = localStorage.getItem('partyblox-nickcolor') || '#00e5ff';
@@ -655,7 +651,6 @@ function wsSend(m){
   }
 }
 
-// Timer para esvaziar a fila de mensagens quando a rede desafogar
 setInterval(() => {
   if(ws && ws.readyState === WebSocket.OPEN && pendingMessages.length > 0 && ws.bufferedAmount < 1024 * 32){
     const msgs = [...pendingMessages];
@@ -664,7 +659,6 @@ setInterval(() => {
   }
 }, 1000);
 
-// Timer para manter o WS ativo (ping a cada 20s)
 setInterval(() => {
   if(ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({kind:'ping'}));
@@ -674,16 +668,18 @@ setInterval(() => {
 /* ===== CONTADOR DE ONLINE NA LANDING ===== */
 async function fetchOnlineCount(){
   try{
-    const r = await fetch(BACKEND_URL + '/api/online?t=' + Date.now(), {cache:'no-store'});
+    const r = await fetch(BACKEND_URL + '/api/ping', {method:'POST', cache:'no-store'});
     if(!r.ok) throw new Error();
     const d = await r.json();
     if(typeof d.online === 'number'){
       const el = $('onlineCount');
       if(el) el.textContent = d.online;
     }
-  }catch(_){}
+  }catch(err){
+    console.warn('[online] falha ao pingar', err);
+  }
 }
-setInterval(() => { if(!$('landing').classList.contains('active')) return; fetchOnlineCount(); }, 5000);
+setInterval(() => { if($('landing').classList.contains('active')) fetchOnlineCount(); }, 10000);
 fetchOnlineCount();
 
 /* ===== RTC (Compartilhamento de Tela) ===== */
@@ -972,7 +968,7 @@ function startMediaHeartbeat(){
     if(!state)return;
     lastServerMediaState=JSON.parse(JSON.stringify(state));
     wsSend({kind:'mediaHeartbeat',state:state});
-  },3000); // Reduzido de 1.5s para 3s para aliviar a rede
+  },3000);
 }
 function stopMediaHeartbeat(){
   if(mediaHeartbeatTimer){clearInterval(mediaHeartbeatTimer);mediaHeartbeatTimer=null;}
@@ -1046,7 +1042,6 @@ function connectRoom(creator){
         kind:'join', room:roomId, name:myName, playerId:myPlayerId,
         creator:!!creator&&firstRoomJoin, password:roomPassword, timestamp:Date.now()
       }));
-      // Limpa fila
       if(pendingMessages.length>0){
         const msgs = [...pendingMessages];
         pendingMessages = [];
