@@ -394,9 +394,9 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
     <input type="text" id="inRoom" maxlength="30" placeholder="Ex: Cinema-Sexta" value="">
     <div class="lbl">🔒 Senha da sala <span style="opacity:.6;font-weight:500">(opcional)</span></div>
     <input type="text" id="inPass" maxlength="40" placeholder="Deixe vazio para não usar senha" value="" autocomplete="off">
-    <!-- ═══ FIX #1: limite sempre visível ═══ -->
-    <div class="lbl" id="limitLabel">👥 Limite de pessoas <span style="opacity:.6;font-weight:500">(0 = sem limite)</span></div>
-    <input type="number" id="inLimit" min="0" max="9999" placeholder="Ex: 10" value="0">
+    <!-- ═══ FIX limite: total incluindo você, padrão 50 ═══ -->
+    <div class="lbl" id="limitLabel">👥 Total de pessoas <span style="opacity:.6;font-weight:500">(você incluso · 0/1 = só você)</span></div>
+    <input type="number" id="inLimit" min="0" max="9999" placeholder="Ex: 50" value="50">
     <div class="row" style="margin-top:20px;">
       <button class="btn blue" onclick="createRoom()">➕ Criar Sala</button>
       <button class="btn green" onclick="joinFromLink()">🔗 Entrar em Sala</button>
@@ -637,7 +637,7 @@ let docPipWindow = null;
 let pendingMessages = [];
 let typingTimeout = null;
 
-/* ═══ FIX #2: estrutura do "digitando" (mapa com timestamp por usuário) ═══ */
+/* ═══ FIX typing: mapa com timestamp por usuário ═══ */
 let lastTypingSent = 0;
 const typerLastSeen = new Map();
 let typingWasActive = false;
@@ -830,7 +830,7 @@ function wsUrl(){ const built = buildWsUrl(window.PARTYBLOX_WS_URL); if(built) r
 function startMediaHeartbeat(){ if(mediaHeartbeatTimer)clearInterval(mediaHeartbeatTimer); mediaHeartbeatTimer=setInterval(()=>{ if(!isHost||!wsReady||intentionalDisconnect)return; const state=getCurrentMediaState(); if(!state)return; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'mediaHeartbeat',state:state}); },3000); }
 function stopMediaHeartbeat(){ if(mediaHeartbeatTimer){clearInterval(mediaHeartbeatTimer);mediaHeartbeatTimer=null;} }
 
-/* ═══ FIX #1: createRoom com 0 = sem limite (envia 9999 pro servidor) ═══ */
+/* ═══ FIX limite: 0/1 = só host, N = N total incluindo host ═══ */
 function createRoom(){
   const name=$('inName').value.trim(), room=$('inRoom').value.trim(), pass=($('inPass').value||'').trim();
   let limit = parseInt($('inLimit').value);
@@ -842,7 +842,7 @@ function createRoom(){
   if(name.length<2){ showRoomNotice('⚠️ Apelido curto.',true); $('inName').focus(); return; }
   if(room.length<2){ showRoomNotice('⚠️ Nome da sala curto.',true); $('inRoom').focus(); return; }
   myName=name; roomName=room; roomPassword=pass;
-  roomLimit = (limit === 0) ? 9999 : limit;
+  roomLimit = Math.max(1, limit);
   enterApp(true);
 }
 function getRoomFromCurrentUrl(){ const p=new URLSearchParams(location.search); let room=p.get('room')||''; if(!room){ const parts=location.pathname.split('/').filter(Boolean); if(parts.length>=2 && /^(room|watch|sala)$/i.test(parts[0])){ try{ room=decodeURIComponent(parts.slice(1).join('/')); }catch(_){ room=parts.slice(1).join('/'); } } } return String(room||'').trim().replace(/^[/]+|[/]+$/g,'').slice(0,30); }
@@ -857,7 +857,7 @@ function joinFromLink(){
 function enterApp(asHost){
   intentionalDisconnect=false; firstRoomJoin=true; appEntered = false;
   pendingMessages = [];
-  resetTypingState();                         /* ═══ FIX #2: limpa typing ═══ */
+  resetTypingState();
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
   const chatBox = $('chatMsgs'); if(chatBox) chatBox.innerHTML = '';
@@ -897,7 +897,7 @@ function connectRoom(creator){
       if(m.kind==='roomState'){
         if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); }
         roomLimit = m.maxUsers || 0;
-        const showLimit = (roomLimit > 0 && roomLimit < 9999);
+        const showLimit = (roomLimit > 0);
         const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
         $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
         if(Array.isArray(m.hosts)){ serverMultiHost=true; hosts=m.hosts; founderId=m.founder||null; isHost=hosts.includes(myPlayerId); }
@@ -913,14 +913,21 @@ function connectRoom(creator){
         if(m.playerId===myPlayerId){isHost=true;hosts=[myPlayerId];founderId=m.founder||founderId;} else{isHost=false;hosts=[m.playerId];founderId=m.founder||founderId;}
         updateHostUI();updateHostPanel();refreshHostChatBadges();
       }else if(m.kind==='rtc')handleRTCMessage(m);
-      /* ═══ FIX #2: typing com timestamp por usuário ═══ */
+      /* ═══ FIX typing: clear() antes do forEach (server é autoritativo) ═══ */
       else if(m.kind==='typing'){
         const typers = (m.users || []).filter(name => name !== myName);
         const now = Date.now();
+        typerLastSeen.clear();
         typers.forEach(name => typerLastSeen.set(name, now));
         refreshTypingDisplay();
       }
-      else if(m.kind==='media'||m.kind==='syncState'||m.kind==='sync'){ if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null; const state=m.state||m.media; if(state){lastServerMediaState=JSON.parse(JSON.stringify(state));applyMediaState(state);} }
+      else if(m.kind==='media'||m.kind==='syncState'||m.kind==='sync'){
+        try {
+          if(m.screenOwner!==undefined)screenOwner=m.screenOwner||null;
+          const state=m.state||m.media;
+          if(state){ lastServerMediaState=JSON.parse(JSON.stringify(state)); applyMediaState(state); }
+        } catch(err){ console.error('[media] apply falhou:', err); }
+      }
       else if(m.kind==='mediaHeartbeat'){ if(m.state){lastServerMediaState=JSON.parse(JSON.stringify(m.state));} }
       else if(m.kind==='syncRequest'){ if(isHost){ const state=getCurrentMediaState(); if(state)wsSend({kind:'syncState',targetId:m.playerId||m.requesterId||null,state:state,timestamp:Date.now()}); } }
       else if(m.kind==='chat'){
@@ -929,8 +936,8 @@ function connectRoom(creator){
         if(m.name===myName&&m.text===lastSentChat.text&&Date.now()-lastSentChat.ts<3000)return;
         addChatMsg(m.name,m.text,!!m.system,m.to&&m.to===myName,m.to,m.media,m.playerId||m.pid,m.color);
       }else if(m.kind==='reaction')showReaction(m.emoji);
-      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0 && roomLimit < 9999); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
-      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0 && roomLimit < 9999); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
+      else if(m.kind==='playerJoined'){ if(m.playerId===myPlayerId)return; playerCount=Math.max(1,Number(m.playerCount||playerCount+1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' entrou na sala',true); if(m.playerId&&!connectedPlayers.find(p=>(p.id===m.playerId||p.playerId===m.playerId)))connectedPlayers.push({id:m.playerId,playerId:m.playerId,name:m.name}); updateHostPanel(); }
+      else if(m.kind==='playerLeft'){ playerCount=Math.max(1,Number(m.playerCount||playerCount-1));$('vcNum').textContent=playerCount; const showLimit = (roomLimit > 0); const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : ''; $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt; addChatMsg('Sistema',m.name+' saiu',true); connectedPlayers=connectedPlayers.filter(p=>p.id!==m.playerId&&p.playerId!==m.playerId); updateHostPanel();refreshHostChatBadges(); }
       else if(m.kind==='playersList'){connectedPlayers=m.players||[];updateHostPanel();}
       else if(m.kind==='game_join'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){const session=gameSessions[currentGame.id]||(gameSessions[currentGame.id]={players:[]});if(!session.players.find(p=>p.id===m.playerId)){session.players.push({id:m.playerId,name:m.name});sendPlayersToIframe();}} }
       else if(m.kind==='game_event'){ if(currentGame&&m.game===currentGame.id&&m.playerId!==myPlayerId){if(m.type==='start')sendToIframe({type:'start',players:m.players,startSymbol:m.startSymbol});else if(m.type==='move')sendToIframe({type:'move',move:m.move,player:m.player,promo:m.promo});else if(m.type==='rematch_req')sendToIframe({type:'rematch_req',player:m.player});else if(m.type==='player_left')sendToIframe({type:'player_left',player:m.player});} }
@@ -1007,7 +1014,6 @@ function sendChat(){
   addChatMsg(myName,pm?pm[2]:text,false,!!pm,pm?pm[1]:null,null,myPlayerId,myNickColor);
   wsSend({kind:'chat',name:myName,playerId:myPlayerId,pid:myPlayerId,text:pm?pm[2]:text,to:pm?pm[1]:undefined,color:myNickColor});
   if(pm){ input.value='@'+pm[1]+' '; input.focus(); } else { input.value=''; }
-  /* ═══ FIX #2: para o typing ao enviar ═══ */
   if (typingWasActive) { wsSend({kind:'stopTyping'}); typingWasActive = false; }
   if (typingStopTimer) { clearTimeout(typingStopTimer); typingStopTimer = null; }
 }
@@ -1188,16 +1194,106 @@ async function handleFileUpload(){
 }
 async function toggleScreenShare(){ if(!isHost)return; if(!isScreenSharing){ try{ const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true}); screenStream=stream; const sv=$('screenVideo'); sv.srcObject=stream; sv.muted=true; sv.volume=0; sv.style.display='block'; await sv.play(); isScreenSharing=true; mediaType='screen'; $('scrBtn').classList.add('live'); $('scrBtn').textContent='🛑 Parar'; hidePlaceholder(); updateMediaBadge('🖥️','Tela'); stream.getVideoTracks()[0].addEventListener('ended',()=>stopScreenShare(),{once:true}); const state={type:'screen',active:true,name:myName,updatedAt:Date.now()}; lastServerMediaState=JSON.parse(JSON.stringify(state)); wsSend({kind:'media',state:state,screenOwner:myPlayerId}); wsSend({kind:'rtc',action:'screenStarted'}); }catch(e){} }else stopScreenShare(); }
 function stopScreenShare(){ if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{}); closeAllRTCPeers(); if(screenStream){screenStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});screenStream=null;} $('screenVideo').srcObject=null; $('screenVideo').style.display='none'; isScreenSharing=false; screenOwner=null; mediaType=null; $('scrBtn').classList.remove('live'); $('scrBtn').textContent='🖥️ Compartilhar Tela'; lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState}); wsSend({kind:'rtc',action:'screenStopped'}); restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none'; }
-function resetPlayerUI(){ closeAllRTCPeers(); if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){} ytVideoId=null; $('youtubeOverlay').style.display='none'; const lv=$('localVideo'); lv.pause(); lv.removeAttribute('src'); lv.load(); lv.style.display='none'; const la=$('localAudio'); la.pause(); la.removeAttribute('src'); la.load(); const sv=$('screenVideo'); sv.pause(); sv.srcObject=null; sv.style.display='none'; const c=$('imageHolder'); try{ c.width=0; c.height=0; }catch(_){} c.style.display='none'; restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none'; hideMediaInteraction(); mediaType=null; updatePipButton(); }
+function resetPlayerUI(){ closeAllRTCPeers(); if(youtubePlayer)try{youtubePlayer.stopVideo();}catch(_){} ytVideoId=null; $('youtubeOverlay').style.display='none'; const lv=$('localVideo'); lv.pause(); lv.removeAttribute('src'); lv.removeAttribute('data-loaded-src'); lv.load(); lv.style.display='none'; const la=$('localAudio'); la.pause(); la.removeAttribute('src'); la.removeAttribute('data-loaded-src'); la.load(); const sv=$('screenVideo'); sv.pause(); sv.srcObject=null; sv.style.display='none'; const c=$('imageHolder'); try{ c.width=0; c.height=0; }catch(_){} c.style.display='none'; restorePlaceholder(); $('mediaBadge').classList.remove('active'); $('playerCtrl').style.display='none'; hideMediaInteraction(); mediaType=null; updatePipButton(); }
 function clearMedia(){ if(!isHost)return; if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{}); if(docPipWindow)try{docPipWindow.close();}catch(_){} resetPlayerUI(); lastServerMediaState={type:'clear',updatedAt:Date.now()}; wsSend({kind:'media',state:lastServerMediaState}); }
+
+/* ═══ FIX mídia: reload no justCompleted + cache-bust ═══ */
 function applyMediaState(state){
-  if(!state)return; if(state.type!=='clear')lastServerMediaState=JSON.parse(JSON.stringify(state)); if(state.type==='clear'){ resetPlayerUI(); return; }
+  if(!state)return;
+  const prevState = lastServerMediaState;
+  if(state.type!=='clear') lastServerMediaState=JSON.parse(JSON.stringify(state));
+  if(state.type==='clear'){ resetPlayerUI(); return; }
   ytSuppressStateSend=true;
-  if(state.type==='youtube'){ $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; hidePlaceholder(); $('youtubeOverlay').style.display='block'; mediaType='youtube'; ytVideoId=state.videoId; if(!youtubePlayer)createYTPlayer(); const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId); if(!sameVideo){ loadYouTube(state.videoId, state.paused===false, Number(state.time)||0); if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId; } else{ try{ const targetPaused=state.paused===true; const current=youtubePlayer.getPlayerState(); if(targetPaused){ if(current!==YT.PlayerState.PAUSED && current!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo(); } else{ if(current!==YT.PlayerState.PLAYING) youtubePlayer.playVideo(); const targetTime = Number(state.time)||0; if(targetTime > 0){ const delta=Math.abs((youtubePlayer.getCurrentTime()||0)-targetTime); if(delta>2 || state.forceSeek===true) youtubePlayer.seekTo(targetTime,true); } } }catch(_){} } updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; if(state.paused===false){ try{ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); }catch(_){} } }
-  else if(state.type==='video'){ $('youtubeOverlay').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; const v=$('localVideo'); if(state.url&&v.src!==state.url){v.src=state.url;v.load();} v.dataset.name=state.name||''; v.muted=false; v.volume=1; v.style.display='block'; hidePlaceholder(); mediaType='video'; updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo'); showPlayerCtrl(); const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)){ try{ v.currentTime=state.time; }catch(_){} } }; if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true}); if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); } else v.pause(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; }
-  else if(state.type==='audio'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none'; const a=$('localAudio'); if(state.url&&a.src!==state.url){a.src=state.url;a.load();} a.dataset.name=state.name||''; a.muted=false; a.volume=1; const p=$('placeholder'); p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>'; p.style.display='flex'; mediaType='audio'; updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio'); showPlayerCtrl(); const seek=()=>{if(typeof state.time==='number'&&isFinite(state.time))try{a.currentTime=state.time;}catch(_){}}; if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true}); if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); } else a.pause(); $('playBtn').textContent=state.paused?'▶️':'⏸️'; }
-  else if(state.type==='image'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; const c=$('imageHolder'),img=new Image(); img.onload=()=>{ c.width=c.parentElement.clientWidth; c.height=c.parentElement.clientHeight; const ctx=c.getContext('2d'); const r=Math.min(c.width/img.width,c.height/img.height); const w=img.width*r,h=img.height*r; ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h); c.style.display='block'; hidePlaceholder(); updateMediaBadge('🖼️','Imagem'); }; img.onerror=()=>toast('❌ Não foi possível carregar a imagem'); img.src=state.url; mediaType='image'; showPlayerCtrl(); }
-  else if(state.type==='screen'){ $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('imageHolder').style.display='none'; if(state.active){ mediaType='screen'; const p=$('placeholder'); p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>'; p.style.display='none'; updateMediaBadge('🖥️','Tela ao vivo'); showPlayerCtrl(); requestScreenFromOwner(); } }
+
+  const justCompleted = !!(prevState && prevState.uploading === true && !state.uploading);
+
+  if(state.type==='youtube'){
+    $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
+    hidePlaceholder(); $('youtubeOverlay').style.display='block'; mediaType='youtube'; ytVideoId=state.videoId;
+    if(!youtubePlayer)createYTPlayer();
+    const sameVideo=!!(youtubePlayer&&youtubePlayer.__partybloxVideoId===state.videoId);
+    if(!sameVideo){ loadYouTube(state.videoId, state.paused===false, Number(state.time)||0); if(youtubePlayer)youtubePlayer.__partybloxVideoId=state.videoId; }
+    else{ try{
+      const tp=state.paused===true; const cu=youtubePlayer.getPlayerState();
+      if(tp){ if(cu!==YT.PlayerState.PAUSED&&cu!==YT.PlayerState.ENDED) youtubePlayer.pauseVideo(); }
+      else{
+        if(cu!==YT.PlayerState.PLAYING) youtubePlayer.playVideo();
+        const tt=Number(state.time)||0;
+        if(tt>0){ const d=Math.abs((youtubePlayer.getCurrentTime()||0)-tt); if(d>2||state.forceSeek===true) youtubePlayer.seekTo(tt,true); }
+      }
+    }catch(_){} }
+    updateMediaBadge('🎬','YouTube'); showPlayerCtrl(); $('playBtn').textContent=state.paused?'▶️':'⏸️';
+    if(state.paused===false){ try{ youtubePlayer.unMute(); youtubePlayer.setVolume(100); youtubePlayer.playVideo(); }catch(_){} }
+  }
+  else if(state.type==='video'){
+    $('youtubeOverlay').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
+    const v=$('localVideo');
+    const alreadyLoaded = v.dataset.loadedSrc === (state.url || '');
+    const needReload = !!state.url && (!alreadyLoaded || justCompleted);
+    if (needReload) {
+      try{v.pause();}catch(_){}
+      const bust = justCompleted ? ('_r=' + Date.now()) : '';
+      const sep = state.url.includes('?') ? '&' : '?';
+      v.src = state.url + (bust ? (sep + bust) : '');
+      v.dataset.loadedSrc = state.url;
+      v.load();
+    }
+    v.dataset.name=state.name||''; v.muted=false; v.volume=1; v.style.display='block';
+    hidePlaceholder(); mediaType='video';
+    updateMediaBadge('🎬',state.uploading ? ('Vídeo • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Vídeo');
+    showPlayerCtrl();
+    const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)&&state.time>0){ try{ v.currentTime=state.time; }catch(_){} } };
+    if(v.readyState>=1)seek();else v.addEventListener('loadedmetadata',seek,{once:true});
+    if(state.paused===false||state.paused===undefined){ v.muted=false; v.volume=1; safePlay(v); } else v.pause();
+    $('playBtn').textContent=state.paused?'▶️':'⏸️';
+  }
+  else if(state.type==='audio'){
+    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
+    const a=$('localAudio');
+    const alreadyLoaded = a.dataset.loadedSrc === (state.url || '');
+    const needReload = !!state.url && (!alreadyLoaded || justCompleted);
+    if (needReload) {
+      try{a.pause();}catch(_){}
+      const bust = justCompleted ? ('_r=' + Date.now()) : '';
+      const sep = state.url.includes('?') ? '&' : '?';
+      a.src = state.url + (bust ? (sep + bust) : '');
+      a.dataset.loadedSrc = state.url;
+      a.load();
+    }
+    a.dataset.name=state.name||''; a.muted=false; a.volume=1;
+    const p=$('placeholder'); p.innerHTML='<div class="icon">🎵</div><h3>'+escapeHtml(state.name||'Música')+'</h3><p>Tocando agora...</p>'; p.style.display='flex';
+    mediaType='audio';
+    updateMediaBadge('🎵',state.uploading ? ('Áudio • '+Math.min(100,Number(state.uploadPercent||0))+'%') : 'Áudio');
+    showPlayerCtrl();
+    const seek=()=>{ if(typeof state.time==='number'&&isFinite(state.time)&&state.time>0){ try{a.currentTime=state.time;}catch(_){} } };
+    if(a.readyState>=1)seek();else a.addEventListener('loadedmetadata',seek,{once:true});
+    if(state.paused===false||state.paused===undefined){ a.muted=false; a.volume=1; safePlay(a); } else a.pause();
+    $('playBtn').textContent=state.paused?'▶️':'⏸️';
+  }
+  else if(state.type==='image'){
+    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none';
+    const c=$('imageHolder'), img=new Image();
+    const bust = justCompleted ? ('?_r=' + Date.now()) : '';
+    img.onload=()=>{
+      c.width=c.parentElement.clientWidth; c.height=c.parentElement.clientHeight;
+      const ctx=c.getContext('2d');
+      const r=Math.min(c.width/img.width,c.height/img.height);
+      const w=img.width*r,h=img.height*r;
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);
+      c.style.display='block'; hidePlaceholder(); updateMediaBadge('🖼️','Imagem');
+    };
+    img.onerror=()=>{ if(!state.uploading) toast('❌ Não foi possível carregar a imagem'); };
+    img.src = state.url + bust;
+    mediaType='image'; showPlayerCtrl();
+  }
+  else if(state.type==='screen'){
+    $('youtubeOverlay').style.display='none'; $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('imageHolder').style.display='none';
+    if(state.active){ mediaType='screen';
+      const p=$('placeholder'); p.innerHTML='<div class="icon">🖥️</div><h3>'+escapeHtml(state.name||'Alguém')+' está compartilhando a tela</h3><p>Conectando transmissão ao vivo...</p>'; p.style.display='none';
+      updateMediaBadge('🖥️','Tela ao vivo'); showPlayerCtrl(); requestScreenFromOwner();
+    }
+  }
   updatePipButton(); setTimeout(()=>{ytSuppressStateSend=false;},2000);
 }
 try{ const initialRoom=getRoomFromCurrentUrl(); if(initialRoom) $('inRoom').value=initialRoom; }catch(_){}
@@ -1210,7 +1306,6 @@ $('chatToggleBtn').addEventListener('click',toggleChat);
 $('copyLinkBtn').addEventListener('click',copyRoomLink);
 $('leaveBtn').addEventListener('click',leaveRoom);
 
-/* ═══ FIX #2: input listener reescrito ═══ */
 $('chatText').addEventListener('input', () => {
   const now = Date.now();
   const text = $('chatText').value.trim();
@@ -1232,9 +1327,6 @@ $('chatText').addEventListener('input', () => {
     }
   }, 2000);
 });
-
-/* ═══ FIX #1: listeners que escondiam o campo foram REMOVIDOS ═══ */
-/* (o limitLabel e inLimit agora ficam sempre visíveis) */
 
 async function openMovies(){
   $('moviesModal').classList.add('active'); const list=$('moviesList'); list.innerHTML='<div class="host-empty">Carregando filmes...</div>';
@@ -1295,14 +1387,11 @@ window.addEventListener('pageshow',()=>{ if(!intentionalDisconnect&&(!ws||ws.rea
 window.addEventListener('beforeunload',()=>{ intentionalDisconnect=true; });
 updateProgress(); loadTheme(); loadNickColor();
 
-/* ═══ FIX #3: visualViewport encolhe #app inteiro (não mexe no input) ═══ */
 const appEl = document.getElementById('app');
-
 function handleVisualViewport() {
   if (!window.visualViewport || !appEl) return;
   const vv = window.visualViewport;
   const keyboardOpen = (window.innerHeight - vv.height) > 100;
-
   if (keyboardOpen) {
     appEl.style.height = vv.height + 'px';
     appEl.style.top = vv.offsetTop + 'px';
@@ -1313,7 +1402,6 @@ function handleVisualViewport() {
     appEl.style.bottom = '';
   }
 }
-
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', handleVisualViewport);
   window.visualViewport.addEventListener('scroll', handleVisualViewport);
