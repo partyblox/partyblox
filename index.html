@@ -376,6 +376,73 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,229,255,.2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,229,255,.4); }
+
+
+/* Ajustes pontuais para o mobile: barra superior e controles do host alinhados sem sobreposição. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .topbar-left {
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+  .room-chip {
+    display: flex;
+    max-width: none;
+    min-width: 0;
+  }
+  .topbar-right {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: none;
+    gap: 6px;
+    margin: 0;
+    overflow: visible;
+  }
+  .tb-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 4px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .host-controls {
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    width: auto;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 5px;
+  }
+  .hc-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 7px 3px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+  }
+}
+@media (max-width: 380px) and (orientation: portrait) {
+  .topbar-right { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tb-btn { padding: 8px 2px; font-size: 9px; }
+  .host-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>
 </head>
 <body>
@@ -908,12 +975,14 @@ function connectRoom(creator){
       if(m.kind==='roomState'){
         if(!appEntered){ appEntered = true; const n = $('roomNotice'); if(n) n.className='room-notice'; $('landing').classList.remove('active'); $('app').classList.add('active'); }
         roomLimit = m.maxUsers || 0;
+        // Atualiza a contagem antes de montar o chip, para o criador também ver o total correto.
+        playerCount = Number(m.playerCount || (Array.isArray(m.players) ? m.players.length : 1));
+        $('vcNum').textContent = playerCount;
         const showLimit = (roomLimit > 0);
         const limitTxt = showLimit ? ` 👥 ${playerCount}/${roomLimit}` : '';
         $('roomChip').textContent='🏠 '+roomName + (roomPassword ? ' 🔒' : '') + limitTxt;
         if(Array.isArray(m.hosts)){ serverMultiHost=true; hosts=m.hosts; founderId=m.founder||null; isHost=hosts.includes(myPlayerId); }
         else{ serverMultiHost=false; isHost=!!m.host; founderId=m.hostId||null; hosts=isHost?[myPlayerId]:(m.hostId?[m.hostId]:[]); }
-        playerCount=Number(m.playerCount||1); $('vcNum').textContent=playerCount;
         if(m.players)connectedPlayers=m.players;
         updateHostUI();updateHostPanel();refreshHostChatBadges();
         if(isHost)startMediaHeartbeat();else stopMediaHeartbeat();
