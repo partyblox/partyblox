@@ -375,6 +375,7 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 <body>
 <div class="upload-overlay" id="uploadOverlay" aria-live="polite">
   <div class="upload-spinner"></div>
+  <div class="upload-title" id="uploadTitle">Aguarde o carregamento...</div>
   <div class="upload-sub" id="uploadSub">Enviando mídia...</div>
 </div>
 <div id="landing" class="screen active">
@@ -575,13 +576,16 @@ body.theme-light .video-placeholder p{color:#6a7a9a;}
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
+
+/* ✅ CORRIGIDO: setUploadLoading null-safe (não quebra se uploadTitle não existir) */
 function setUploadLoading(active,title='Aguarde...',sub='Enviando mídia...'){
   const o=$('uploadOverlay'); if(!o)return;
-  $('uploadTitle').textContent=title;
-  $('uploadSub').textContent=sub;
+  const t=$('uploadTitle'); if(t) t.textContent=title;
+  const s=$('uploadSub');   if(s) s.textContent=sub;
   o.classList.toggle('active',!!active);
 }
+
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500);}
 function fmtTime(s){if(!s||!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 function buildWsUrl(rawInput){
   let raw = String(rawInput || '').trim();
@@ -592,7 +596,6 @@ function buildWsUrl(rawInput){
   return 'wss://' + raw;
 }
 
-// FORÇA O BACKEND_URL A USAR O TÚNEL SE DISPONÍVEL
 let BACKEND_URL = `${location.protocol}//${location.host}`;
 function updateBackendUrl(){
   const ws = buildWsUrl(window.PARTYBLOX_WS_URL);
@@ -603,8 +606,8 @@ function updateBackendUrl(){
   }
   console.log('[BACKEND] usando', BACKEND_URL);
   if (BACKEND_URL.includes('github.io') || BACKEND_URL.includes('netlify.app')) {
-    console.warn('[BACKEND] AVISO: Você está no GitHub Pages sem a URL do túnel! O upload não vai funcionar até configurar o tunnel.json corretamente.');
-    toast('⚠️ Configure o tunnel.json com a URL do Cloudflare para os uploads funcionarem.');
+    console.warn('[BACKEND] AVISO: GitHub Pages/Netlify sem tunnel.json configurado!');
+    toast('⚠️ Configure tunnel.json com a URL do Cloudflare.');
   }
 }
 updateBackendUrl();
@@ -681,7 +684,6 @@ async function fetchOnlineCount(){
 setInterval(() => { if($('landing').classList.contains('active')) fetchOnlineCount(); }, 10000);
 fetchOnlineCount();
 
-/* ===== RTC ===== */
 function handleRTCMessage(msg){
   if(!msg || !msg.action) return;
   if(msg.action==='screenRequest'){ if(isScreenSharing && screenStream) createRTCPeerForViewer(msg.from); return; }
@@ -919,6 +921,8 @@ function joinFromLink(){
 }
 function enterApp(asHost){
   intentionalDisconnect=false; firstRoomJoin=true; appEntered = false;
+  /* ✅ CORRIGIDO: limpa fila de mensagens pendentes ao reentrar */
+  pendingMessages = [];
   try{ if(ws){ ws.onclose=null; ws.close(1000,'reenter'); } }catch(_){}
   ws=null; wsReady=false;
   const chatBox = $('chatMsgs'); if(chatBox) chatBox.innerHTML = '';
@@ -1392,7 +1396,7 @@ async function uploadLargeFileInChunks(file, roomId, onProgress, onReady, isChat
   if(onProgress) onProgress(100,totalChunks,totalChunks,{...data,progressiveReady:true,uploadedBytes:total,uploadPercent:100});
   return {...data,uploading:false,uploadedBytes:total,totalBytes:total,uploadPercent:100};
 }
-function updateUploadOverlayProgress(pct, large=true, ready=false){ const suffix=ready?' — ▶️ reprodução liberada':''; $('uploadSub').textContent=`${pct}% — enviando${suffix}. Você pode continuar usando a sala.`; }
+function updateUploadOverlayProgress(pct, large=true, ready=false){ const suffix=ready?' — ▶️ reprodução liberada':''; const s=$('uploadSub'); if(s) s.textContent=`${pct}% — enviando${suffix}. Você pode continuar usando a sala.`; }
 async function handleFileUpload(){
   if(!isHost)return;
   const f=$('fileInput').files&&$('fileInput').files[0]; if(!f)return;
@@ -1426,7 +1430,11 @@ async function handleFileUpload(){
       img.src=data.url; updateMediaBadge('🖼️','Imagem'); showPlayerCtrl(); wsSend({kind:'media',state:lastServerMediaState});
     }
     toast('✅ Upload concluído!');
-  }catch(err){ setUploadLoading(false); console.error('[upload]',err); toast('❌ Falha no upload: '+(err.message||'erro desconhecido')); }
+  }catch(err){
+    setUploadLoading(false);
+    console.error('[upload] falhou:', err, 'BACKEND_URL=', BACKEND_URL);
+    toast('❌ Falha no upload: '+(err.message||'erro desconhecido'));
+  }
   finally{$('fileInput').value='';}
 }
 async function toggleScreenShare(){
