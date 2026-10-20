@@ -1253,6 +1253,25 @@ function applyMediaState(state){
 
   const justCompleted = !!(prevState && prevState.uploading === true && !state.uploading);
 
+  // Arquivos grandes (especialmente MP4/M4A com metadados no final) não são
+  // reproduzíveis com segurança enquanto ainda estão sendo gravados no servidor.
+  // Aguarda a finalização e só então carrega a URL completa em todos os clientes.
+  if(state.uploading === true && (state.type === 'video' || state.type === 'audio')){
+    mediaType = state.type;
+    $('youtubeOverlay').style.display='none';
+    $('localVideo').style.display='none';
+    $('localAudio').pause();
+    $('localAudio').removeAttribute('src');
+    $('screenVideo').style.display='none';
+    $('imageHolder').style.display='none';
+    const p=$('placeholder');
+    p.innerHTML='<div class="icon">'+(state.type==='video'?'🎬':'🎵')+'</div><h3>'+escapeHtml(state.name||(state.type==='video'?'Vídeo':'Áudio'))+'</h3><p>Arquivo grande sendo enviado… a reprodução começará quando o envio terminar.</p>';
+    p.style.display='flex';
+    updateMediaBadge(state.type==='video'?'🎬':'🎵',(state.type==='video'?'Vídeo':'Áudio')+' • '+Math.min(99,Number(state.uploadPercent||0))+'%');
+    showPlayerCtrl();
+    return;
+  }
+
   if(state.type==='youtube'){
     $('localVideo').style.display='none'; $('localAudio').removeAttribute('src'); $('screenVideo').style.display='none'; $('imageHolder').style.display='none';
     hidePlaceholder(); $('youtubeOverlay').style.display='block'; mediaType='youtube'; ytVideoId=state.videoId;
