@@ -1232,7 +1232,20 @@ async function handleFileUpload(){
     const onProgress=(pct,_i,_t,info)=>{ const ready=!!(info&&info.progressiveReady); if(!progressiveStarted) updateUploadOverlayProgress(pct,true,ready); else updateUploadOverlayProgress(pct,true,true); };
     const data=await uploadLargeFileInChunks(f,roomId,onProgress,onReady,false);
     setUploadLoading(false); if(!data||!data.url)throw new Error('Servidor não retornou a URL da mídia.');
-    if(ty==='video'||ty==='audio'){ const finalState={...data,type:ty,url:data.url,paused:false,time:0,name:data.name||f.name,uploading:false,updatedAt:Date.now()}; applyMediaState(finalState); const el=ty==='video'?$('localVideo'):$('localAudio'); el.dataset.name=finalState.name; try{await safePlay(el);}catch(_){} sendLocalState(); }
+    if(ty==='video'||ty==='audio'){
+      const finalState={...data,type:ty,url:data.url,paused:false,time:0,name:data.name||f.name,uploading:false,updatedAt:Date.now()};
+      const el=ty==='video'?$('localVideo'):$('localAudio');
+      el.dataset.name=finalState.name;
+      // O host pode receber o broadcast de conclusão antes de o upload local terminar.
+      // Invalida a URL memorizada para garantir que o host também recarregue o arquivo final.
+      el.dataset.loadedSrc='';
+      const retryPlayback=()=>{ if(mediaType===ty && el.isConnected) safePlay(el); };
+      el.addEventListener('loadeddata',retryPlayback,{once:true});
+      el.addEventListener('canplay',retryPlayback,{once:true});
+      applyMediaState(finalState);
+      try{await safePlay(el);}catch(_){}
+      sendLocalState();
+    }
     else{ mediaType='image'; lastServerMediaState={type:'image',url:data.url,name:data.name||f.name,uploading:false,uploadPercent:100,updatedAt:Date.now()}; $('localVideo').style.display='none';$('screenVideo').style.display='none';$('youtubeOverlay').style.display='none';$('placeholder').style.display='none'; const holder=$('imageHolder'); holder.style.display='block'; const ctx=holder.getContext('2d'); const img=new Image(); img.onload=()=>{holder.width=img.naturalWidth||1920;holder.height=img.naturalHeight||1080;ctx.clearRect(0,0,holder.width,holder.height);ctx.drawImage(img,0,0);}; img.onerror=()=>toast('❌ Imagem não pôde ser lida.'); img.src=data.url; updateMediaBadge('🖼️','Imagem'); showPlayerCtrl(); wsSend({kind:'media',state:lastServerMediaState}); }
     toast('✅ Upload concluído!');
   }catch(err){ setUploadLoading(false); console.error('[upload] falhou:', err, 'BACKEND_URL=', BACKEND_URL); toast('❌ Falha no upload: '+(err.message||'erro desconhecido')); }
