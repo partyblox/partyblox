@@ -1053,7 +1053,7 @@ function addChatMsg(author,text,isSystem=false,isPrivate=false,target=null,media
   msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
   while(msgs.children.length>150)msgs.removeChild(msgs.firstChild);
 }
-function normalizeChatPlayerName(value){ return String(value||'').normalize('NFC').trim().toLocaleLowerCase('pt-BR').replace(/[\\u200B-\\u200D\\uFEFF]/g,''); }
+function normalizeChatPlayerName(value){ return String(value||'').normalize('NFC').trim().toLocaleLowerCase('pt-BR').replace(/[\u200B-\u200D\uFEFF]/g,''); }
 function parsePrivateChat(text){
   if(!text.startsWith('@'))return null;
   const body=text.slice(1);
@@ -1063,12 +1063,12 @@ function parsePrivateChat(text){
     .filter((p,i,arr)=>arr.findIndex(x=>x.id===p.id)===i)
     .sort((a,b)=>b.name.length-a.name.length);
   for(const p of candidates){
-    if(body.length>p.name.length&&normalizeChatPlayerName(body.slice(0,p.name.length))===normalizeChatPlayerName(p.name)&&/\\s/.test(body[p.name.length])){
+    if(body.length>p.name.length&&normalizeChatPlayerName(body.slice(0,p.name.length))===normalizeChatPlayerName(p.name)&&/\s/.test(body[p.name.length])){
       const message=body.slice(p.name.length).trim();
       if(message)return {name:p.name,id:p.id,text:message};
     }
   }
-  const fallback=body.match(/^(\\S+)\\s+([\\s\\S]+)$/);
+  const fallback=body.match(/^(\S+)\s+([\s\S]+)$/);
   if(!fallback)return null;
   const target=fallback[1], found=candidates.find(p=>normalizeChatPlayerName(p.name)===normalizeChatPlayerName(target)||p.id===target);
   return {name:found?found.name:target,id:found?found.id:'',text:fallback[2].trim()};
