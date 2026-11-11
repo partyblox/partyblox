@@ -646,8 +646,11 @@
       const playerId =
         localStorage.getItem("pb_pid") ||
         (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
-
       localStorage.setItem("pb_pid", playerId);
+
+      const visitorId = localStorage.getItem("pb_visitor_id") ||
+        (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+      localStorage.setItem("pb_visitor_id", visitorId);
 
       let isHost = false;
       let hosts = [];
@@ -745,11 +748,14 @@
 
         const meta = document.createElement("span");
         meta.className = "meta";
-        meta.textContent = m.to ? `privado para ${m.to}` : "";
+        const stamp = Number(m.timestamp);
+        const date = Number.isFinite(stamp) && stamp > 0 ? new Date(stamp) : new Date();
+        const clock = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        meta.textContent = (m.to ? `privado para ${m.to} · ` : "") + clock;
 
         div.appendChild(who);
         div.appendChild(txt);
-        if (meta.textContent) div.appendChild(meta);
+        div.appendChild(meta);
 
         chatMessages.appendChild(div);
         trimChat();
@@ -760,7 +766,11 @@
       }
 
       function updateOnline() {
-        fetch("/api/ping", { method: "POST" })
+        fetch("/api/ping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visitorId })
+        })
           .then(r => r.json())
           .then(d => {
             $("onlineCount").textContent = `🟢 ${d.online || 0} pessoas no site agora`;
@@ -919,7 +929,8 @@
           password,
           maxUsers: maxUsersValue,
           creator: creator === true,
-          playerId
+          playerId,
+          visitorId
         };
 
         joinRequestActive = true;
@@ -1680,6 +1691,7 @@
           name: playerName,
           text,
           pid: playerId,
+          timestamp: Date.now(),
           color: $("nickColor").value
         });
 
