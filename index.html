@@ -843,13 +843,30 @@
         }
       }
 
-      function connect() {
-        if (ws && (ws.readyState === 0 || ws.readyState === 1)) return;
+      let joinRequestTimer = null;
+      let joinRequestActive = false;
 
-        ws = new WebSocket(WS_URL);
+      function connect() {
+        // Reutiliza uma conexão em andamento; nunca cria dois sockets para o mesmo clique.
+        if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
+
+        try {
+          ws = new WebSocket(WS_URL);
+        } catch (err) {
+          joinRequestActive = false;
+          toast("Não foi possível iniciar a conexão com o servidor.");
+          $("statusText").textContent = "Falha na conexão.";
+          return;
+        }
 
         ws.onopen = () => {
-          if (pendingJoin) sendWs(pendingJoin);
+          if (pendingJoin && joinRequestActive) {
+            try {
+              ws.send(JSON.stringify(pendingJoin));
+            } catch (err) {
+              toast("Não foi possível enviar o pedido da sala.");
+            }
+          }
         };
 
         ws.onmessage = ev => {
@@ -859,22 +876,41 @@
         };
 
         ws.onclose = () => {
+          if (joinRequestTimer) clearTimeout(joinRequestTimer);
+          joinRequestTimer = null;
+          joinRequestActive = false;
           if (!$("room").classList.contains("hidden")) {
             toast("Conexão perdida.");
             showLanding();
           }
         };
 
-        ws.onerror = () => {};
+        ws.onerror = () => {
+          if (joinRequestActive) {
+            toast("Erro ao conectar ao servidor. Confira se o server.js está rodando.");
+            $("statusText").textContent = "Erro de conexão.";
+          }
+        };
       }
 
       function joinRoom(creator) {
+        if (joinRequestActive) return;
+
         playerName = $("nick").value.trim() || "Player";
         roomId = $("roomName").value.trim() || "Sala-Publica";
         password = $("pass").value;
-        maxUsersValue = Number($("maxUsers").value) || 1;
+        maxUsersValue = Number($("maxUsers").value);
+
+        if (!Number.isFinite(maxUsersValue)) maxUsersValue = 50;
+        maxUsersValue = Math.max(1, Math.min(10000, Math.trunc(maxUsersValue)));
+        if (!roomId) {
+          toast("Digite um nome para a sala.");
+          $("roomName").focus();
+          return;
+        }
 
         localStorage.setItem("pb_nick", playerName);
+        localStorage.setItem("pb_room", roomId);
 
         pendingJoin = {
           kind: "join",
@@ -882,24 +918,57 @@
           name: playerName,
           password,
           maxUsers: maxUsersValue,
-          creator,
+          creator: creator === true,
           playerId
         };
 
-        connect();
-        sendWs(pendingJoin);
+        joinRequestActive = true;
+        $("btnCreate").disabled = true;
+        $("btnJoin").disabled = true;
+        $("statusText").textContent = "Conectando à sala...";
+
+        // Se o socket já estiver aberto, envia uma única vez. Se estiver conectando,
+        // o envio será feito exclusivamente pelo evento onopen.
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          sendWs(pendingJoin);
+        } else {
+          connect();
+        }
+
+        if (joinRequestTimer) clearTimeout(joinRequestTimer);
+        joinRequestTimer = setTimeout(() => {
+          if (!joinRequestActive) return;
+          joinRequestActive = false;
+          pendingJoin = null;
+          $("btnCreate").disabled = false;
+          $("btnJoin").disabled = false;
+          $("statusText").textContent = "Tempo esgotado.";
+          toast("O servidor não respondeu. Verifique o server.js e tente novamente.");
+        }, 12000);
       }
 
       function handleMessage(msg) {
         if (!msg || !msg.kind) return;
 
         if (msg.kind === "joinRejected" || msg.kind === "wrongPassword" || msg.kind === "roomExists" || msg.kind === "kicked") {
+          if (joinRequestTimer) clearTimeout(joinRequestTimer);
+          joinRequestTimer = null;
+          joinRequestActive = false;
+          pendingJoin = null;
+          $("btnCreate").disabled = false;
+          $("btnJoin").disabled = false;
           alert(msg.message || "Erro ao entrar na sala.");
           showLanding();
           return;
         }
 
         if (msg.kind === "roomState") {
+          if (joinRequestTimer) clearTimeout(joinRequestTimer);
+          joinRequestTimer = null;
+          joinRequestActive = false;
+          pendingJoin = null;
+          $("btnCreate").disabled = false;
+          $("btnJoin").disabled = false;
           hosts = msg.hosts || [];
           founder = msg.founder || null;
           isHost = !!msg.host;
@@ -1637,7 +1706,11 @@
 
         $("btnLeave").onclick = () => {
           sendWs({ kind: "leave" });
-          try { ws.close(1000, "leave"); } catch (_) {}
+          pendingJoin = null;
+          joinRequestActive = false;
+          if (joinRequestTimer) clearTimeout(joinRequestTimer);
+          joinRequestTimer = null;
+          try { if (ws) ws.close(1000, "leave"); } catch (_) {}
           showLanding();
         };
 
